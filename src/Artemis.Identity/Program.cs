@@ -13,3 +13,4 @@ var app = builder.Build();
 app.UseIdentityServer();
 
 app.Run();
+
