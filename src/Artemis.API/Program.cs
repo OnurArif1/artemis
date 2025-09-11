@@ -1,55 +1,39 @@
-using Microsoft.EntityFrameworkCore;
 using Artemis.API.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+// ConnectionString'i configuration'dan oku
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// PostgreSQL bağlantısı için DbContext ekle
+// DbContext'i PostgreSQL ile bağla
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    options.UseNpgsql(connectionString);
+
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+    }
+});
+
+// Controller desteğini ekle
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Development ortamında veritabanı migrasyonlarını otomatik uygula
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
 }
 
+// HTTPS yönlendirme
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", async (ApplicationDbContext dbContext) =>
-{
-    // Veritabanından veri çek
-    var existingForecasts = await dbContext.WeatherForecasts.ToListAsync();
-    
-    if (existingForecasts.Any())
-    {
-        return Results.Ok(existingForecasts);
-    }
-
-    // Eğer veri yoksa yeni veri oluştur ve kaydet
-    var newForecasts = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        {
-            Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
-
-    await dbContext.WeatherForecasts.AddRangeAsync(newForecasts);
-    await dbContext.SaveChangesAsync();
-
-    return Results.Ok(newForecasts);
-})
-.WithName("GetWeatherForecast");
+// Controller route’larını aktif et
+app.MapControllers();
 
 app.Run();

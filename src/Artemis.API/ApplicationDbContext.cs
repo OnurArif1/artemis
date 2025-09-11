@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using src.Artemis.API.Entities;
 
 namespace Artemis.API.Data
 {
@@ -9,31 +10,47 @@ namespace Artemis.API.Data
         {
         }
 
-        // DbSet örnekleri
-        public DbSet<WeatherForecast> WeatherForecasts { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Place> Places { get; set; }
+        public DbSet<PlaceCategory> PlaceCategories { get; set; }
+        public DbSet<Post> Posts { get; set; }
+        public DbSet<Reaction> Reactions { get; set; }
+        public DbSet<Report> Reports { get; set; }
+        public DbSet<Topic> Topics { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // WeatherForecast için konfigürasyon
-            modelBuilder.Entity<WeatherForecast>(entity =>
-            {
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.Date).IsRequired();
-                entity.Property(e => e.TemperatureC).IsRequired();
-                entity.Property(e => e.Summary).HasMaxLength(100);
-            });
-        }
-    }
+            // Post - User ilişkisi
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Posts)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-    // WeatherForecast modeli
-    public class WeatherForecast
-    {
-        public int Id { get; set; }
-        public DateOnly Date { get; set; }
-        public int TemperatureC { get; set; }
-        public string? Summary { get; set; }
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+            // Post - Topic ilişkisi
+            modelBuilder.Entity<Post>()
+                .HasOne(p => p.Topic)
+                .WithMany(t => t.Posts)
+                .HasForeignKey(p => p.TopicId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Comment - Post ilişkisi
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.Post)
+                .WithMany(p => p.Comments)
+                .HasForeignKey(c => c.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Comment - User ilişkisi
+            modelBuilder.Entity<Comment>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }
