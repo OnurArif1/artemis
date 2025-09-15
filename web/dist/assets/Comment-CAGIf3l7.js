@@ -1,0 +1,2 @@
+import{_ as l,c as d,o as m,b as o,a as n,w as t,r as a}from"./index-DinWiISF.js";const c={};function C(_,e){const r=a("CCardBody"),s=a("CCard");return m(),d("div",null,[e[1]||(e[1]=o("h4",{class:"mb-3"},"Comments",-1)),n(s,null,{default:t(()=>[n(r,null,{default:t(()=>[...e[0]||(e[0]=[o("p",null,"Yönetim arayüzü placeholder. Burada Comment CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const p=l(c,[["render",C]]);export{p as default};
+//# sourceMappingURL=Comment-CAGIf3l7.js.map

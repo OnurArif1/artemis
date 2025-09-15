@@ -1,0 +1,2 @@
+import{_ as l,c,o as d,b as o,a,w as n,r as t}from"./index-DinWiISF.js";const C={};function _(i,e){const r=t("CCardBody"),s=t("CCard");return d(),c("div",null,[e[1]||(e[1]=o("h4",{class:"mb-3"},"Reactions",-1)),a(s,null,{default:n(()=>[a(r,null,{default:n(()=>[...e[0]||(e[0]=[o("p",null,"Yönetim arayüzü placeholder. Burada Reaction CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const m=l(C,[["render",_]]);export{m as default};
+//# sourceMappingURL=Reaction-DEpeQ1ZP.js.map

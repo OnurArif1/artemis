@@ -1,0 +1,2 @@
+import{_ as l,c as d,o as c,b as o,a as t,w as a,r as n}from"./index-DinWiISF.js";const C={};function _(u,e){const s=n("CCardBody"),r=n("CCard");return c(),d("div",null,[e[1]||(e[1]=o("h4",{class:"mb-3"},"Posts",-1)),t(r,null,{default:a(()=>[t(s,null,{default:a(()=>[...e[0]||(e[0]=[o("p",null,"Yönetim arayüzü placeholder. Burada Post CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const p=l(C,[["render",_]]);export{p as default};
+//# sourceMappingURL=Post-DViIZ6bI.js.map
