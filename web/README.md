@@ -1,6 +1,6 @@
-# Artemis Frontend
+# Artemis Web
 
-A modern Vue.js 3 frontend application for the Artemis project.
+A modern Vue.js 3 web application for the Artemis project.
 
 ## Features
 
@@ -16,7 +16,7 @@ A modern Vue.js 3 frontend application for the Artemis project.
 ## Project Structure
 
 ```
-frontend/
+web/
 ├── src/
 │   ├── components/          # Reusable Vue components
 │   ├── views/              # Page components
@@ -99,7 +99,7 @@ These URLs can be modified in `vite.config.js` and `src/services/authService.js`
 - **Vue Router 4** - Official router for Vue.js
 - **Pinia** - Vue state management library
 - **Axios** - HTTP client for API requests
-- **Vite** - Next generation frontend tooling
+- **Vite** - Next generation web tooling
 - **Sass** - CSS preprocessor
 
 ## Browser Support

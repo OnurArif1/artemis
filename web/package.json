@@ -1,7 +1,7 @@
 {
-  "name": "artemis-frontend",
+  "name": "artemis-web",
   "version": "1.0.0",
-  "description": "Artemis Frontend - Vue.js Application",
+  "description": "Artemis Web - Vue.js Application",
   "private": true,
   "scripts": {
     "dev": "vite",
