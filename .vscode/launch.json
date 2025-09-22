@@ -1,0 +1,61 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Identity.Api",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-identity-api",
+            "program": "${workspaceFolder}/src/Identity.Api/bin/Debug/net9.0/Identity.Api.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/Identity.Api",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5095"
+            }
+        },
+        {
+            "name": "Artemis.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-artemis-api",
+            "program": "${workspaceFolder}/src/Artemis.API/bin/Debug/net9.0/Artemis.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/Artemis.API",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5094"
+            }
+        },
+        {
+            "name": "Artemis.Gateway",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build-gateway",
+            "program": "${workspaceFolder}/src/Artemis.Gateway/bin/Debug/net9.0/Artemis.Gateway.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/Artemis.Gateway",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5091"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Launch All Services (Compound)",
+            "configurations": [
+                "Identity.Api",
+                "Artemis.API", 
+                "Artemis.Gateway"
+            ],
+            "stopAll": true
+        }
+    ]
+}
