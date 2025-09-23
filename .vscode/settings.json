@@ -11,11 +11,9 @@
         "**/.vs": true
     },
     "omnisharp.enableEditorConfigSupport": true,
-    "omnisharp.enableImportCompletion": true,
     "omnisharp.enableRoslynAnalyzers": true,
     "csharp.format.enable": true,
     "csharp.inlayHints.parameters.enabled": true,
-    "csharp.inlayHints.types.enabled": true,
     "terminal.integrated.defaultProfile.windows": "Git Bash",
     "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
     "dotnet.inlayHints.enableInlayHintsForParameters": true,
@@ -25,5 +23,6 @@
     "dotnet.inlayHints.enableInlayHintsForOtherParameters": true,
     "dotnet.inlayHints.suppressInlayHintsForParametersThatDifferOnlyBySuffix": true,
     "dotnet.inlayHints.suppressInlayHintsForParametersThatMatchMethodIntent": true,
-    "dotnet.inlayHints.suppressInlayHintsForParametersThatMatchArgumentName": true
+    "dotnet.inlayHints.suppressInlayHintsForParametersThatMatchArgumentName": true,
+    "csharp.inlayHints.enableInlayHintsForTypes": true
 }
