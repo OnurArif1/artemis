@@ -1,0 +1,2 @@
+import{_ as s,c,o as d,b as a,a as o,w as t,r}from"./index-DinWiISF.js";const C={};function _(u,e){const n=r("CCardBody"),l=r("CCard");return d(),c("div",null,[e[1]||(e[1]=a("h4",{class:"mb-3"},"Place Categories",-1)),o(l,null,{default:t(()=>[o(n,null,{default:t(()=>[...e[0]||(e[0]=[a("p",null,"Yönetim arayüzü placeholder. Burada PlaceCategory CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const p=s(C,[["render",_]]);export{p as default};
+//# sourceMappingURL=PlaceCategory-I80penXX.js.map

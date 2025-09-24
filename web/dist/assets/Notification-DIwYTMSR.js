@@ -1,0 +1,2 @@
+import{_ as l,c,o as d,b as o,a as t,w as a,r as n}from"./index-DinWiISF.js";const i={};function f(C,e){const r=n("CCardBody"),s=n("CCard");return d(),c("div",null,[e[1]||(e[1]=o("h4",{class:"mb-3"},"Notifications",-1)),t(s,null,{default:a(()=>[t(r,null,{default:a(()=>[...e[0]||(e[0]=[o("p",null,"Yönetim arayüzü placeholder. Burada Notification CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const u=l(i,[["render",f]]);export{u as default};
+//# sourceMappingURL=Notification-DIwYTMSR.js.map

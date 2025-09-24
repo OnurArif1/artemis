@@ -1,0 +1,31 @@
+{
+  "name": "artemis-web",
+  "version": "1.0.0",
+  "description": "Artemis Web - Vue.js Application",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "@coreui/coreui": "^5.4.3",
+    "@coreui/icons": "^3.0.1",
+    "@coreui/icons-vue": "^2.2.0",
+    "@coreui/utils": "^2.0.2",
+    "@coreui/vue": "^5.6.0",
+    "@popperjs/core": "^2.11.8",
+    "@vueuse/core": "^10.7.0",
+    "axios": "^1.6.2",
+    "pinia": "^3.0.3",
+    "simplebar-vue": "^2.4.2",
+    "vue": "^3.5.21",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "sass": "^1.92.1",
+    "vite": "^7.1.5"
+  }
+}

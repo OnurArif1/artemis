@@ -1,0 +1,2 @@
+import{_ as l,c as d,o as c,b as o,a as t,w as r,r as a}from"./index-DinWiISF.js";const p={};function C(_,e){const n=a("CCardBody"),s=a("CCard");return c(),d("div",null,[e[1]||(e[1]=o("h4",{class:"mb-3"},"Reports",-1)),t(s,null,{default:r(()=>[t(n,null,{default:r(()=>[...e[0]||(e[0]=[o("p",null,"Yönetim arayüzü placeholder. Burada Report CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const m=l(p,[["render",C]]);export{m as default};
+//# sourceMappingURL=Report-BHQ13QNN.js.map

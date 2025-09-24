@@ -1,0 +1,2 @@
+import{_ as s,c,o as d,b as a,a as o,w as n,r as t}from"./index-DinWiISF.js";const C={};function _(u,e){const l=t("CCardBody"),r=t("CCard");return d(),c("div",null,[e[1]||(e[1]=a("h4",{class:"mb-3"},"Places",-1)),o(r,null,{default:n(()=>[o(l,null,{default:n(()=>[...e[0]||(e[0]=[a("p",null,"Yönetim arayüzü placeholder. Burada Place CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const p=s(C,[["render",_]]);export{p as default};
+//# sourceMappingURL=Place-D3qTe-2y.js.map
