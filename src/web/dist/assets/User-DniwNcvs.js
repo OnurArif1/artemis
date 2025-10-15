@@ -1,2 +1,0 @@
-import{_ as l,c as d,o as c,b as o,a as r,w as a,r as n}from"./index-DinWiISF.js";const C={};function _(u,e){const s=n("CCardBody"),t=n("CCard");return c(),d("div",null,[e[1]||(e[1]=o("h4",{class:"mb-3"},"Users",-1)),r(t,null,{default:a(()=>[r(s,null,{default:a(()=>[...e[0]||(e[0]=[o("p",null,"Yönetim arayüzü placeholder. Burada User CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const p=l(C,[["render",_]]);export{p as default};
-//# sourceMappingURL=User-DniwNcvs.js.map

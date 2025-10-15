@@ -1,2 +1,0 @@
-import{_ as l,c,o as d,b as o,a,w as n,r as t}from"./index-DinWiISF.js";const p={};function C(_,e){const r=t("CCardBody"),s=t("CCard");return d(),c("div",null,[e[1]||(e[1]=o("h4",{class:"mb-3"},"Topics",-1)),a(s,null,{default:n(()=>[a(r,null,{default:n(()=>[...e[0]||(e[0]=[o("p",null,"Yönetim arayüzü placeholder. Burada Topic CRUD listelenecek.",-1)])]),_:1})]),_:1})])}const u=l(p,[["render",C]]);export{u as default};
-//# sourceMappingURL=Topic-DBLXPSQd.js.map
