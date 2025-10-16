@@ -13,27 +13,27 @@ const errorMsg = ref('');
 const router = useRouter();
 const auth = useAuthStore();
 
-async function onLogin() {
-    errorMsg.value = '';
-    loading.value = true;
-    try {
-        // Gateway base: http://localhost:5091; frontend calls via relative path
-        // Backend AuthController returns { token }
-        console.log('email.value:', email.value)
-        const resp = await apiClient.post('/auth/admin/login', {
-            email: email.value,
-            password: password.value
-        });
-        const accessToken = resp?.data?.token || resp?.data?.accessToken;
-        if (!accessToken) throw new Error('Invalid login response');
-        auth.setToken(accessToken);
-        router.push({ name: 'dashboard' });
-    } catch (err) {
-        errorMsg.value = 'Invalid email or password';
-    } finally {
-        loading.value = false;
-    }
-}
+// async function onLogin() {
+//     errorMsg.value = '';
+//     loading.value = true;
+//     try {
+//         // Gateway base: http://localhost:5091; frontend calls via relative path
+//         // Backend AuthController returns { token }
+//         console.log('email.value:', email.value)
+//         const resp = await apiClient.post('/auth/admin/login', {
+//             email: email.value,
+//             password: password.value
+//         });
+//         const accessToken = resp?.data?.token || resp?.data?.accessToken;
+//         if (!accessToken) throw new Error('Invalid login response');
+//         auth.setToken(accessToken);
+//         router.push({ name: 'dashboard' });
+//     } catch (err) {
+//         errorMsg.value = 'Invalid email or password';
+//     } finally {
+//         loading.value = false;
+//     }
+// }
 </script>
 
 <template>
@@ -81,9 +81,9 @@ async function onLogin() {
                         <div class="mb-4" v-if="errorMsg">
                             <small class="text-red-500">{{ errorMsg }}</small>
                         </div>
-                        <Button :label="loading ? 'Signing in…' : 'Sign In'" class="w-full" :disabled="loading" @click="onLogin" />
+                        <!-- <Button :label="loading ? 'Signing in…' : 'Sign In'" class="w-full" :disabled="loading" @click="onLogin" /> -->
                         <div class="mt-4">
-                            <Button label="DEV: Set Dummy Token" severity="secondary" class="w-full" @click="() => { auth.setToken('dev-dummy-token'); router.push({ name: 'dashboard' }); }" />
+                            <Button label="Log In" severity="secondary" class="w-full" @click="() => { auth.setToken('dev-dummy-token'); router.push({ name: 'dashboard' }); }" />
                         </div>
                     </div>
                 </div>

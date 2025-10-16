@@ -4,6 +4,28 @@ import NotificationsWidget from '@/components/dashboard/NotificationsWidget.vue'
 import RecentSalesWidget from '@/components/dashboard/RecentSalesWidget.vue';
 import RevenueStreamWidget from '@/components/dashboard/RevenueStreamWidget.vue';
 import StatsWidget from '@/components/dashboard/StatsWidget.vue';
+import { getProtected } from '@/service/TestService';
+import { ref } from 'vue';
+
+const protectedResult = ref(null);
+const loading = ref(false);
+const error = ref('');
+
+async function callProtected() {
+    loading.value = true;
+    error.value = '';
+    protectedResult.value = null;
+    try {
+        const data = await getProtected();
+        protectedResult.value = data;
+        console.log('protected response:', data);
+    } catch (e) {
+        error.value = e?.data?.message || e?.message || 'Request failed';
+        console.error('protected error:', e);
+    } finally {
+        loading.value = false;
+    }
+}
 </script>
 
 <template>
@@ -17,6 +39,11 @@ import StatsWidget from '@/components/dashboard/StatsWidget.vue';
         <div class="col-span-12 xl:col-span-6">
             <RevenueStreamWidget />
             <NotificationsWidget />
+            <div class="mt-6 p-4 border rounded">
+                <Button :label="loading ? 'Calling…' : 'Test Protected API'" @click="callProtected" :disabled="loading" />
+                <pre class="mt-3 whitespace-pre-wrap" v-if="protectedResult">{{ JSON.stringify(protectedResult, null, 2) }}</pre>
+                <small class="text-red-500" v-if="error">{{ error }}</small>
+            </div>
         </div>
     </div>
 </template>

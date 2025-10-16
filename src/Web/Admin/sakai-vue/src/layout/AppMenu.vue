@@ -1,7 +1,17 @@
 <script setup>
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 import AppMenuItem from './AppMenuItem.vue';
+
+const router = useRouter();
+const auth = useAuthStore();
+
+function onLogout() {
+    auth.clearToken();
+    router.push({ name: 'login' });
+}
 
 const model = ref([
     {
@@ -45,7 +55,7 @@ const model = ref([
                     {
                         label: 'Login',
                         icon: 'pi pi-fw pi-sign-in',
-                        to: '/auth/login'
+                        to: '/login'
                     },
                     {
                         label: 'Error',
@@ -133,6 +143,16 @@ const model = ref([
                 icon: 'pi pi-fw pi-github',
                 url: 'https://github.com/primefaces/sakai-vue',
                 target: '_blank'
+            }
+        ]
+    },
+    {
+        label: 'Account',
+        items: [
+            {
+                label: 'Logout',
+                icon: 'pi pi-fw pi-sign-out',
+                command: onLogout
             }
         ]
     }
