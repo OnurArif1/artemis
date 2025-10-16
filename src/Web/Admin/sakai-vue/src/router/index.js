@@ -1,5 +1,6 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -7,6 +8,7 @@ const router = createRouter({
         {
             path: '/',
             component: AppLayout,
+            meta: { requiresAuth: true },
             children: [
                 {
                     path: '/',
@@ -118,9 +120,10 @@ const router = createRouter({
         },
 
         {
-            path: '/auth/login',
+            path: '/login',
             name: 'login',
-            component: () => import('@/views/pages/auth/Login.vue')
+            component: () => import('@/views/pages/auth/Login.vue'),
+            meta: { requiresAuth: false }
         },
         {
             path: '/auth/access',
@@ -136,3 +139,21 @@ const router = createRouter({
 });
 
 export default router;
+
+// auth guard using route meta
+router.beforeEach((to, from, next) => {
+    const auth = useAuthStore();
+    console.log('auth:', auth)
+    const requiresAuth = to.matched.some((r) => r.meta && r.meta.requiresAuth);
+    console.log('requiresAuth:', requiresAuth)
+    if (requiresAuth && !auth.isAuthenticated) {
+        console.log('logined:', requiresAuth)
+        next({ name: 'login' });
+        return;
+    }
+    if (!requiresAuth && auth.isAuthenticated && to.name === 'login') {
+        next({ name: 'dashboard' });
+        return;
+    }
+    next();
+});

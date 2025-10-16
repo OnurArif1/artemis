@@ -8,9 +8,13 @@ import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
 import '@/assets/styles.scss';
+import { createPinia } from 'pinia';
+import { useAuthStore } from '@/stores/auth';
 
 const app = createApp(App);
 
+const pinia = createPinia();
+app.use(pinia);
 app.use(router);
 app.use(PrimeVue, {
     theme: {
@@ -22,5 +26,9 @@ app.use(PrimeVue, {
 });
 app.use(ToastService);
 app.use(ConfirmationService);
+
+// hydrate auth before mounting to ensure correct initial redirect
+const auth = useAuthStore();
+auth.hydrateFromStorage();
 
 app.mount('#app');
