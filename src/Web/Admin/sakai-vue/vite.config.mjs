@@ -10,6 +10,18 @@ export default defineConfig({
     optimizeDeps: {
         noDiscovery: true
     },
+    server: {
+        proxy: {
+            '/api': {
+                target: 'http://localhost:5091', // Artemis.Gateway
+                changeOrigin: true
+            },
+            '/identity': {
+                target: 'http://localhost:5091', // Artemis.Gateway
+                changeOrigin: true
+            }
+        }
+    },
     plugins: [
         vue(),
         Components({

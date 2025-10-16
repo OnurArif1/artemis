@@ -20,6 +20,7 @@ public class TestController : ControllerBase
     [HttpGet("protected")]
     public IActionResult GetProtected()
     {
+        // authorize ol ve buraya düş
         var user = User.Identity?.Name;
         var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
         
