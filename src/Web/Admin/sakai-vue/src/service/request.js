@@ -6,7 +6,7 @@ const service = axios.create({
     baseURL: '/api',
     timeout: 1000000,
     maxContentLength: 200000,
-    withCredentials: true
+    withCredentials: false
 });
 
 service.interceptors.request.use(

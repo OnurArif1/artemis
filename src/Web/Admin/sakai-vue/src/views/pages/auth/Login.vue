@@ -1,9 +1,9 @@
 <script setup>
 import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
 import { ref } from 'vue';
-import apiClient from '@/service/ApiClient';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const email = ref('');
 const password = ref('');
@@ -13,27 +13,34 @@ const errorMsg = ref('');
 const router = useRouter();
 const auth = useAuthStore();
 
-// async function onLogin() {
-//     errorMsg.value = '';
-//     loading.value = true;
-//     try {
-//         // Gateway base: http://localhost:5091; frontend calls via relative path
-//         // Backend AuthController returns { token }
-//         console.log('email.value:', email.value)
-//         const resp = await apiClient.post('/auth/admin/login', {
-//             email: email.value,
-//             password: password.value
-//         });
-//         const accessToken = resp?.data?.token || resp?.data?.accessToken;
-//         if (!accessToken) throw new Error('Invalid login response');
-//         auth.setToken(accessToken);
-//         router.push({ name: 'dashboard' });
-//     } catch (err) {
-//         errorMsg.value = 'Invalid email or password';
-//     } finally {
-//         loading.value = false;
-//     }
-// }
+async function onLogin() {
+    errorMsg.value = '';
+    loading.value = true;
+    try {
+        // Gateway base: http://localhost:5091; frontend calls via relative path
+
+        const form = new URLSearchParams();
+        form.append('grant_type', 'password');
+        form.append('client_id', 'artemis.client');
+        form.append('client_secret', 'artemis_secret');
+        form.append('username', email.value);
+        form.append('password', password.value);
+        form.append('scope', 'openid profile email roles artemis.api');
+
+        const resp = await axios.post('http://localhost:5091/identity/connect/token', form, {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        });
+
+        const accessToken = resp?.data?.access_token;
+        if (!accessToken) throw new Error('Invalid login response');
+        auth.setToken(accessToken);
+        router.push({ name: 'dashboard' });
+    } catch (err) {
+        errorMsg.value = 'Invalid email or password';
+    } finally {
+        loading.value = false;
+    }
+}
 </script>
 
 <template>
@@ -83,7 +90,7 @@ const auth = useAuthStore();
                         </div>
                         <!-- <Button :label="loading ? 'Signing in…' : 'Sign In'" class="w-full" :disabled="loading" @click="onLogin" /> -->
                         <div class="mt-4">
-                            <Button label="Log In" severity="secondary" class="w-full" @click="() => { auth.setToken('dev-dummy-token'); router.push({ name: 'dashboard' }); }" />
+                            <Button label="Log In" severity="secondary" class="w-full" @click="onLogin" />
                         </div>
                     </div>
                 </div>
