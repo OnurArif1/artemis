@@ -13,8 +13,8 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.ToTable("CategoryHashtagMap");
             builder.HasKey(keyExpression: chm => chm.Id);
             builder.Property(c => c.Id).UseHiLo("CategoryHashtagMap_hilo").IsRequired();
-            builder.Property(chm => chm.CategoryId).IsRequired();
-            builder.Property(chm => chm.HashtagId).IsRequired();
+            builder.Property(chm => chm.CategoryId);
+            builder.Property(chm => chm.HashtagId);
 
              builder.HasOne(m => m.Category)
                 .WithMany()

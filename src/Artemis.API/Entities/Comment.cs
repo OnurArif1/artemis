@@ -1,5 +1,5 @@
 namespace Artemis.API.Entities;
-public class Command : BaseEntity
+public class Comment : BaseEntity
 {
     public int TopicId { get; set; }
     public virtual Topic Topic { get; set; }

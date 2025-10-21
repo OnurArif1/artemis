@@ -12,10 +12,10 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.ToTable("Party");
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Id).UseHiLo("Party_hilo").IsRequired();
-            builder.Property(p => p.PartyName).IsRequired();
-            builder.Property(p => p.PartyType).IsRequired();
-            builder.Property(p => p.IsBanned).IsRequired();
-            builder.Property(p => p.DeviceId).IsRequired();
+            builder.Property(p => p.PartyName);
+            builder.Property(p => p.PartyType);
+            builder.Property(p => p.IsBanned);
+            builder.Property(p => p.DeviceId);
         }
     }
 }

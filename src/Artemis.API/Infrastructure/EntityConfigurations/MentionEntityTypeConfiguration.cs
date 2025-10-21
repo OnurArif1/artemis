@@ -8,11 +8,13 @@ public class MentionEntityTypeConfiguration : IEntityTypeConfiguration<Mention>
 {
     public void Configure(EntityTypeBuilder<Mention> builder)
     {
+        builder.ToTable("Mention");
+
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id).UseHiLo("Mention_hilo").IsRequired();
         builder.Property(c => c.RoomId);
         builder.Property(c => c.MessageId);
-        builder.Property(c => c.CommandId);
+        builder.Property(c => c.CommentId);
         builder.Property(c => c.TopicId);
 
         builder.HasOne(c => c.Topic)
@@ -30,9 +32,9 @@ public class MentionEntityTypeConfiguration : IEntityTypeConfiguration<Mention>
             .HasForeignKey(c => c.MessageId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(c => c.Command)
+        builder.HasOne(c => c.Comment)
             .WithMany()
-            .HasForeignKey(c => c.CommandId)
+            .HasForeignKey(c => c.CommentId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

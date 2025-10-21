@@ -4,17 +4,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Artemis.API.Infrastructure.EntityConfigurations;
 
-public class CommandEntityTypeConfiguration : IEntityTypeConfiguration<Command>
+public class CommentEntityTypeConfiguration : IEntityTypeConfiguration<Comment>
 {
-    public void Configure(EntityTypeBuilder<Command> builder)
+    public void Configure(EntityTypeBuilder<Comment> builder)
     {
+        builder.ToTable("Comment");
+
         builder.HasKey(c => c.Id);
-        builder.Property(c => c.Id).UseHiLo("Command_hilo").IsRequired();
-        builder.Property(c => c.TopicId).IsRequired();
-        builder.Property(c => c.Topic).IsRequired();
-        builder.Property(c => c.PartyId).IsRequired();
-        builder.Property(c => c.Upvote).IsRequired();
-        builder.Property(c => c.Downvote).IsRequired();
+        builder.Property(c => c.Id).UseHiLo("Comment_hilo").IsRequired();
+        builder.Property(c => c.TopicId);
+        builder.Property(c => c.PartyId);
+        builder.Property(c => c.Upvote);
+        builder.Property(c => c.Downvote);
 
         builder.HasOne(c => c.Topic)
             .WithMany()

@@ -8,8 +8,8 @@ public class OrganizationEntityTypeConfiguration : IEntityTypeConfiguration<Orga
 {
     public void Configure(EntityTypeBuilder<Organization> builder)
     {
-        builder.HasKey(o => o.Id);
-        builder.Property(o => o.Id).UseHiLo("Organization_hilo").IsRequired();
+        builder.ToTable("Organization");
 
+        builder.Property(o => o.Id).UseHiLo("Organization_hilo").IsRequired();
     }
 }

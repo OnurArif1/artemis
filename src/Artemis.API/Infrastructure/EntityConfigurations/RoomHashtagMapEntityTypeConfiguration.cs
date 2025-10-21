@@ -12,8 +12,8 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.ToTable("RoomHashtagMap");
             builder.HasKey(rhm => rhm.Id);
             builder.Property(rhm => rhm.Id).UseHiLo("RoomHashtagMap_hilo").IsRequired();
-            builder.Property(rhm => rhm.RoomId).IsRequired();
-            builder.Property(rhm => rhm.HashtagId).IsRequired();
+            builder.Property(rhm => rhm.RoomId);
+            builder.Property(rhm => rhm.HashtagId);
 
             builder.HasOne(rhm => rhm.Room)
                 .WithMany()

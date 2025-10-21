@@ -11,11 +11,11 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.ToTable("Message");
             builder.HasKey(m => m.Id);
             builder.Property(propertyExpression: m => m.Id).UseHiLo("Message_hilo").IsRequired();
-            builder.Property(m => m.RoomId).IsRequired();
-            builder.Property(m => m.PartyId).IsRequired();
-            builder.Property(m => m.Upvote).IsRequired();
-            builder.Property(m => m.Downvote).IsRequired();
-            builder.Property(m => m.LastUpdateDate).IsRequired();
+            builder.Property(m => m.RoomId);
+            builder.Property(m => m.PartyId);
+            builder.Property(m => m.Upvote);
+            builder.Property(m => m.Downvote);
+            builder.Property(m => m.LastUpdateDate);
 
             builder.HasOne(m => m.Room)
                 .WithMany()

@@ -1,11 +1,5 @@
-using Artemis.API.Data;
-using Artemis.API.Repositories;
-using Artemis.API.Abstract;
-using src.Artemis.API.Entities;
+using Artemis.API.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // DbContext'i PostgreSQL ile bağla
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+builder.Services.AddDbContext<ArtemisDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
 
@@ -40,11 +34,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// DI - Repositories
-builder.Services.AddScoped<IComment, CommentRepository>();
-builder.Services.AddScoped<IPost, PostRepository>();
-builder.Services.AddScoped<IAdmin, AdminRepository>();
-
 // Identity Server Authentication
 builder.Services
     .AddAuthentication("Bearer")
@@ -60,7 +49,7 @@ var app = builder.Build();
 // Development ortamında veritabanı migrasyonlarını otomatik uygula
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ArtemisDbContext>();
     dbContext.Database.Migrate();
 }
 

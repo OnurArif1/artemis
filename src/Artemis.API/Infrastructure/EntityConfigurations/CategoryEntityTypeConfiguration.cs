@@ -12,7 +12,7 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.ToTable("Category");
             builder.HasKey(keyExpression: c => c.Id);
             builder.Property(c => c.Id).UseHiLo("Category_hilo").IsRequired();
-            builder.Property(c => c.Title).IsRequired();
+            builder.Property(c => c.Title);
         }
     }
 }

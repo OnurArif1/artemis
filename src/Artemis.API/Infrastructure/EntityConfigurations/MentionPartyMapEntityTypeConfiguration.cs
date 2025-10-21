@@ -8,10 +8,11 @@ public class MentionPartyMapEntityTypeConfiguration : IEntityTypeConfiguration<M
 {
     public void Configure(EntityTypeBuilder<MentionPartyMap> builder)
     {
+        builder.ToTable("MentionPartyMap");
+
         builder.HasKey(mpm => mpm.Id);
         builder.Property(mpm => mpm.Id).UseHiLo("MentionPartyMap_hilo").IsRequired();
         builder.Property(mpm => mpm.MentionId);
-        builder.Property(mpm => mpm.Mention);
         builder.Property(mpm => mpm.PartyId);
 
         builder.HasOne(mpm => mpm.Mention)

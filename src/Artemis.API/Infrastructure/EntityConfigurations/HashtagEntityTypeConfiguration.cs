@@ -12,7 +12,7 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.ToTable("Hashtag");
             builder.HasKey(h => h.Id);
             builder.Property(h => h.Id).UseHiLo("Hashtag_hilo").IsRequired();
-            builder.Property(h => h.HashtagName).IsRequired();
+            builder.Property(h => h.HashtagName);
         }
     }
 }

@@ -8,8 +8,8 @@ public class PersonEntityTypeConfiguration : IEntityTypeConfiguration<Person>
 {
     public void Configure(EntityTypeBuilder<Person> builder)
     {
-        builder.HasKey(p => p.Id);
-        builder.Property(p => p.Id).UseHiLo("Person_hilo").IsRequired();
+        builder.ToTable("Person");
 
+        builder.Property(p => p.Id).UseHiLo("Person_hilo").IsRequired();
     }
 }

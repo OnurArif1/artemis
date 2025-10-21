@@ -12,15 +12,15 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.ToTable("Room");
             builder.HasKey(r => r.Id);
             builder.Property(r => r.Id).UseHiLo("Room_hilo").IsRequired();
-            builder.Property(r => r.Title).IsRequired();
-            builder.Property(r => r.LocationX).IsRequired();
-            builder.Property(r => r.LocationY).IsRequired();
-            builder.Property(r => r.Type).IsRequired();
-            builder.Property(r => r.LifeCycle).IsRequired();
-            builder.Property(r => r.ChannelId).IsRequired();
-            builder.Property(r => r.ReferenceId).IsRequired();
-            builder.Property(r => r.Upvote).IsRequired();
-            builder.Property(r => r.Downvote).IsRequired();
+            builder.Property(r => r.Title);
+            builder.Property(r => r.LocationX);
+            builder.Property(r => r.LocationY);
+            builder.Property(r => r.Type);
+            builder.Property(r => r.LifeCycle);
+            builder.Property(r => r.ChannelId);
+            builder.Property(r => r.ReferenceId);
+            builder.Property(r => r.Upvote);
+            builder.Property(r => r.Downvote);
         }
     }
 }

@@ -12,8 +12,8 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.ToTable("Subscribe");
             builder.HasKey(s => s.Id);
             builder.Property(s => s.Id).UseHiLo("Subscribe_hilo").IsRequired();
-            builder.Property(s => s.CreatedPartyId).IsRequired();
-            builder.Property(s => s.SubscriberPartyId).IsRequired();
+            builder.Property(s => s.CreatedPartyId);
+            builder.Property(s => s.SubscriberPartyId);
 
             builder.HasOne(s => s.CreatedParty)
                 .WithMany()

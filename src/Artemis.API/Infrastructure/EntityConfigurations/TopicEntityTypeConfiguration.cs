@@ -8,16 +8,18 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
     {
         public void Configure(EntityTypeBuilder<Topic> builder)
         {
+            builder.ToTable("Topic");
+
             builder.HasKey(t => t.Id);
             builder.Property(t => t.Id).UseHiLo("Topic_hilo").IsRequired();
-            builder.Property(t => t.Title).IsRequired();
-            builder.Property(t => t.LocationX).IsRequired();
-            builder.Property(t => t.LocationY).IsRequired();
-            builder.Property(t => t.CategoryId).IsRequired();
+            builder.Property(t => t.Title);
+            builder.Property(t => t.LocationX);
+            builder.Property(t => t.LocationY);
+            builder.Property(t => t.CategoryId);
             builder.Property(t => t.MentionId);
-            builder.Property(t => t.Upvote).IsRequired();
-            builder.Property(t => t.Downvote).IsRequired();
-            builder.Property(t => t.LastUpdateDate).IsRequired();
+            builder.Property(t => t.Upvote);
+            builder.Property(t => t.Downvote);
+            builder.Property(t => t.LastUpdateDate);
             
             builder.HasOne(t => t.Category)
                    .WithMany()
