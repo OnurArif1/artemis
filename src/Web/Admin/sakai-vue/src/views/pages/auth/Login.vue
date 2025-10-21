@@ -25,15 +25,26 @@ async function onLogin() {
         form.append('password', password.value);
         form.append('scope', 'openid profile email roles artemis.api');
 
-        const resp = await axios.post('http://localhost:5091/identity/connect/token', form, {
+        const tokenUrl = import.meta.env.VITE_IDENTITY_TOKEN_URL;
+
+        const resp = await axios.post(tokenUrl, form, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
 
         const accessToken = resp?.data?.access_token;
+        const expiresIn = resp?.data?.expires_in;
         if (!accessToken) throw new Error('Invalid login response');
-        auth.setToken(accessToken);
+
+        localStorage.setItem('auth.token', accessToken);
+        if (expiresIn) {
+            localStorage.setItem('auth.expiresAt', (Date.now() + Number(expiresIn) * 1000).toString());
+        }
+        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+
+        auth.setToken?.(accessToken, expiresIn ? Number(expiresIn) : undefined);
         router.push({ name: 'dashboard' });
     } catch (err) {
+        console.log('err:', err);
         errorMsg.value = 'Invalid email or password';
     } finally {
         loading.value = false;

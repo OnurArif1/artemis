@@ -16,12 +16,13 @@ const router = createRouter({
                     component: () => import('@/views/Dashboard.vue')
                 }
             ]
+        },
+        {
+            path: '/login',
+            name: 'login',
+            meta: { requiresAuth: true },
+            component: () => import('@/views/pages/auth/Login.vue')
         }
-        // {
-        //     path: '/landing',
-        //     name: 'landing',
-        //     component: () => import('@/views/pages/Landing.vue')
-        // }
     ]
 });
 

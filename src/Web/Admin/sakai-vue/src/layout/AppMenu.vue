@@ -10,7 +10,31 @@ const auth = useAuthStore();
 
 function onLogout() {
     auth.clearToken();
-    router.push({ name: 'login' });
+
+    // try named route first, fallback to common login paths
+    (async () => {
+        try {
+            const routes = router.getRoutes();
+            console.log(
+                'router routes:',
+                routes.map((r) => ({ name: r.name, path: r.path, meta: r.meta }))
+            );
+
+            await router.push({ name: 'login' });
+        } catch (e) {
+            const fallbackPaths = ['/login', '/auth/login', '/signin', '/'];
+            for (const p of fallbackPaths) {
+                try {
+                    await router.push(p);
+                    return;
+                } catch {
+                    // ignore
+                }
+            }
+            // last resort: hard redirect to root
+            window.location.href = '/';
+        }
+    })();
 }
 
 const model = ref([

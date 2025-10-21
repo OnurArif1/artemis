@@ -1,44 +1,21 @@
 <script setup>
-import BestSellingWidget from '@/components/dashboard/BestSellingWidget.vue';
-import NotificationsWidget from '@/components/dashboard/NotificationsWidget.vue';
-import RecentSalesWidget from '@/components/dashboard/RecentSalesWidget.vue';
-import RevenueStreamWidget from '@/components/dashboard/RevenueStreamWidget.vue';
-import StatsWidget from '@/components/dashboard/StatsWidget.vue';
-import { getProtected, getPublic } from '@/service/TestService';
 import { ref } from 'vue';
+import { getProtected } from '@/service/TestService';
 
-const protectedResult = ref(null);
-const publicResult = ref(null);
 const loading = ref(false);
+const data = ref(null);
 const error = ref('');
 
-async function callProtected() {
-    loading.value = true;
+async function fetchProtected() {
     error.value = '';
-    protectedResult.value = null;
-    try {
-        const data = await getProtected();
-        protectedResult.value = data;
-        console.log('protected response:', data);
-    } catch (e) {
-        error.value = e?.data?.message || e?.message || 'Request failed';
-        console.error('protected error:', e);
-    } finally {
-        loading.value = false;
-    }
-}
-
-async function callPublic() {
+    data.value = null;
     loading.value = true;
-    error.value = '';
-    publicResult.value = null;
     try {
-        const data = await getPublic();
-        publicResult.value = data;
-        console.log('public response:', data);
+        const res = await getProtected();
+        data.value = res;
     } catch (e) {
-        error.value = e?.data?.message || e?.message || 'Request failed';
-        console.error('public error:', e);
+        console.error(e);
+        error.value = e?.message || 'Request failed';
     } finally {
         loading.value = false;
     }
@@ -48,5 +25,17 @@ async function callPublic() {
 <template>
     <div class="grid grid-cols-12 gap-8">
         <div>Admin Dashboard</div>
+
+        <div class="mt-4">
+            <button class="p-2 bg-blue-600 text-white rounded" :disabled="loading" @click="fetchProtected">
+                {{ loading ? 'Loading...' : 'Get Protected' }}
+            </button>
+        </div>
+
+        <div class="mt-4">
+            <div v-if="error" class="text-red-600">Error: {{ error }}</div>
+            <pre v-if="data" class="mt-2 p-2 bg-gray-100 rounded">{{ JSON.stringify(data, null, 2) }}</pre>
+        </div>
     </div>
 </template>
+<style scoped></style>
