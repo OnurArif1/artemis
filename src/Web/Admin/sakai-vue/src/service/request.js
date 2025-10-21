@@ -54,5 +54,3 @@ export default function request({ method, url, data, params, baseURL, headers })
         headers
     });
 }
-
-

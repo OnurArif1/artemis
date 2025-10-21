@@ -8,7 +8,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use((config) => {
     const authStore = useAuthStore();
-    console.log('authStore.token:', authStore.token)
+    console.log('authStore.token:', authStore.token);
     if (authStore.token) {
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${authStore.token}`;
@@ -17,5 +17,3 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export default apiClient;
-
-

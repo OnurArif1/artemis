@@ -47,23 +47,6 @@ async function callPublic() {
 
 <template>
     <div class="grid grid-cols-12 gap-8">
-        <StatsWidget />
-
-        <div class="col-span-12 xl:col-span-6">
-            <RecentSalesWidget />
-            <BestSellingWidget />
-        </div>
-        <div class="col-span-12 xl:col-span-6">
-            <RevenueStreamWidget />
-            <NotificationsWidget />
-            <div class="mt-6 p-4 border rounded">
-                <Button :label="loading ? 'Calling…' : 'Test Protected API'" @click="callProtected" :disabled="loading" />
-                <pre class="mt-3 whitespace-pre-wrap" v-if="protectedResult">{{ JSON.stringify(protectedResult, null, 2) }}</pre>
-                <small class="text-red-500" v-if="error">{{ error }}</small>
-                <div class="mt-4"/>
-                <Button :label="loading ? 'Calling…' : 'Test Public API'" @click="callPublic" :disabled="loading" />
-                <pre class="mt-3 whitespace-pre-wrap" v-if="publicResult">{{ JSON.stringify(publicResult, null, 2) }}</pre>
-            </div>
-        </div>
+        <div>Admin Dashboard</div>
     </div>
 </template>
