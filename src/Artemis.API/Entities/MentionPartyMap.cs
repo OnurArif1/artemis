@@ -1,0 +1,8 @@
+namespace Artemis.API.Entities;
+public class MentionPartyMap : BaseEntity
+{
+    public int MentionId { get; set; }
+    public virtual Mention Mention { get; set; }
+    public int PartyId { get; set; }
+    public virtual Party Party { get; set; }
+}

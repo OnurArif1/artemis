@@ -1,22 +1,18 @@
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+using Artemis.API.Entities.Enums;
 
-namespace src.Artemis.API.Entities
+namespace Artemis.API.Entities;
+public class Topic : BaseEntity
 {
-    public class Topic
-    {
-        [Key]
-        public int Id { get; set; }
-
-        [Required, MaxLength(200)]
-        public string Title { get; set; }
-
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        public int PlaceId { get; set; }
-        public Place Place { get; set; }
-
-        public ICollection<Post> Posts { get; set; }
-    }
+    public int PartyId { get; set; }
+    public virtual Party Party { get; set; }
+    public string Title { get; set; }
+    public RoomType Type { get; set; }
+    public double LocationX { get; set; }
+    public double LocationY { get; set; }
+    public int CategoryId { get; set; }
+    public virtual Category Category { get; set; }
+    public int? MentionId { get; set; }
+    public int Upvote { get; set; }
+    public int Downvote { get; set; }
+    public DateTime LastUpdateDate { get; set; }
 }
