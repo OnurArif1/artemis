@@ -1,5 +1,6 @@
 using Artemis.API.Infrastructure;
 using Artemis.API.Services;
+using Artemis.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,9 @@ builder.Services.AddDbContext<ArtemisDbContext>(options =>
 
 // Controller desteğini ekle
 builder.Services.AddControllers();
+
+// Services kayıtları
+builder.Services.AddScoped<IRoomService, RoomService>();
 
 // CORS (development için izin ver)
 builder.Services.AddCors(options =>

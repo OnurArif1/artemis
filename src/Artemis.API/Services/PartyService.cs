@@ -5,25 +5,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Artemis.API.Services;
 
-public class RoomService : IRoomService
+public class PartyService : IPartyService
 {
     private readonly ArtemisDbContext _artemisDbContext;
 
-    public RoomService(ArtemisDbContext artemisDbContext)
+    public PartyService(ArtemisDbContext artemisDbContext)
     {
         _artemisDbContext = artemisDbContext;
     }
 
-    public async ValueTask Create(Room room)
+    public async ValueTask Create(Party party)
     {
         // todo ask. how to unique rooms?
-        await _artemisDbContext.Rooms.AddAsync(room);
+        await _artemisDbContext.Parties.AddAsync(party);
         _artemisDbContext.SaveChanges();
     }
 
-    public async ValueTask<IEnumerable<RoomGetViewModel>> GetList(RoomFilterViewModel filterViewModel)
+    public async ValueTask<IEnumerable<PartyGetViewModel>> GetList(PartyFilterViewModel filterViewModel)
     {
-        var query = (from r in _artemisDbContext.Rooms
+        var query = (from r in _artemisDbContext.Parties
                      select new { r }).AsQueryable();
 
         var count = await query.CountAsync();
@@ -31,12 +31,12 @@ public class RoomService : IRoomService
                      .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
                      .Take(filterViewModel.PageSize);
 
-        var rooms = await (query.Select(rg => new RoomGetViewModel()
+        var parties = await (query.Select(rg => new PartyGetViewModel()
         {
             Id = rg.r.Id,
             Count = count
         })).AsNoTracking().ToListAsync();
 
-        return rooms;
+        return parties;
     }
 }
