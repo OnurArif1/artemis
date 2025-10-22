@@ -5,7 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Services kayıtları
 builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IPartyService, PartyService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -22,10 +25,6 @@ builder.Services.AddDbContext<ArtemisDbContext>(options =>
 
 // Controller desteğini ekle
 builder.Services.AddControllers();
-
-// Services kayıtları
-builder.Services.AddScoped<IRoomService, RoomService>();
-
 // CORS (development için izin ver)
 builder.Services.AddCors(options =>
 {
