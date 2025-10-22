@@ -1,4 +1,3 @@
-using Artemis.API.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 
