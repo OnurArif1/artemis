@@ -40,7 +40,10 @@ function onLogout() {
 const model = ref([
     {
         label: 'Home',
-        items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },{ label: 'Rooms', icon: 'pi pi-fw pi-table', to: '/room/list' }]
+        items: [
+            { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
+            { label: 'Rooms', icon: 'pi pi-fw pi-table', to: '/room/list' }
+        ]
     },
     {
         label: 'Account',

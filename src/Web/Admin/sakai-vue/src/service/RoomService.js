@@ -11,4 +11,12 @@ export default class RoomService {
         });
         return response?.data ?? response;
     }
+
+    async create(payload) {
+        await this.request({
+            method: 'post',
+            url: '/room/create',
+            data: payload
+        });
+    }
 }

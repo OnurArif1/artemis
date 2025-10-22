@@ -1,3 +1,4 @@
+using Artemis.API.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -19,5 +20,12 @@ public class RoomController : ControllerBase
     {
         var viewModels = await _roomService.GetList(viewModel);
         return Ok(viewModels);
+    }
+
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateAsync(Room room)
+    {
+        await _roomService.Create(room);
+        return Ok();
     }
 }
