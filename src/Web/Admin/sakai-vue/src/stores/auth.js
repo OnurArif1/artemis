@@ -45,18 +45,34 @@ export const useAuthStore = defineStore('auth', () => {
         localStorage.removeItem('auth.expiresAt');
         delete axios.defaults.headers.common['Authorization'];
     }
-
-    // add compatibility alias expected by components
     function clearToken() {
         clear();
     }
 
     function isAuthenticated() {
-        if (!token.value) return false;
-        if (expiresAt.value && Date.now() > expiresAt.value) {
+        const storedToken = localStorage.getItem('auth.token');
+        const storedExpires = localStorage.getItem('auth.expiresAt');
+        
+        if (!storedToken) {
             clear();
             return false;
         }
+        
+        if (storedExpires) {
+            const exp = parseInt(storedExpires, 10);
+            if (isNaN(exp) || (exp && Date.now() > exp)) {
+                clear();
+                return false;
+            }
+        }
+        if (storedToken !== token.value) {
+            token.value = storedToken;
+            if (storedExpires) {
+                expiresAt.value = parseInt(storedExpires, 10);
+            }
+            axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+        }
+        
         return true;
     }
 

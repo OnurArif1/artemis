@@ -20,7 +20,7 @@ const router = createRouter({
         {
             path: '/login',
             name: 'login',
-            meta: { requiresAuth: true },
+            meta: { requiresAuth: false },
             component: () => import('@/views/pages/auth/Login.vue')
         }
     ]
@@ -28,17 +28,18 @@ const router = createRouter({
 
 export default router;
 
-// auth guard using route meta
 router.beforeEach((to, from, next) => {
     const auth = useAuthStore();
     const requiresAuth = to.matched.some((r) => r.meta && r.meta.requiresAuth);
-    if (requiresAuth && !auth.isAuthenticated) {
+    if (requiresAuth && !auth.isAuthenticated()) {
         next({ name: 'login' });
         return;
     }
-    if (!requiresAuth && auth.isAuthenticated && to.name === 'login') {
+
+    if (to.name === 'login' && auth.isAuthenticated()) {
         next({ name: 'dashboard' });
         return;
     }
+    
     next();
 });
