@@ -10,6 +10,7 @@ import ToastService from 'primevue/toastservice';
 import '@/assets/styles.scss';
 import { createPinia } from 'pinia';
 import { useAuthStore } from '@/stores/auth';
+import { useLayout } from '@/layout/composables/layout';
 
 const app = createApp(App);
 
@@ -28,5 +29,9 @@ app.use(ToastService);
 app.use(ConfirmationService);
 const auth = useAuthStore();
 auth.hydrateFromStorage();
+const { layoutConfig } = useLayout();
+if (layoutConfig.darkTheme) {
+    document.documentElement.classList.add('app-dark');
+}
 
 app.mount('#app');
