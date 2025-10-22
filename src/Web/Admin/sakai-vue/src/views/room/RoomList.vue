@@ -57,7 +57,7 @@ onMounted(load);
             </Column>
         </DataTable>
 
-        <Dialog v-model:visible="showCreate" modal :closable="false" header="Create Room" style="width:500px">
+        <Dialog v-model:visible="showCreate" modal :closable="false" header="Create Room" style="width: 500px">
             <CreateRoom @created="onCreated" @cancel="onCancel" />
         </Dialog>
     </div>

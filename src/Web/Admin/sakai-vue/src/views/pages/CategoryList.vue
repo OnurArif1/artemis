@@ -21,7 +21,7 @@ onMounted(load);
 <template>
     <div>
         <DataTable :value="categories" :paginator="true" :rows="10">
-             <template #empty> No categories found. </template>
+            <template #empty> No categories found. </template>
             <template #loading> Loading categories data. Please wait.</template>
             <Column field="id" header="Id" style="min-width: 12rem">
                 <template #body="{ data }">

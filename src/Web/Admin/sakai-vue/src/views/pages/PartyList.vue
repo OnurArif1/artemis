@@ -21,7 +21,7 @@ onMounted(load);
 <template>
     <div>
         <DataTable :value="parties" :paginator="true" :rows="10">
-             <template #empty> No parties found. </template>
+            <template #empty> No parties found. </template>
             <template #loading> Loading parties data. Please wait.</template>
             <Column field="id" header="Id" style="min-width: 12rem">
                 <template #body="{ data }">
