@@ -1,12 +1,13 @@
 using Artemis.API.Infrastructure;
+using Artemis.API.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ConnectionString'i configuration'dan oku
+builder.Services.AddScoped<IRoomService, RoomService>();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// DbContext'i PostgreSQL ile bağla
 builder.Services.AddDbContext<ArtemisDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
@@ -46,23 +47,19 @@ builder.Services
 
 var app = builder.Build();
 
-// Development ortamında veritabanı migrasyonlarını otomatik uygula
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ArtemisDbContext>();
     dbContext.Database.Migrate();
 }
 
-// HTTPS yönlendirme
 app.UseHttpsRedirection();
 
-// CORS
 app.UseCors("DevCors");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Controller route’larını aktif et
 app.MapControllers();
 
 app.Run();
