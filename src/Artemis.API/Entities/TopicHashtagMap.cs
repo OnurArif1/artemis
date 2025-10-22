@@ -5,4 +5,5 @@ public class TopicHashtagMap : BaseEntity
     public int HashtagId { get; set; }
 
     public virtual Hashtag Hashtag { get; set; }
+    public DateTime CreateDate { get; set; }
 }

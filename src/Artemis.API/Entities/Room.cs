@@ -1,3 +1,5 @@
+using Artemis.API.Entities.Enums;
+
 namespace Artemis.API.Entities;
 public class Room : BaseEntity
 {
@@ -8,12 +10,13 @@ public class Room : BaseEntity
     public string Title { get; set; }
     public double LocationX { get; set; }
     public double LocationY { get; set; }
-    public double Type { get; set; }
+    public RoomType RoomType { get; set; }
     public double LifeCycle { get; set; }
     public double ChannelId { get; set; }
     public string ReferenceId { get; set; }
     public int Upvote { get; set; }
     public int Downvote { get; set; }
+    public DateTime CreateDate { get; set; }
 
     public virtual Category? Category { get; set; }
 }

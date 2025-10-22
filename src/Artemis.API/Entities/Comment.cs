@@ -8,4 +8,5 @@ public class Comment : BaseEntity
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime LastUpdateDate { get; set; }
+    public DateTime CreateDate { get; set; }
 }

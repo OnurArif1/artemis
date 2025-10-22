@@ -15,7 +15,6 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.Property(r => r.Title);
             builder.Property(r => r.LocationX);
             builder.Property(r => r.LocationY);
-            builder.Property(r => r.Type);
             builder.Property(r => r.LifeCycle);
             builder.Property(r => r.ChannelId);
             builder.Property(r => r.ReferenceId);

@@ -6,4 +6,5 @@ public class RoomHashtagMap : BaseEntity
 
     public virtual Room Room { get; set; }
     public virtual Hashtag Hashtag { get; set; }
+    public DateTime CreateDate { get; set; }
 }

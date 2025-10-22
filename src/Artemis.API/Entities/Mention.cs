@@ -9,5 +9,5 @@ public class Mention : BaseEntity
     public virtual Comment? Comment { get; set; }
     public int? TopicId { get; set; }
     public virtual Topic? Topic { get; set; }
-    
+    public DateTime CreateDate { get; set; }    
 }

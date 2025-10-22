@@ -8,4 +8,5 @@ public class Party : BaseEntity
     public PartyType PartyType { get; set; }
     public bool IsBanned { get; set; }
     public int DeviceId { get; set; }
+    public DateTime CreateDate { get; set; }
 }

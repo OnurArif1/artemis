@@ -8,5 +8,5 @@ public class Message : BaseEntity
     public int Downvote { get; set; }
     public DateTime LastUpdateDate { get; set; }
     public virtual Room Room { get; set; }
-
+    public DateTime CreateDate { get; set; }
 }

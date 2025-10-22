@@ -7,4 +7,5 @@ public class Subscribe : BaseEntity
     public virtual Party CreatedParty { get; set; }
     public int SubscriberPartyId { get; set; }
     public virtual Party SubscriberParty { get; set; }
+    public DateTime CreateDate { get; set; }
 }

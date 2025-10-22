@@ -3,6 +3,7 @@ using System;
 using Artemis.API.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Artemis.API.Infrastructure.Migrations
 {
     [DbContext(typeof(ArtemisDbContext))]
-    partial class ArtemisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251021235435_ChangedColumnTypeForRoomTable")]
+    partial class ChangedColumnTypeForRoomTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -78,9 +81,6 @@ namespace Artemis.API.Infrastructure.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -104,9 +104,6 @@ namespace Artemis.API.Infrastructure.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("HashtagId")
                         .HasColumnType("integer");
 
@@ -127,9 +124,6 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Downvote")
                         .HasColumnType("integer");
@@ -166,9 +160,6 @@ namespace Artemis.API.Infrastructure.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("HashtagName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -188,9 +179,6 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.Property<int?>("CommentId")
                         .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("MessageId")
                         .HasColumnType("integer");
@@ -225,9 +213,6 @@ namespace Artemis.API.Infrastructure.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("MentionId")
                         .HasColumnType("integer");
 
@@ -253,9 +238,6 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Downvote")
                         .HasColumnType("integer");
@@ -291,9 +273,6 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("DeviceId")
                         .HasColumnType("integer");
@@ -331,9 +310,6 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Downvote")
                         .HasColumnType("integer");
@@ -387,9 +363,6 @@ namespace Artemis.API.Infrastructure.Migrations
                     b.Property<string>("Comment")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("HashtagId")
                         .HasColumnType("integer");
 
@@ -415,9 +388,6 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("CreatedPartyId")
                         .HasColumnType("integer");
@@ -447,9 +417,6 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Downvote")
                         .HasColumnType("integer");
@@ -498,9 +465,6 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.Property<string>("Comment")
                         .HasColumnType("text");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("HashtagId")
                         .HasColumnType("integer");
