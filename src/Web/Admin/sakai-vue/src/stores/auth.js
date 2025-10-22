@@ -52,12 +52,12 @@ export const useAuthStore = defineStore('auth', () => {
     function isAuthenticated() {
         const storedToken = localStorage.getItem('auth.token');
         const storedExpires = localStorage.getItem('auth.expiresAt');
-        
+
         if (!storedToken) {
             clear();
             return false;
         }
-        
+
         if (storedExpires) {
             const exp = parseInt(storedExpires, 10);
             if (isNaN(exp) || (exp && Date.now() > exp)) {
@@ -72,7 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
             }
             axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         }
-        
+
         return true;
     }
 

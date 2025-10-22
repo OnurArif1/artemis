@@ -55,6 +55,6 @@ router.beforeEach((to, from, next) => {
         next({ name: 'dashboard' });
         return;
     }
-    
+
     next();
 });
