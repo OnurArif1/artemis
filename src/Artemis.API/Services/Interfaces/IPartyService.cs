@@ -6,4 +6,6 @@ public interface IPartyService
 {
     ValueTask<IEnumerable<PartyGetViewModel>> GetList(PartyFilterViewModel filterViewModel);
     ValueTask Create(Party party);
+    ValueTask<int?> GetPartyIdByName(string partyName);
+    ValueTask<string?> GetPartyNameById(int partyId);
 }

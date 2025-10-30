@@ -1,6 +1,6 @@
 using Artemis.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-
+using Artemis.API.Entities;
 
 namespace Artemis.API.Services;
 
@@ -20,5 +20,19 @@ public class PartyController : ControllerBase
     {
         var viewModels = await _partyService.GetList(viewModel);
         return Ok(viewModels);
+    }
+
+    [HttpGet("lookup/partyId")]
+    public async Task<IActionResult> LookupPartyId([FromQuery] string partyName)
+    {
+        var id = await _partyService.GetPartyIdByName(partyName);
+        return Ok(id);
+    }
+
+    [HttpGet("lookup/partyName")]
+    public async Task<IActionResult> LookupPartyName([FromQuery] int partyId)
+    {
+        var name = await _partyService.GetPartyNameById(partyId);
+        return Ok(name);
     }
 }
