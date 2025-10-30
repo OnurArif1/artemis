@@ -16,7 +16,7 @@ const emit = defineEmits(['created', 'updated', 'cancel']);
 
 const initial = {
   topicId: 1,
-  partyId: 1,
+  partyId: null,
   categoryId: 1,
   title: '',
   locationX: 0,
@@ -54,11 +54,16 @@ watch(
 
 const isEditMode = computed(() => !!props.room?.id);
 
-async function getPartyList() {
+async function getPartyLookup(filterText = '') {
+  const filter = {
+    searchText: filterText,
+    partyLooukpSearchType: 1
+  };
+
   try {
     partyLoading.value = true;
-    const response = await partyService.getLookup();
-    partyOptions.value = response.viewModels.map(p => ({
+    const response = await partyService.getLookup(filter);
+    partyOptions.value = (response.viewModels || []).map(p => ({
       label: p.partyName,
       value: p.partyId
     }));
@@ -69,8 +74,17 @@ async function getPartyList() {
   }
 }
 
+function onPartyFilter(event) {
+  const filterValue = event.value?.trim() ?? '';
+  if (filterValue.length >= 2) {
+    getPartyLookup(filterValue);
+  } else if (!filterValue) {
+    getPartyLookup();
+  }
+}
+
 onMounted(() => {
-  getPartyList();
+  getPartyLookup();
 });
 
 async function submit() {
@@ -116,6 +130,8 @@ function cancel() {
           option-value="value"
           placeholder="Select a Party"
           :loading="partyLoading"
+          filter
+          @filter="onPartyFilter"
         />
         <Message v-if="!form.partyId" size="small" severity="error" variant="simple">
           Party is required.
