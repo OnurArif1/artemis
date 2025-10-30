@@ -1,5 +1,9 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed,onMounted } from 'vue';
+import request from '@/service/request';
+import PartyService from '@/service/PartyService';
+
+const partyService = new PartyService(request);
 
 const props = defineProps({
   room: {
@@ -28,6 +32,9 @@ const initial = {
 const form = ref({ ...initial });
 const loading = ref(false);
 
+const partyOptions = ref([]);
+const partyLoading = ref(false);
+
 const roomTypeOptions = [
   { label: 'Public', value: 1 },
   { label: 'Private', value: 2 }
@@ -46,6 +53,25 @@ watch(
 );
 
 const isEditMode = computed(() => !!props.room?.id);
+
+async function getPartyList() {
+  try {
+    partyLoading.value = true;
+    const response = await partyService.getLookup();
+    partyOptions.value = response.viewModels.map(p => ({
+      label: p.partyName,
+      value: p.partyId
+    }));
+  } catch (error) {
+    console.error('Err:', error);
+  } finally {
+    partyLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  getPartyList();
+});
 
 async function submit() {
   loading.value = true;
@@ -81,10 +107,18 @@ function cancel() {
       </div>
 
       <div class="flex flex-col gap-2 mb-3">
-        <label for="partyId">Party Id</label>
-        <InputText id="partyId" v-model="form.partyId" type="number" />
+        <label for="partyId">Party</label>
+        <Dropdown
+          id="partyId"
+          v-model="form.partyId"
+          :options="partyOptions"
+          option-label="label"
+          option-value="value"
+          placeholder="Select a Party"
+          :loading="partyLoading"
+        />
         <Message v-if="!form.partyId" size="small" severity="error" variant="simple">
-          PartyId is required.
+          Party is required.
         </Message>
       </div>
 

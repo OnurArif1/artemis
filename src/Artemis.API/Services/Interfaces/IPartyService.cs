@@ -8,4 +8,5 @@ public interface IPartyService
     ValueTask Create(Party party);
     ValueTask<int?> GetPartyIdByName(string partyName);
     ValueTask<string?> GetPartyNameById(int partyId);
+    ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel);
 }

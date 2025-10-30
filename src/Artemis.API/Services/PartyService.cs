@@ -1,4 +1,5 @@
 using Artemis.API.Entities;
+using Artemis.API.Entities.Enums;
 using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -52,6 +53,38 @@ public class PartyService : IPartyService
             .FirstOrDefaultAsync();
 
         return id;
+    }
+
+    public async ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel)
+    {
+        int count;
+        var parties = await _artemisDbContext.Parties
+           .AsNoTracking().ToListAsync();
+
+        count = parties.Count;
+
+        if (!string.IsNullOrWhiteSpace(viewModel.SearchText))
+        {
+            if (viewModel.PartyLooukpSearchType == PartyLooukpSearchType.PartyName)
+            {
+                parties = parties.Where(i => i.PartyName.Contains(viewModel.SearchText)).ToList();
+                count = parties.Count;
+            }
+
+            if (viewModel.PartyLooukpSearchType == PartyLooukpSearchType.PartyId)
+            {
+                parties = parties.Where(i => i.Id == Convert.ToInt32(viewModel.SearchText)).ToList();
+                count = parties.Count;
+            }
+        }
+
+        var viewModels = parties.Select(i => new PartyLookupViewModel
+        {
+            PartyId = i.Id,
+            PartyName = i.PartyName
+        }).ToList();
+
+        return new ResultPartyLookupViewModel { Count = count, ViewModels = viewModels };
     }
 
     public async ValueTask<string?> GetPartyNameById(int partyId)
