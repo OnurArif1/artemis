@@ -1,5 +1,5 @@
 namespace Artemis.API.Entities;
-public class Message : BaseEntity
+public class Message : BaseEntity, IChangingDate
 {
     public int RoomId { get; set; }
     public int PartyId { get; set; }

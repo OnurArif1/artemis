@@ -1,5 +1,5 @@
 namespace Artemis.API.Entities;
-public class Mention : BaseEntity
+public class Mention : BaseEntity, IChangingDate
 {
     public int? RoomId { get; set; }
     public virtual Room? Room { get; set; }

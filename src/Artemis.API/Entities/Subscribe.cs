@@ -1,7 +1,7 @@
 using System.Security.AccessControl;
 
 namespace Artemis.API.Entities;
-public class Subscribe : BaseEntity
+public class Subscribe : BaseEntity, IChangingDate
 {
     public int CreatedPartyId { get; set; }
     public virtual Party CreatedParty { get; set; }

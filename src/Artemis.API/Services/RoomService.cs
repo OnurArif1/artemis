@@ -36,22 +36,32 @@ public class RoomService : IRoomService
         _artemisDbContext.SaveChanges();
     }
 
-    public async ValueTask<IEnumerable<RoomGetViewModel>> GetList(RoomFilterViewModel filterViewModel)
+  public async ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel)
     {
-        var query = (from r in _artemisDbContext.Rooms
-                     select new { r }).AsQueryable();
-
+        var query = _artemisDbContext.Rooms.AsQueryable();
         var count = await query.CountAsync();
-        // query = query
-        //              .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
-        //              .Take(filterViewModel.PageSize);
 
-        var rooms = await (query.Select(rg => new RoomGetViewModel()
+        var rooms = await query
+            .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
+            .Take(filterViewModel.PageSize)
+            .Select(r => new RoomResultViewmodel
+            {
+                Id = r.Id,
+                Title = r.Title,
+                LocationX = r.LocationX,
+                LocationY = r.LocationY,
+                RoomType = r.RoomType,
+                LifeCycle = r.LifeCycle,
+                Upvote = r.Upvote,
+                Downvote = r.Downvote,
+                CreateDate = r.CreateDate
+            })
+            .ToListAsync();
+
+        return new RoomListViewModel
         {
-            Id = rg.r.Id,
-            Count = count
-        })).AsNoTracking().ToListAsync();
-
-        return rooms;
+            Count = count,
+            ResultViewmodels = rooms
+        };
     }
 }

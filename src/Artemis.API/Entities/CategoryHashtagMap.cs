@@ -1,5 +1,5 @@
 namespace Artemis.API.Entities;
-public class CategoryHashtagMap : BaseEntity
+public class CategoryHashtagMap : BaseEntity, IChangingDate
 {
     public int HashtagId { get; set; }
 

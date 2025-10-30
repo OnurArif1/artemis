@@ -1,5 +1,5 @@
 namespace Artemis.API.Entities;
-public class RoomHashtagMap : BaseEntity
+public class RoomHashtagMap : BaseEntity, IChangingDate
 {
     public int RoomId { get; set; }
     public int HashtagId { get; set; }

@@ -2,7 +2,7 @@ using Artemis.API.Entities.Enums;
 
 namespace Artemis.API.Entities;
 
-public class Party : BaseEntity
+public class Party : BaseEntity, IChangingDate
 {
     public string PartyName { get; set; }
     public PartyType PartyType { get; set; }

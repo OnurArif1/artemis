@@ -1,5 +1,5 @@
 namespace Artemis.API.Entities;
-public class MentionPartyMap : BaseEntity
+public class MentionPartyMap : BaseEntity, IChangingDate
 {
     public int MentionId { get; set; }
     public virtual Mention Mention { get; set; }

@@ -1,7 +1,7 @@
 using Artemis.API.Entities.Enums;
 
 namespace Artemis.API.Entities;
-public class Topic : BaseEntity
+public class Topic : BaseEntity, IChangingDate
 {
     public int PartyId { get; set; }
     public virtual Party Party { get; set; }
