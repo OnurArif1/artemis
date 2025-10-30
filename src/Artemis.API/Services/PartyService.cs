@@ -39,4 +39,30 @@ public class PartyService : IPartyService
 
         return parties;
     }
+    
+    public async ValueTask<int?> GetPartyIdByName(string partyName)
+    {
+        if (string.IsNullOrWhiteSpace(partyName))
+            return null;
+
+        var id = await _artemisDbContext.Parties
+            .AsNoTracking()
+            .Where(p => p.PartyName == partyName)
+            .Select(p => (int?)p.Id)
+            .FirstOrDefaultAsync();
+
+        return id;
+    }
+
+    public async ValueTask<string?> GetPartyNameById(int partyId)
+    {
+        var name = await _artemisDbContext.Parties
+            .AsNoTracking()
+            .Where(p => p.Id == partyId)
+            .Select(p => p.PartyName)
+            .FirstOrDefaultAsync();
+
+        return name;
+    }
+
 }

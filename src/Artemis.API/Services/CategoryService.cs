@@ -39,4 +39,29 @@ public class CategoryService : ICategoryService
 
         return categories;
     }
+
+    public async ValueTask<int?> GetCategoryIdByName(string categoryName)
+    {
+        if (string.IsNullOrWhiteSpace(categoryName))
+            return null;
+
+        var id = await _artemisDbContext.Categories
+            .AsNoTracking()
+            .Where(c => c.Title == categoryName)
+            .Select(c => (int?)c.Id)
+            .FirstOrDefaultAsync();
+
+        return id;
+    }
+
+    public async ValueTask<string?> GetCategoryNameById(int categoryId)
+    {
+        var name = await _artemisDbContext.Categories
+            .AsNoTracking()
+            .Where(c => c.Id == categoryId)
+            .Select(c => c.Title)
+            .FirstOrDefaultAsync();
+
+        return name;
+    }
 }

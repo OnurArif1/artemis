@@ -21,4 +21,18 @@ public class CategoryController : ControllerBase
         var viewModels = await _categoryService.GetList(viewModel);
         return Ok(viewModels);
     }
+
+    [HttpGet("lookup/categoryId")]
+    public async Task<IActionResult> LookupCategoryId([FromQuery] string categoryName)
+    {
+        var id = await _categoryService.GetCategoryIdByName(categoryName);
+        return Ok(id);
+    }
+
+    [HttpGet("lookup/categoryName")]
+    public async Task<IActionResult> LookupCategoryName([FromQuery] int categoryId)
+    {
+        var name = await _categoryService.GetCategoryNameById(categoryId);
+        return Ok(name);
+    }
 }
