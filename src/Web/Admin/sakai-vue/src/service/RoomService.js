@@ -4,6 +4,7 @@ export default class RoomService {
     }
 
     async getList(filter = {}) {
+        console.log('filter:', filter)
         const response = await this.request({
             method: 'get',
             url: '/room/list',

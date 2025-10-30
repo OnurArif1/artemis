@@ -14,9 +14,24 @@ public class RoomService : IRoomService
         _artemisDbContext = artemisDbContext;
     }
 
-    public async ValueTask Create(Room room)
+    public async ValueTask Create(CreateRoomViewModel viewModel)
     {
         // todo ask. how to unique rooms?
+        var room = new Room()
+        {
+            TopicId = viewModel.TopicId,
+            PartyId = viewModel.PartyId,
+            CategoryId = viewModel.CategoryId,
+            Title = viewModel.Title,
+            LocationX = viewModel.LocationX,
+            LocationY = viewModel.LocationY,
+            RoomType = viewModel.RoomType,
+            LifeCycle = viewModel.LifeCycle,
+            ChannelId = viewModel.ChannelId,
+            ReferenceId = viewModel.ReferenceId,
+            Upvote = viewModel.Upvote,
+            Downvote = viewModel.Downvote
+        };
         await _artemisDbContext.Rooms.AddAsync(room);
         _artemisDbContext.SaveChanges();
     }
@@ -27,9 +42,9 @@ public class RoomService : IRoomService
                      select new { r }).AsQueryable();
 
         var count = await query.CountAsync();
-        query = query.OrderByDescending(i => i.r.CreateDate)
-                     .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
-                     .Take(filterViewModel.PageSize);
+        // query = query
+        //              .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
+        //              .Take(filterViewModel.PageSize);
 
         var rooms = await (query.Select(rg => new RoomGetViewModel()
         {

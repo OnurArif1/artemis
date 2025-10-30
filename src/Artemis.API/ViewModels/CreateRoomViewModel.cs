@@ -1,11 +1,11 @@
 using Artemis.API.Entities.Enums;
 
-namespace Artemis.API.Entities;
-public class Room : BaseEntity
+namespace Artemis.API.Services;
+
+public class CreateRoomViewModel
 {
-    public int? TopicId { get; set; }
+     public int? TopicId { get; set; }
     public int PartyId { get; set; }
-    // public ICollection<Party> Party { get; set; }
     public int? CategoryId { get; set; }
     public string Title { get; set; }
     public double LocationX { get; set; }
@@ -17,6 +17,4 @@ public class Room : BaseEntity
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime CreateDate { get; set; }
-
-    // public ICollection<Category?> Category { get; set; }
 }
