@@ -2,8 +2,9 @@ using Artemis.API.Entities.Enums;
 
 namespace Artemis.API.Services;
 
-public class CreateRoomViewModel
+public class CreateOrUpdateRoomViewModel
 {
+    public int? Id { get; set; } = null;
      public int? TopicId { get; set; }
     public int PartyId { get; set; }
     public int? CategoryId { get; set; }

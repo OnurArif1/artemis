@@ -19,4 +19,5 @@ public class RoomResultViewmodel
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime CreateDate { get; set; }
+    public int PartyId { get; set; }
 }

@@ -19,4 +19,12 @@ export default class RoomService {
             data: payload
         });
     }
+
+    async update(payload) {
+        await this.request({
+            method: 'post',
+            url: '/room/update',
+            data: payload
+        });
+    }
 }

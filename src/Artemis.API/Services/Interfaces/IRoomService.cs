@@ -5,5 +5,6 @@ namespace Artemis.API.Services.Interfaces;
 public interface IRoomService
 {
     ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel);
-    ValueTask Create(CreateRoomViewModel viewModel);
+    ValueTask Create(CreateOrUpdateRoomViewModel viewModel);
+    ValueTask Update(CreateOrUpdateRoomViewModel viewModel);
 }

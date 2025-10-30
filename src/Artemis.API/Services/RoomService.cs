@@ -14,7 +14,7 @@ public class RoomService : IRoomService
         _artemisDbContext = artemisDbContext;
     }
 
-    public async ValueTask Create(CreateRoomViewModel viewModel)
+    public async ValueTask Create(CreateOrUpdateRoomViewModel viewModel)
     {
         // todo ask. how to unique rooms?
         var room = new Room()
@@ -36,12 +36,17 @@ public class RoomService : IRoomService
         _artemisDbContext.SaveChanges();
     }
 
-  public async ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel)
+    public async ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel)
     {
         var query = _artemisDbContext.Rooms.AsQueryable();
         var count = await query.CountAsync();
 
-        var rooms = await query
+        if (!string.IsNullOrWhiteSpace(filterViewModel.Title))
+        {
+            query = query.Where(x => x.Title.Contains(filterViewModel.Title));
+        }
+
+        var rooms = await query.OrderByDescending(i => i.CreateDate)
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
             .Take(filterViewModel.PageSize)
             .Select(r => new RoomResultViewmodel
@@ -54,7 +59,8 @@ public class RoomService : IRoomService
                 LifeCycle = r.LifeCycle,
                 Upvote = r.Upvote,
                 Downvote = r.Downvote,
-                CreateDate = r.CreateDate
+                CreateDate = r.CreateDate,
+                PartyId = r.PartyId
             })
             .ToListAsync();
 
@@ -63,5 +69,28 @@ public class RoomService : IRoomService
             Count = count,
             ResultViewmodels = rooms
         };
+    }
+
+    public async ValueTask Update(CreateOrUpdateRoomViewModel viewModel)
+    {
+        var query = _artemisDbContext.Rooms.AsQueryable();
+        var room = await query.FirstOrDefaultAsync(i => i.Id == viewModel.Id);
+        if (room is not null)
+        {
+            room.TopicId = viewModel.TopicId;
+            room.PartyId = viewModel.PartyId;
+            room.CategoryId = viewModel.CategoryId;
+            room.Title = viewModel.Title;
+            room.LocationX = viewModel.LocationX;
+            room.LocationY = viewModel.LocationY;
+            room.RoomType = viewModel.RoomType;
+            room.LifeCycle = viewModel.LifeCycle;
+            room.ChannelId = viewModel.ChannelId;
+            room.ReferenceId = viewModel.ReferenceId;
+            room.Upvote = viewModel.Upvote;
+            room.Downvote = viewModel.Downvote;
+
+            await _artemisDbContext.SaveChangesAsync();
+        }    
     }
 }
