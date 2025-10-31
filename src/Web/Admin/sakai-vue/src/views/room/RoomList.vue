@@ -61,7 +61,7 @@ function onCreated(payload) {
 
             await roomService.create(data);
             showCreate.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Created' });
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Created', life: 3000 });
             await load();
         } catch (err) {
             console.error('Room create error:', err);
@@ -90,7 +90,7 @@ function onUpdated(payload) {
 
             await roomService.update(data);
             showCreate.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Updated' });
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Updated', life: 3000 });
             await load();
         } catch (err) {
             console.error('Room update error:', err);

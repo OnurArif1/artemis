@@ -61,7 +61,7 @@ function onCreated(payload) {
         try {
             await categoryService.create(payload);
             showCreate.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Created' });
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Created', life: 3000 });
             await load();
         } catch (err) {
             console.error('Category create error:', err);
@@ -74,7 +74,7 @@ function onUpdated(payload) {
         try {
             await categoryService.update(payload);
             showCreate.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Updated' });
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Updated', life: 3000 });
             await load();
         } catch (err) {
             console.error('Category update error:', err);

@@ -73,6 +73,50 @@ public class PartyService : IPartyService
             await _artemisDbContext.SaveChangesAsync();
         }    
     }
-    
+
+    public async ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel)
+    {
+        var query = _artemisDbContext.Parties.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(viewModel.SearchText))
+        {
+            if (viewModel.PartyLooukpSearchType == PartyLooukpSearchType.PartyName)
+            {
+                query = query.Where(x => x.PartyName.Contains(viewModel.SearchText));
+            }
+            else if (viewModel.PartyLooukpSearchType == PartyLooukpSearchType.PartyId)
+            {
+                if (int.TryParse(viewModel.SearchText, out int partyId))
+                {
+                    query = query.Where(x => x.Id == partyId);
+                }
+            }
+            else
+            {
+                query = query.Where(x => x.PartyName.Contains(viewModel.SearchText) || x.Id.ToString().Contains(viewModel.SearchText));
+            }
+        }
+
+        if (viewModel.PartyId.HasValue)
+        {
+            query = query.Where(x => x.Id == viewModel.PartyId.Value);
+        }
+
+        var parties = await query
+            .OrderBy(x => x.PartyName)
+            .Take(50)
+            .Select(p => new PartyLookupViewModel
+            {
+                PartyId = p.Id,
+                PartyName = p.PartyName
+            })
+            .ToListAsync();
+
+        return new ResultPartyLookupViewModel
+        {
+            Count = parties.Count,
+            ViewModels = parties
+        };
+    }
 
 }

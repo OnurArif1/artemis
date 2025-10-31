@@ -2,8 +2,10 @@
 import { ref, watch, computed,onMounted } from 'vue';
 import request from '@/service/request';
 import PartyService from '@/service/PartyService';
+import CategoryService from '@/service/CategoryService';
 
 const partyService = new PartyService(request);
+const categoryService = new CategoryService(request);
 
 const props = defineProps({
   room: {
@@ -34,6 +36,8 @@ const loading = ref(false);
 
 const partyOptions = ref([]);
 const partyLoading = ref(false);
+const categoryOptions = ref([]);
+const categoryLoading = ref(false);
 
 const roomTypeOptions = [
   { label: 'Public', value: 1 },
@@ -83,8 +87,38 @@ function onPartyFilter(event) {
   }
 }
 
+async function getCategoryLookup(filterText = '') {
+  const filter = {
+    searchText: filterText,
+    categoryLookupSearchType: 1
+  };
+
+  try {
+    categoryLoading.value = true;
+    const response = await categoryService.getLookup(filter);
+    categoryOptions.value = (response.viewModels || []).map(c => ({
+      label: c.title,
+      value: c.categoryId
+    }));
+  } catch (error) {
+    console.error('Category lookup error:', error);
+  } finally {
+    categoryLoading.value = false;
+  }
+}
+
+function onCategoryFilter(event) {
+  const filterValue = event.value?.trim() ?? '';
+  if (filterValue.length >= 2) {
+    getCategoryLookup(filterValue);
+  } else if (!filterValue) {
+    getCategoryLookup();
+  }
+}
+
 onMounted(() => {
   getPartyLookup();
+  getCategoryLookup();
 });
 
 async function submit() {
@@ -136,6 +170,21 @@ function cancel() {
         <Message v-if="!form.partyId" size="small" severity="error" variant="simple">
           Party is required.
         </Message>
+      </div>
+
+      <div class="flex flex-col gap-2 mb-3">
+        <label for="categoryId">Category</label>
+        <Dropdown
+          id="categoryId"
+          v-model="form.categoryId"
+          :options="categoryOptions"
+          option-label="label"
+          option-value="value"
+          placeholder="Select a Category"
+          :loading="categoryLoading"
+          filter
+          @filter="onCategoryFilter"
+        />
       </div>
 
       <div class="flex flex-col gap-2 mb-3">

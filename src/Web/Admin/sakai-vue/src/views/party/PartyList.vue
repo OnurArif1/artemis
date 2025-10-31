@@ -61,7 +61,7 @@ function onCreated(payload) {
         try {
             await partyService.create(payload);
             showCreate.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Created' });
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Created', life: 3000  });
             await load();
         } catch (err) {
             console.error('Party create error:', err);
@@ -74,7 +74,7 @@ function onUpdated(payload) {
         try {
             await partyService.update(payload);
             showCreate.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Updated' });
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Updated', life: 3000 });
             await load();
         } catch (err) {
             console.error('Party update error:', err);

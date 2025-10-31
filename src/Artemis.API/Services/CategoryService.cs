@@ -63,4 +63,35 @@ public class CategoryService : ICategoryService
             await _artemisDbContext.SaveChangesAsync();
         }
     }
+
+    public async ValueTask<ResultCategoryLookupViewModel> GetCategoryLookup(GetLookupCategoryViewModel viewModel)
+    {
+        var query = _artemisDbContext.Categories.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(viewModel.SearchText))
+        {
+            query = query.Where(x => x.Title.Contains(viewModel.SearchText));
+        }
+
+        if (viewModel.CategoryId.HasValue)
+        {
+            query = query.Where(x => x.Id == viewModel.CategoryId.Value);
+        }
+
+        var categories = await query
+            .OrderBy(x => x.Title)
+            .Take(50)
+            .Select(c => new CategoryLookupViewModel
+            {
+                CategoryId = c.Id,
+                Title = c.Title
+            })
+            .ToListAsync();
+
+        return new ResultCategoryLookupViewModel
+        {
+            Count = categories.Count,
+            ViewModels = categories
+        };
+    }
 }
