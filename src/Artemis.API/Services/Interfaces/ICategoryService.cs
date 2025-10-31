@@ -4,8 +4,7 @@ namespace Artemis.API.Services.Interfaces;
 
 public interface ICategoryService
 {
-    ValueTask<IEnumerable<CategoryGetViewModel>> GetList(CategoryFilterViewModel filterViewModel);
-    ValueTask Create(Category category);
-    ValueTask<int?> GetCategoryIdByName(string categoryName);
-    ValueTask<string?> GetCategoryNameById(int categoryId);
+    ValueTask<CategoryListViewModel> GetList(CategoryFilterViewModel filterViewModel);
+    ValueTask Create(CreateOrUpdateCategoryViewModel viewModel);
+    ValueTask Update(CreateOrUpdateCategoryViewModel viewModel);
 }

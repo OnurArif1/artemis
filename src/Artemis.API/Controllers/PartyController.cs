@@ -21,18 +21,18 @@ public class PartyController : ControllerBase
         return Ok(viewModels);
     }
 
-    [HttpGet("lookup/partyId")]
-    public async Task<IActionResult> LookupPartyId([FromQuery] string partyName)
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateAsync(CreateOrUpdatePartyViewModel viewModel)
     {
-        var id = await _partyService.GetPartyIdByName(partyName);
-        return Ok(id);
+        await _partyService.Create(viewModel);
+        return Ok();
     }
 
-    [HttpGet("lookup/partyName")]
-    public async Task<IActionResult> LookupPartyName([FromQuery] int partyId)
+    [HttpPost("update")]
+    public async Task<IActionResult> UpdateAsync(CreateOrUpdatePartyViewModel viewModel)
     {
-        var name = await _partyService.GetPartyNameById(partyId);
-        return Ok(name);
+        await _partyService.Update(viewModel);
+        return Ok();
     }
 
     [HttpGet("lookup")]

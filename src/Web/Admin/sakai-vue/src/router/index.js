@@ -23,12 +23,12 @@ const router = createRouter({
                 {
                     path: '/party/list',
                     name: 'party-list',
-                    component: () => import('@/views/pages/PartyList.vue')
+                    component: () => import('@/views/party/PartyList.vue')
                 },
                 {
                     path: '/category/list',
                     name: 'category-list',
-                    component: () => import('@/views/pages/CategoryList.vue')
+                    component: () => import('@/views/category/CategoryList.vue')
                 }
             ]
         },

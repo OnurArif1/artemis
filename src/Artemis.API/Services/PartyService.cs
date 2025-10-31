@@ -15,87 +15,64 @@ public class PartyService : IPartyService
         _artemisDbContext = artemisDbContext;
     }
 
-    public async ValueTask Create(Party party)
+    public async ValueTask Create(CreateOrUpdatePartyViewModel viewModel)
     {
-        // todo ask. how to unique rooms?
+        var party = new Party()
+        {
+            PartyName = viewModel.PartyName,
+            PartyType = viewModel.PartyType,
+            IsBanned = viewModel.IsBanned,
+            DeviceId = viewModel.DeviceId,
+            CreateDate = viewModel.CreateDate
+        };
         await _artemisDbContext.Parties.AddAsync(party);
-        _artemisDbContext.SaveChanges();
+        await _artemisDbContext.SaveChangesAsync();
     }
 
-    public async ValueTask<IEnumerable<PartyGetViewModel>> GetList(PartyFilterViewModel filterViewModel)
+    public async ValueTask<PartyListViewModel> GetList(PartyFilterViewModel filterViewModel)
     {
-        var query = (from r in _artemisDbContext.Parties
-                     select new { r }).AsQueryable();
-
+        var query = _artemisDbContext.Parties.AsQueryable();
         var count = await query.CountAsync();
-        query = query.OrderByDescending(i => i.r.CreateDate)
-                     .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
-                     .Take(filterViewModel.PageSize);
 
-        var parties = await (query.Select(rg => new PartyGetViewModel()
+        if (!string.IsNullOrWhiteSpace(filterViewModel.Title))
         {
-            Id = rg.r.Id,
-            Count = count
-        })).AsNoTracking().ToListAsync();
-
-        return parties;
-    }
-    
-    public async ValueTask<int?> GetPartyIdByName(string partyName)
-    {
-        if (string.IsNullOrWhiteSpace(partyName))
-            return null;
-
-        var id = await _artemisDbContext.Parties
-            .AsNoTracking()
-            .Where(p => p.PartyName == partyName)
-            .Select(p => (int?)p.Id)
-            .FirstOrDefaultAsync();
-
-        return id;
-    }
-
-    public async ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel)
-    {
-        int count;
-        var parties = await _artemisDbContext.Parties
-           .AsNoTracking().ToListAsync();
-
-        count = parties.Count;
-
-        if (!string.IsNullOrWhiteSpace(viewModel.SearchText))
-        {
-            if (viewModel.PartyLooukpSearchType == PartyLooukpSearchType.PartyName)
-            {
-                parties = parties.Where(i => i.PartyName.Contains(viewModel.SearchText)).ToList();
-                count = parties.Count;
-            }
-
-            if (viewModel.PartyLooukpSearchType == PartyLooukpSearchType.PartyId)
-            {
-                parties = parties.Where(i => i.Id == Convert.ToInt32(viewModel.SearchText)).ToList();
-                count = parties.Count;
-            }
+            query = query.Where(x => x.PartyName.Contains(filterViewModel.Title));
         }
 
-        var viewModels = parties.Select(i => new PartyLookupViewModel
+        var parties = await query.OrderByDescending(i => i.CreateDate)
+            .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
+            .Take(filterViewModel.PageSize)
+            .Select(r => new PartyResultViewModel
+            {
+                Id = r.Id,
+                PartyName = r.PartyName,
+                PartyType = r.PartyType,
+                IsBanned = r.IsBanned,
+                DeviceId = r.DeviceId,
+                CreateDate = r.CreateDate
+            })
+            .ToListAsync();
+
+        return new PartyListViewModel
         {
-            PartyId = i.Id,
-            PartyName = i.PartyName
-        }).ToList();
-
-        return new ResultPartyLookupViewModel { Count = count, ViewModels = viewModels };
+            Count = count,
+            ResultViewmodels = parties
+        };
     }
 
-    public async ValueTask<string?> GetPartyNameById(int partyId)
+    public async ValueTask Update(CreateOrUpdatePartyViewModel viewModel)
     {
-        var name = await _artemisDbContext.Parties
-            .AsNoTracking()
-            .Where(p => p.Id == partyId)
-            .Select(p => p.PartyName)
-            .FirstOrDefaultAsync();
-
-        return name;
+        var query = _artemisDbContext.Parties.AsQueryable();
+        var party = await query.FirstOrDefaultAsync(i => i.Id == viewModel.Id);
+        if (party is not null)
+        {
+            party.PartyName = viewModel.PartyName;
+            party.PartyType = viewModel.PartyType;
+            party.IsBanned = viewModel.IsBanned;
+            party.DeviceId = viewModel.DeviceId;
+            await _artemisDbContext.SaveChangesAsync();
+        }    
     }
+    
 
 }

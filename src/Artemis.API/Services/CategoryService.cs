@@ -14,54 +14,53 @@ public class CategoryService : ICategoryService
         _artemisDbContext = artemisDbContext;
     }
 
-    public async ValueTask Create(Category category)
+    public async ValueTask Create(CreateOrUpdateCategoryViewModel viewModel)
     {
-        // todo ask. how to unique rooms?
-        await _artemisDbContext.Categories.AddAsync(category);
-        _artemisDbContext.SaveChanges();
-    }
-
-    public async ValueTask<IEnumerable<CategoryGetViewModel>> GetList(CategoryFilterViewModel filterViewModel)
-    {
-        var query = (from r in _artemisDbContext.Categories
-                     select new { r }).AsQueryable();
-
-        var count = await query.CountAsync();
-        query = query.OrderByDescending(i => i.r.CreateDate)
-                     .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
-                     .Take(filterViewModel.PageSize);
-
-        var categories = await (query.Select(rg => new CategoryGetViewModel()
+        var category = new Category
         {
-            Id = rg.r.Id,
-            Count = count
-        })).AsNoTracking().ToListAsync();
-
-        return categories;
+            Title = viewModel.Title,
+            CreateDate = viewModel.CreateDate
+        };
+        await _artemisDbContext.Categories.AddAsync(category);
+        await _artemisDbContext.SaveChangesAsync();
     }
 
-    public async ValueTask<int?> GetCategoryIdByName(string categoryName)
+    public async ValueTask<CategoryListViewModel> GetList(CategoryFilterViewModel filterViewModel)
     {
-        if (string.IsNullOrWhiteSpace(categoryName))
-            return null;
+        var query = _artemisDbContext.Categories.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(filterViewModel.Title))
+        {
+            query = query.Where(x => x.Title.Contains(filterViewModel.Title));
+        }
+        var count = await query.CountAsync();
 
-        var id = await _artemisDbContext.Categories
+        var categories = await query.OrderByDescending(i => i.CreateDate)
+            .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
+            .Take(filterViewModel.PageSize)
+            .Select(r => new CategoryResultViewModel
+            {
+                Id = r.Id,
+                Title = r.Title,
+                CreateDate = r.CreateDate
+            })
             .AsNoTracking()
-            .Where(c => c.Title == categoryName)
-            .Select(c => (int?)c.Id)
-            .FirstOrDefaultAsync();
+            .ToListAsync();
 
-        return id;
+        return new CategoryListViewModel
+        {
+            Count = count,
+            ResultViewmodels = categories
+        };
     }
 
-    public async ValueTask<string?> GetCategoryNameById(int categoryId)
+    public async ValueTask Update(CreateOrUpdateCategoryViewModel viewModel)
     {
-        var name = await _artemisDbContext.Categories
-            .AsNoTracking()
-            .Where(c => c.Id == categoryId)
-            .Select(c => c.Title)
-            .FirstOrDefaultAsync();
-
-        return name;
+        var category = await _artemisDbContext.Categories
+            .FirstOrDefaultAsync(i => i.Id == viewModel.Id);
+        if (category is not null)
+        {
+            category.Title = viewModel.Title;
+            await _artemisDbContext.SaveChangesAsync();
+        }
     }
 }

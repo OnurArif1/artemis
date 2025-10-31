@@ -12,12 +12,19 @@ export default class PartyService {
         return response?.data ?? response;
     }
 
-    async getLookup(filter = {}) {
-        const response = await this.request({
-            method: 'get',
-            url: '/party/lookup',
-            params: filter
+    async create(payload) {
+        await this.request({
+            method: 'post',
+            url: '/party/create',
+            data: payload
         });
-        return response?.data ?? response;
+    }
+
+    async update(payload) {
+        await this.request({
+            method: 'post',
+            url: '/party/update',
+            data: payload
+        });
     }
 }

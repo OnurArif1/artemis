@@ -4,9 +4,7 @@ namespace Artemis.API.Services.Interfaces;
 
 public interface IPartyService
 {
-    ValueTask<IEnumerable<PartyGetViewModel>> GetList(PartyFilterViewModel filterViewModel);
-    ValueTask Create(Party party);
-    ValueTask<int?> GetPartyIdByName(string partyName);
-    ValueTask<string?> GetPartyNameById(int partyId);
-    ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel);
+    ValueTask<PartyListViewModel> GetList(PartyFilterViewModel filterViewModel);
+    ValueTask Create(CreateOrUpdatePartyViewModel viewModel);
+    ValueTask Update(CreateOrUpdatePartyViewModel viewModel);
 }
