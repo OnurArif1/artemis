@@ -19,6 +19,7 @@ declare module 'vue' {
     FooterWidget: typeof import('./src/components/landing/FooterWidget.vue')['default']
     HeroWidget: typeof import('./src/components/landing/HeroWidget.vue')['default']
     HighlightsWidget: typeof import('./src/components/landing/HighlightsWidget.vue')['default']
+    InputNumber: typeof import('primevue/inputnumber')['default']
     InputText: typeof import('primevue/inputtext')['default']
     Message: typeof import('primevue/message')['default']
     NotificationsWidget: typeof import('./src/components/dashboard/NotificationsWidget.vue')['default']

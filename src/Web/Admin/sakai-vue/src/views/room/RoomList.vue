@@ -162,7 +162,7 @@ onMounted(load);
                     <Button
                         icon="pi pi-plus"
                         @click="openCreate"
-                        v-tooltip.bottom="'Yeni oda oluştur'"
+                        v-tooltip.bottom="'Add New Room'"
                     />
                 </div>
             </template>

@@ -11,4 +11,20 @@ export default class PartyService {
         });
         return response?.data ?? response;
     }
+
+    async create(payload) {
+        await this.request({
+            method: 'post',
+            url: '/party/create',
+            data: payload
+        });
+    }
+
+    async update(payload) {
+        await this.request({
+            method: 'post',
+            url: '/party/update',
+            data: payload
+        });
+    }
 }

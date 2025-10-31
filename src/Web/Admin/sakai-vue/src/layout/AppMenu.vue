@@ -44,7 +44,7 @@ const model = ref([
             { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
             { label: 'Rooms', icon: 'pi pi-fw pi-table', to: '/room/list' },
             { label: 'Parties', icon: 'pi pi-fw pi-users', to: '/party/list' },
-            { label: 'Categories', icon: 'pi pi-fw pi-users', to: '/category/list' }
+            { label: 'Categories', icon: 'pi pi-fw pi-align-center', to: '/category/list' }
         ]
     },
     {
