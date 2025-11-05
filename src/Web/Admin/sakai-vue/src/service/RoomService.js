@@ -15,6 +15,7 @@ export default class RoomService {
     async create(payload) {
         await this.request({
             method: 'post',
+<<<<<<< HEAD
             url: '/room/create',
             data: payload
         });
@@ -25,6 +26,10 @@ export default class RoomService {
             method: 'post',
             url: '/room/update',
             data: payload
+=======
+            url: '/room',
+            data: roomData
+>>>>>>> 5b9c5f5b (fix)
         });
     }
 }

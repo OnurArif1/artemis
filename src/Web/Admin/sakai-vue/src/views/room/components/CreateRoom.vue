@@ -34,6 +34,7 @@ const initial = {
 const form = ref({ ...initial });
 const loading = ref(false);
 
+<<<<<<< HEAD
 const partyOptions = ref([]);
 const partyLoading = ref(false);
 const categoryOptions = ref([]);
@@ -43,6 +44,12 @@ const roomTypeOptions = [
   { label: 'Public', value: 1 },
   { label: 'Private', value: 2 }
 ];
+=======
+// const roomTypeOptions = [
+//     { label: 'Public', value: 1 },
+//     { label: 'Private', value: 2 }
+// ];
+>>>>>>> 5b9c5f5b (fix)
 
 watch(
   () => props.room,
@@ -172,6 +179,7 @@ function cancel() {
         </Message>
       </div>
 
+<<<<<<< HEAD
       <div class="flex flex-col gap-2 mb-3">
         <label for="categoryId">Category</label>
         <Dropdown
@@ -191,12 +199,19 @@ function cancel() {
         <label for="locationX">Location X</label>
         <InputText id="locationX" v-model="form.locationX" type="number" />
       </div>
+=======
+            <div class="flex flex-col gap-2 mb-3">
+                <label for="locationX">Location X</label>
+                <InputText id="locationX" v-model="form.locationX" type="number" />
+            </div>
+>>>>>>> 5b9c5f5b (fix)
 
       <div class="flex flex-col gap-2 mb-3">
         <label for="locationY">Location Y</label>
         <InputText id="locationY" v-model="form.locationY" type="number" />
       </div>
 
+<<<<<<< HEAD
       <div class="flex flex-col gap-2 mb-3">
         <label for="roomType">Room Type</label>
         <Dropdown
@@ -207,6 +222,12 @@ function cancel() {
           option-value="value"
         />
       </div>
+=======
+            <!-- <div class="flex flex-col gap-2 mb-3">
+                <label for="roomType">Room Type</label>
+                <Dropdown id="roomType" v-model="form.roomType" :options="roomTypeOptions" option-label="label" option-value="value" />
+            </div> -->
+>>>>>>> 5b9c5f5b (fix)
 
       <div class="flex gap-2 justify-end mt-4">
         <Button type="button" label="Cancel" class="p-button-text" @click="cancel" />
