@@ -8,12 +8,11 @@ import { useToast } from 'primevue/usetoast';
 const toast = useToast();
 const rooms = ref([]);
 const roomService = new RoomService(request);
-const showCreate = ref(false)
-const selectedRoom = ref(null)
+const showCreate = ref(false);
+const selectedRoom = ref(null);
 const pageIndex = ref(1);
 const pageSize = ref(10);
 const totalRecords = ref(0);
-
 
 async function load() {
     try {
@@ -37,8 +36,8 @@ function openCreate() {
 }
 
 function openUpdate(room) {
-  selectedRoom.value = { ...room }
-  showCreate.value = true
+    selectedRoom.value = { ...room };
+    showCreate.value = true;
 }
 
 function onCreated(payload) {
@@ -98,7 +97,6 @@ function onUpdated(payload) {
     })();
 }
 
-
 function onCancel() {
     showCreate.value = false;
 }
@@ -136,48 +134,33 @@ const getSeverity = (status) => {
     }
 };
 
-
-
 onMounted(load);
 </script>
 
 <template>
     <div>
-        <DataTable :value="rooms" paginator :rows="10"
-                    :first="(pageIndex - 1) * pageSize"
-                    :totalRecords="totalRecords" lazy :filters="filters"
-                    :rowsPerPageOptions="[5, 10, 20, 50]"
-                    @page="onPage">
+        <DataTable :value="rooms" paginator :rows="10" :first="(pageIndex - 1) * pageSize" :totalRecords="totalRecords" lazy :filters="filters" :rowsPerPageOptions="[5, 10, 20, 50]" @page="onPage">
             <template #header>
                 <div class="flex justify-between items-center mb-3">
                     <div class="relative w-64">
-                        <InputText
-                            v-model="filters.global.value"
-                            placeholder="Search by Title"
-                            @input="onSearch"
-                            class="w-full pr-10"
-                        />
+                        <InputText v-model="filters.global.value" placeholder="Search by Title" @input="onSearch" class="w-full pr-10" />
                         <i class="pi pi-search absolute top-1/2 -translate-y-1/2 right-3 text-surface-400 pointer-events-none" />
                     </div>
-                    <Button
-                        icon="pi pi-plus"
-                        @click="openCreate"
-                        v-tooltip.bottom="'Add New Room'"
-                    />
+                    <Button icon="pi pi-plus" @click="openCreate" v-tooltip.bottom="'Add New Room'" />
                 </div>
             </template>
-            <Column field="id" header="Id"/>
-            <Column field="title" header="Title"/>
-            <Column field="locationX" header="LocationX"/>
-            <Column field="locationY" header="LocationY"/>
+            <Column field="id" header="Id" />
+            <Column field="title" header="Title" />
+            <Column field="locationX" header="LocationX" />
+            <Column field="locationY" header="LocationY" />
             <Column field="roomType" header="RoomType">
                 <template #body="{ data }">
                     <Tag :value="data.roomType === 1 ? 'Public' : 'Private'" :severity="getSeverity(data.roomType)" />
                 </template>
             </Column>
-            <Column field="lifeCycle" header="LifeCycle"/>
-            <Column field="upvote" header="Upvote"/>
-            <Column field="downvote" header="Downvote"/>
+            <Column field="lifeCycle" header="LifeCycle" />
+            <Column field="upvote" header="Upvote" />
+            <Column field="downvote" header="Downvote" />
             <Column field="createDate" header="CreateDate">
                 <template #body="{ data }">
                     <Tag :value="formatDate(data.createDate)" severity="success" />
@@ -193,12 +176,7 @@ onMounted(load);
         </DataTable>
 
         <Dialog v-model:visible="showCreate" modal :closable="false" :header="selectedRoom ? 'Update Room' : 'Create Room'" style="width: 500px">
-            <CreateRoom
-                :room="selectedRoom"
-                @created="onCreated"
-                @updated="onUpdated"
-                @cancel="onCancel"
-            />
+            <CreateRoom :room="selectedRoom" @created="onCreated" @updated="onUpdated" @cancel="onCancel" />
         </Dialog>
     </div>
 </template>

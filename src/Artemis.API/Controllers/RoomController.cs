@@ -23,13 +23,8 @@ public class RoomController : ControllerBase
         return Ok(viewModels);
     }
 
-<<<<<<< HEAD
     [HttpPost("create")]
     public async Task<IActionResult> CreateAsync(CreateOrUpdateRoomViewModel viewModel)
-=======
-    [HttpPost]
-    public async Task<IActionResult> CreateAsync(Room room)
->>>>>>> 5b9c5f5b (fix)
     {
         await _roomService.Create(viewModel);
         return Ok();
