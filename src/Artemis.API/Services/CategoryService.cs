@@ -94,4 +94,15 @@ public class CategoryService : ICategoryService
             ViewModels = categories
         };
     }
+
+    public async ValueTask Delete(int id)
+    {
+        var category = await _artemisDbContext.Categories
+            .FirstOrDefaultAsync(i => i.Id == id);
+        if (category is not null)
+        {
+            _artemisDbContext.Categories.Remove(category);
+            await _artemisDbContext.SaveChangesAsync();
+        }
+    }
 }

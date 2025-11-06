@@ -119,4 +119,15 @@ public class PartyService : IPartyService
         };
     }
 
+    public async ValueTask Delete(int id)
+    {
+        var party = await _artemisDbContext.Parties
+            .FirstOrDefaultAsync(i => i.Id == id);
+        if (party is not null)
+        {
+            _artemisDbContext.Parties.Remove(party);
+            await _artemisDbContext.SaveChangesAsync();
+        }
+    }
+
 }

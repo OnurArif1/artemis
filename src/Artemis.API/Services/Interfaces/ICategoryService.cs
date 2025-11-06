@@ -8,4 +8,6 @@ public interface ICategoryService
     ValueTask Create(CreateOrUpdateCategoryViewModel viewModel);
     ValueTask Update(CreateOrUpdateCategoryViewModel viewModel);
     ValueTask<ResultCategoryLookupViewModel> GetCategoryLookup(GetLookupCategoryViewModel viewModel);
+    ValueTask Delete(int id);
+
 }

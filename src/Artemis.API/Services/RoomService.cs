@@ -91,6 +91,15 @@ public class RoomService : IRoomService
             room.Downvote = viewModel.Downvote;
 
             await _artemisDbContext.SaveChangesAsync();
-        }    
+        }
+    }
+    public async ValueTask Delete(int id)
+    {
+        var room = await _artemisDbContext.Rooms.FirstOrDefaultAsync(i => i.Id == id);
+        if (room is not null)
+        {
+            _artemisDbContext.Rooms.Remove(room);
+            await _artemisDbContext.SaveChangesAsync();
+        }
     }
 }
