@@ -80,20 +80,17 @@ public class PartyService : IPartyService
 
         if (!string.IsNullOrWhiteSpace(viewModel.SearchText))
         {
-            if (viewModel.PartyLooukpSearchType == PartyLooukpSearchType.PartyName)
+            if (viewModel.PartyLookupSearchType == PartyLookupSearchType.PartyName)
             {
                 query = query.Where(x => x.PartyName.Contains(viewModel.SearchText));
             }
-            else if (viewModel.PartyLooukpSearchType == PartyLooukpSearchType.PartyId)
+
+            if (viewModel.PartyLookupSearchType == PartyLookupSearchType.PartyId)
             {
                 if (int.TryParse(viewModel.SearchText, out int partyId))
                 {
                     query = query.Where(x => x.Id == partyId);
                 }
-            }
-            else
-            {
-                query = query.Where(x => x.PartyName.Contains(viewModel.SearchText) || x.Id.ToString().Contains(viewModel.SearchText));
             }
         }
 
@@ -104,7 +101,6 @@ public class PartyService : IPartyService
 
         var parties = await query
             .OrderBy(x => x.PartyName)
-            .Take(50)
             .Select(p => new PartyLookupViewModel
             {
                 PartyId = p.Id,

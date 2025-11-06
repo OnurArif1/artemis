@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Artemis.API.Entities.Enums;
 
-public enum PartyLooukpSearchType
+public enum PartyLookupSearchType
 {
     [Display(Name = "None")]
     None = 0,

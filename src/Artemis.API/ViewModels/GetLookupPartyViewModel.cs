@@ -6,5 +6,5 @@ public class GetLookupPartyViewModel
 {
     public int? PartyId { get; set; }
     public string? SearchText { get; set; }
-    public PartyLooukpSearchType? PartyLooukpSearchType { get; set; }
+    public PartyLookupSearchType? PartyLookupSearchType { get; set; }
 }

@@ -46,7 +46,6 @@ const roomTypeOptions = [
 
 const isEditMode = computed(() => !!props.room?.id);
 
-// ✅ Party verilerini çekme fonksiyonu (geliştirilmiş)
 async function getPartyLookup(filterText = '') {
     const filter = {
         searchText: filterText,
@@ -56,16 +55,11 @@ async function getPartyLookup(filterText = '') {
     try {
         partyLoading.value = true;
         const response = await partyService.getLookup(filter);
-
-        // Bazı API’lerde "viewModels" yerine "resultViewmodels" veya "result" olabilir:
-        const list = response?.viewModels || response?.resultViewmodels || response?.result || response || [];
-
-        partyOptions.value = list.map((p) => ({
+        partyOptions.value = response?.viewModels.map((p) => ({
             label: p.partyName || p.name || p.title || 'Unnamed Party',
             value: p.partyId || p.id
         }));
 
-        console.log('✅ Party options loaded:', partyOptions.value);
     } catch (error) {
         console.error('❌ Party lookup error:', error);
     } finally {
@@ -91,9 +85,7 @@ async function getCategoryLookup(filterText = '') {
     try {
         categoryLoading.value = true;
         const response = await categoryService.getLookup(filter);
-        const list = response?.viewModels || response?.resultViewmodels || response?.result || response || [];
-
-        categoryOptions.value = list.map((c) => ({
+        categoryOptions.value = response?.viewModels.map((c) => ({
             label: c.title,
             value: c.categoryId || c.id
         }));
@@ -113,7 +105,6 @@ function onCategoryFilter(event) {
     }
 }
 
-// ✅ Sadece bir tane watch bloğu (hem edit hem create durumunu kapsar)
 watch(
     () => props.room,
     (newRoom) => {
@@ -121,7 +112,7 @@ watch(
             form.value = { ...newRoom };
         } else {
             form.value = { ...initial };
-            getPartyLookup(); // create popup açıldığında party verilerini çek
+            getPartyLookup();
             getCategoryLookup();
         }
     },
