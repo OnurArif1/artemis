@@ -1,3 +1,4 @@
+using Artemis.API.Hubs;
 using Artemis.API.Infrastructure;
 using Artemis.API.Services;
 using Artemis.API.Services.Interfaces;
@@ -5,7 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Services kayıtları
+builder.Services.AddSignalR();
+builder.Services.AddCors();
+
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IPartyService, PartyService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -23,9 +26,7 @@ builder.Services.AddDbContext<ArtemisDbContext>(options =>
     }
 });
 
-// Controller desteğini ekle
 builder.Services.AddControllers();
-// CORS (development için izin ver)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCors", policy =>
@@ -38,7 +39,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Identity Server Authentication
 builder.Services
     .AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
@@ -59,10 +59,12 @@ using (var scope = app.Services.CreateScope())
 app.UseHttpsRedirection();
 
 app.UseCors("DevCors");
-
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
+app.Urls.Add("http://0.0.0.0:5094");
 
 app.Run();

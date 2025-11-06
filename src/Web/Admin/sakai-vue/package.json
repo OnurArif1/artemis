@@ -8,6 +8,7 @@
         "lint": "eslint --fix . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
     },
     "dependencies": {
+        "@microsoft/signalr": "^9.0.6",
         "@primeuix/themes": "^1.0.0",
         "chart.js": "3.3.2",
         "primeicons": "^7.0.0",
