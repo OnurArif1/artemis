@@ -28,4 +28,25 @@ public class CategoryController : ControllerBase
         var categories = await _categoryService.GetCategoryLookup(viewmodel);
         return Ok(categories);
     }
+
+    [HttpPost("create")]
+    public async Task<IActionResult> CreateAsync(CreateOrUpdateCategoryViewModel viewModel)
+    {
+        await _categoryService.Create(viewModel);
+        return Ok();
+    }
+
+    [HttpPost("update")]
+    public async Task<IActionResult> UpdateAsync(CreateOrUpdateCategoryViewModel viewModel)
+    {
+        await _categoryService.Update(viewModel);
+        return Ok();
+    }
+    
+    [HttpDelete("delete/{id}")]
+    public async Task<IActionResult> DeleteAsync(int id)
+    {
+        await _categoryService.Delete(id);
+        return Ok();
+    }
 }

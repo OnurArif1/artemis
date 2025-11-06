@@ -27,4 +27,7 @@ export default class PartyService {
             data: payload
         });
     }
+    async delete(partyId) {
+        return this.request({ method: 'delete', url: `/party/delete/${partyId}` });
+    }
 }

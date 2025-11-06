@@ -43,24 +43,30 @@ function onPage(event) {
     load();
 }
 
-const showCreate = ref(false);
+const showFormDialog = ref(false);
+const showDeleteDialog = ref(false);
 const selectedCategory = ref(null);
 
 function openCreate() {
-    showCreate.value = true;
     selectedCategory.value = null;
+    showFormDialog.value = true;
 }
 
 function openUpdate(category) {
     selectedCategory.value = { ...category };
-    showCreate.value = true;
+    showFormDialog.value = true;
+}
+
+function openDelete(category) {
+    selectedCategory.value = { ...category };
+    showDeleteDialog.value = true;
 }
 
 function onCreated(payload) {
     (async () => {
         try {
             await categoryService.create(payload);
-            showCreate.value = false;
+            showFormDialog.value = false;
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Created', life: 3000 });
             await load();
         } catch (err) {
@@ -73,7 +79,7 @@ function onUpdated(payload) {
     (async () => {
         try {
             await categoryService.update(payload);
-            showCreate.value = false;
+            showFormDialog.value = false;
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Updated', life: 3000 });
             await load();
         } catch (err) {
@@ -82,8 +88,32 @@ function onUpdated(payload) {
     })();
 }
 
+function onDeleted(categoryId) {
+    (async () => {
+        try {
+            await categoryService.delete(categoryId); // ✅ ID’ye göre siler
+            showFormDialog.value = false; // Silme modali kapanır
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Deleted', life: 3000 });
+            await load(); // Listeyi yeniden yükler
+        } catch (err) {
+            console.error('Category delete error:', err);
+        }
+    })();
+}
+
+async function confirmDelete() {
+    try {
+        await categoryService.delete(selectedCategory.value.id);
+        showDeleteDialog.value = false;
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Deleted', life: 3000 });
+        await load();
+    } catch (err) {
+        console.error('Category delete error:', err);
+    }
+}
+
 function onCancel() {
-    showCreate.value = false;
+    showFormDialog.value = false;
 }
 </script>
 
@@ -101,17 +131,32 @@ function onCancel() {
             </template>
             <Column field="id" header="Id" />
             <Column field="title" header="Title" />
-            <Column header="Actions">
+            <Column header="Update">
                 <template #body="{ data }">
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" />
+                </template>
+            </Column>
+            <Column header="Delete">
+                <template #body="{ data }">
+                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" />
                 </template>
             </Column>
             <template #empty> No categories found. </template>
             <template #loading> Loading categories data. Please wait.</template>
         </DataTable>
 
-        <Dialog v-model:visible="showCreate" modal :closable="false" :header="selectedCategory ? 'Update Category' : 'Create Category'" style="width: 500px">
-            <CreateCategory :category="selectedCategory" @created="onCreated" @updated="onUpdated" @cancel="onCancel" />
+        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedCategory ? 'Update Category' : 'Create Category'" style="width: 500px">
+            <CreateCategory :category="selectedCategory" @created="onCreated" @updated="onUpdated" @deleted="onDeleted" @cancel="onCancel" />
+        </Dialog>
+
+        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Category" style="width: 400px">
+            <div class="p-4 text-center">
+                <p>Are you sure you want to delete <b>{{ selectedCategory?.title }}</b>?</p>
+                <div class="flex justify-center gap-3 mt-4">
+                    <Button label="Cancel" class="p-button-text" @click="showDeleteDialog = false" />
+                    <Button label="Delete" severity="danger" @click="confirmDelete" />
+                </div>
+            </div>
         </Dialog>
     </div>
 </template>

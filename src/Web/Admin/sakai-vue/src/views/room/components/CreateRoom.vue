@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, computed, onMounted } from 'vue';
+import { ref, watch, computed} from 'vue';
 import request from '@/service/request';
 import PartyService from '@/service/PartyService';
 import CategoryService from '@/service/CategoryService';
@@ -14,7 +14,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['created', 'updated', 'cancel']);
+const emit = defineEmits(['created', 'updated', 'cancel', 'deleted']);
 
 const initial = {
     topicId: 1,
@@ -44,20 +44,9 @@ const roomTypeOptions = [
     { label: 'Private', value: 2 }
 ];
 
-watch(
-    () => props.room,
-    (newRoom) => {
-        if (newRoom) {
-            form.value = { ...newRoom };
-        } else {
-            form.value = { ...initial };
-        }
-    },
-    { immediate: true }
-);
-
 const isEditMode = computed(() => !!props.room?.id);
 
+// ✅ Party verilerini çekme fonksiyonu (geliştirilmiş)
 async function getPartyLookup(filterText = '') {
     const filter = {
         searchText: filterText,
@@ -67,12 +56,18 @@ async function getPartyLookup(filterText = '') {
     try {
         partyLoading.value = true;
         const response = await partyService.getLookup(filter);
-        partyOptions.value = (response.viewModels || []).map((p) => ({
-            label: p.partyName,
-            value: p.partyId
+
+        // Bazı API’lerde "viewModels" yerine "resultViewmodels" veya "result" olabilir:
+        const list = response?.viewModels || response?.resultViewmodels || response?.result || response || [];
+
+        partyOptions.value = list.map((p) => ({
+            label: p.partyName || p.name || p.title || 'Unnamed Party',
+            value: p.partyId || p.id
         }));
+
+        console.log('✅ Party options loaded:', partyOptions.value);
     } catch (error) {
-        console.error('Err:', error);
+        console.error('❌ Party lookup error:', error);
     } finally {
         partyLoading.value = false;
     }
@@ -96,9 +91,11 @@ async function getCategoryLookup(filterText = '') {
     try {
         categoryLoading.value = true;
         const response = await categoryService.getLookup(filter);
-        categoryOptions.value = (response.viewModels || []).map((c) => ({
+        const list = response?.viewModels || response?.resultViewmodels || response?.result || response || [];
+
+        categoryOptions.value = list.map((c) => ({
             label: c.title,
-            value: c.categoryId
+            value: c.categoryId || c.id
         }));
     } catch (error) {
         console.error('Category lookup error:', error);
@@ -116,10 +113,20 @@ function onCategoryFilter(event) {
     }
 }
 
-onMounted(() => {
-    getPartyLookup();
-    getCategoryLookup();
-});
+// ✅ Sadece bir tane watch bloğu (hem edit hem create durumunu kapsar)
+watch(
+    () => props.room,
+    (newRoom) => {
+        if (newRoom) {
+            form.value = { ...newRoom };
+        } else {
+            form.value = { ...initial };
+            getPartyLookup(); // create popup açıldığında party verilerini çek
+            getCategoryLookup();
+        }
+    },
+    { immediate: true }
+);
 
 async function submit() {
     loading.value = true;

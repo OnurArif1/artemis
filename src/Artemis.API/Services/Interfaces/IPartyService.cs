@@ -8,4 +8,5 @@ public interface IPartyService
     ValueTask Create(CreateOrUpdatePartyViewModel viewModel);
     ValueTask Update(CreateOrUpdatePartyViewModel viewModel);
     ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel);
+    ValueTask Delete(int id);
 }

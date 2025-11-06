@@ -36,4 +36,7 @@ export default class CategoryService {
         });
         return response?.data ?? response;
     }
+    delete(categoryId) {
+        return this.request({ method: 'delete', url: `/category/delete/${categoryId}` });
+    }
 }

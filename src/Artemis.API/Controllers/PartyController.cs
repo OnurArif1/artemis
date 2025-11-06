@@ -41,4 +41,10 @@ public class PartyController : ControllerBase
         var parties = await _partyService.GetPartyLookup(viewmodel);
         return Ok(parties);
     }
+    [HttpDelete("delete/{id}")]
+    public async Task<IActionResult> DeleteAsync(int id)
+    {
+        await _partyService.Delete(id);
+        return Ok();
+    }
 }

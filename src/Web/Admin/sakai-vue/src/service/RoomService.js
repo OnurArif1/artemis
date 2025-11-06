@@ -27,4 +27,7 @@ export default class RoomService {
             data: payload
         });
     }
+    async delete(roomId) {
+        return this.request({ method: 'delete', url: `/room/delete/${roomId}` });
+    }
 }

@@ -7,4 +7,5 @@ public interface IRoomService
     ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel);
     ValueTask Create(CreateOrUpdateRoomViewModel viewModel);
     ValueTask Update(CreateOrUpdateRoomViewModel viewModel);
+    ValueTask Delete(int id);
 }

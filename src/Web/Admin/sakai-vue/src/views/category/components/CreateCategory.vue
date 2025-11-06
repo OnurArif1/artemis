@@ -8,7 +8,7 @@ const props = defineProps({
     }
 });
 
-const emit = defineEmits(['created', 'updated', 'cancel']);
+const emit = defineEmits(['created', 'updated', 'cancel', 'deleted']);
 
 const initial = {
     title: ''

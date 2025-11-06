@@ -36,4 +36,10 @@ public class RoomController : ControllerBase
         await _roomService.Update(viewModel);
         return Ok();
     }
+    [HttpPost("delete")]
+    public async Task<IActionResult> DeleteAsync(int id)
+    {
+        await _roomService.Delete(id);
+        return Ok();
+    }
 }

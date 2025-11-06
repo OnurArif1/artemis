@@ -43,24 +43,30 @@ function onPage(event) {
     load();
 }
 
-const showCreate = ref(false);
+const showFormDialog = ref(false);
+const showDeleteDialog = ref(false);
 const selectedParty = ref(null);
 
 function openCreate() {
-    showCreate.value = true;
     selectedParty.value = null;
+    showFormDialog.value = true;
 }
 
 function openUpdate(party) {
     selectedParty.value = { ...party };
-    showCreate.value = true;
+    showFormDialog.value = true;
+}
+
+function openDelete(party) {
+    selectedParty.value = { ...party };
+    showDeleteDialog.value = true;
 }
 
 function onCreated(payload) {
     (async () => {
         try {
             await partyService.create(payload);
-            showCreate.value = false;
+            showFormDialog.value = false;
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Created', life: 3000 });
             await load();
         } catch (err) {
@@ -73,7 +79,7 @@ function onUpdated(payload) {
     (async () => {
         try {
             await partyService.update(payload);
-            showCreate.value = false;
+            showFormDialog.value = false;
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Updated', life: 3000 });
             await load();
         } catch (err) {
@@ -82,8 +88,32 @@ function onUpdated(payload) {
     })();
 }
 
+function onDeleted(partyId) {
+    (async () => {
+        try {
+            await partyService.delete(partyId);
+            showDeleteDialog.value = false;
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Deleted', life: 3000 });
+            await load();
+        } catch (err) {
+            console.error('Party delete error:', err);
+        }
+    })();
+}
+
+async function confirmDelete() {
+    try {
+        await partyService.delete(selectedParty.value.id);
+        showDeleteDialog.value = false;
+        toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Deleted', life: 3000 });
+        await load();
+    } catch (err) {
+        console.error('Party delete error:', err);
+    }
+}
+
 function onCancel() {
-    showCreate.value = false;
+    showFormDialog.value = false;
 }
 </script>
 
@@ -99,22 +129,44 @@ function onCancel() {
                     <Button icon="pi pi-plus" @click="openCreate" v-tooltip.bottom="'Yeni party oluştur'" />
                 </div>
             </template>
+
             <Column field="id" header="Id" />
             <Column field="partyName" header="Name" />
             <Column field="partyType" header="Type" />
             <Column field="deviceId" header="DeviceId" />
             <Column field="isBanned" header="Banned" />
-            <Column header="Actions">
+
+            <Column header="Update">
                 <template #body="{ data }">
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" />
                 </template>
             </Column>
-            <template #empty> No parties found. </template>
-            <template #loading> Loading parties data. Please wait.</template>
+
+            <Column header="Delete">
+                <template #body="{ data }">
+                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" />
+                </template>
+            </Column>
+
+            <template #empty>No parties found.</template>
+            <template #loading>Loading parties data. Please wait.</template>
         </DataTable>
 
-        <Dialog v-model:visible="showCreate" modal :closable="false" :header="selectedParty ? 'Update Party' : 'Create Party'" style="width: 500px">
-            <CreateParty :party="selectedParty" @created="onCreated" @updated="onUpdated" @cancel="onCancel" />
+        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedParty ? 'Update Party' : 'Create Party'" style="width: 500px">
+            <CreateParty :party="selectedParty" @created="onCreated" @updated="onUpdated" @deleted="onDeleted" @cancel="onCancel" />
+        </Dialog>
+
+        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Party" style="width: 400px">
+            <div class="p-4 text-center">
+                <p>
+                    Are you sure you want to delete <b>{{ selectedParty?.partyName }}</b
+                    >?
+                </p>
+                <div class="flex justify-center gap-3 mt-4">
+                    <Button label="Cancel" class="p-button-text" @click="showDeleteDialog = false" />
+                    <Button label="Delete" severity="danger" @click="confirmDelete" />
+                </div>
+            </div>
         </Dialog>
     </div>
 </template>
