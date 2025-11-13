@@ -9,7 +9,7 @@ public class CommentController : ControllerBase
 {
     private readonly ICommentService _commentService;
 
-    public PartyController(ITopicService commentService)
+    public CommentController(ICommentService commentService)
     {
         _commentService = commentService;
     }
@@ -36,21 +36,57 @@ public class CommentController : ControllerBase
     [HttpPost("create")]
     public async Task<IActionResult> CreateAsync(CreateOrUpdateCommentViewModel viewModel)
     {
-        await _commentService.Create(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _commentService.Create(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 
     [HttpPost("update")]
     public async Task<IActionResult> UpdateAsync(CreateOrUpdateCommentViewModel viewModel)
     {
-        await _commentService.Update(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _commentService.Update(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        await _commentService.Delete(id);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _commentService.Delete(id);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 }

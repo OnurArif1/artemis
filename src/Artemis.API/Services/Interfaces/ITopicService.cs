@@ -6,7 +6,7 @@ public interface ITopicService
 {
     ValueTask<TopicListViewModel> GetList(TopicFilterViewModel filterViewModel);
     ValueTask<TopicGetViewModel?> GetById(int id);
-    ValueTask Create(CreateOrUpdateTopicViewModel viewModel);
-    ValueTask Update(CreateOrUpdateTopicViewModel viewModel);
-    ValueTask Delete(int id);
+    ValueTask<ResultViewModel> Create(CreateOrUpdateTopicViewModel viewModel);
+    ValueTask<ResultViewModel> Update(CreateOrUpdateTopicViewModel viewModel);
+    ValueTask<ResultViewModel> Delete(int id);
 }

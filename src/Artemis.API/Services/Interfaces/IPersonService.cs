@@ -5,7 +5,8 @@ namespace Artemis.API.Services.Interfaces;
 public interface IPersonService
 {
     ValueTask<PersonListViewModel> GetList(PersonFilterViewModel filterViewModel);
-    ValueTask Create(CreateOrUpdatePersonViewModel viewModel);
-    ValueTask Update(CreateOrUpdatePersonViewModel viewModel);
-    ValueTask Delete(int id);
+    ValueTask<PersonGetViewModel?> GetById(int id);
+    ValueTask<ResultViewModel> Create(CreateOrUpdatePersonViewModel viewModel);
+    ValueTask<ResultViewModel> Update(CreateOrUpdatePersonViewModel viewModel);
+    ValueTask<ResultViewModel> Delete(int id);
 }

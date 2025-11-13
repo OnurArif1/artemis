@@ -6,7 +6,7 @@ public interface ICommentService
 {
     ValueTask<CommentListViewModel> GetList(CommentFilterViewModel filterViewModel);
     ValueTask<CommentGetViewModel?> GetById(int id);
-    ValueTask Create(CreateOrUpdateCommentViewModel viewModel);
-    ValueTask Update(CreateOrUpdateCommentViewModel viewModel);
-    ValueTask Delete(int id);
+    ValueTask<ResultViewModel> Create(CreateOrUpdateCommentViewModel viewModel);
+    ValueTask<ResultViewModel> Update(CreateOrUpdateCommentViewModel viewModel);
+    ValueTask<ResultViewModel> Delete(int id);
 }

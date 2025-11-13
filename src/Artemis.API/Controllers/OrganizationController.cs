@@ -11,7 +11,7 @@ public class OrganizationController : ControllerBase
 {
     private readonly IOrganizationService _organizationService;
 
-    public RoomController(IOrganizationService organizationService)
+    public OrganizationController(IOrganizationService organizationService)
     {
         _organizationService = organizationService;
     }
@@ -23,23 +23,72 @@ public class OrganizationController : ControllerBase
         return Ok(viewModels);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetByIdAsync(int id)
+    {
+        var viewModel = await _organizationService.GetById(id);
+        if (viewModel == null)
+        {
+            return NotFound();
+        }
+        
+        return Ok(viewModel);
+    }
+
     [HttpPost("create")]
     public async Task<IActionResult> CreateAsync(CreateOrUpdateOrganizationViewModel viewModel)
     {
-        await _organizationService.Create(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _organizationService.Create(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 
     [HttpPost("update")]
     public async Task<IActionResult> UpdateAsync(CreateOrUpdateOrganizationViewModel viewModel)
     {
-        await _organizationService.Update(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _organizationService.Update(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
+
     [HttpPost("delete")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        await _organizationService.Delete(id);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _organizationService.Delete(id);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 }

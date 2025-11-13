@@ -1,9 +1,11 @@
+using Artemis.API.Entities.Enums;
+
 namespace Artemis.API.Services;
 
 public class OrganizationListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<MentionPartyMapResultViewModel> ResultViewModels { get; set; } = new();
+    public IEnumerable<OrganizationResultViewModel> ResultViewModels { get; set; } = new List<OrganizationResultViewModel>();
 }
 
 public class OrganizationResultViewModel

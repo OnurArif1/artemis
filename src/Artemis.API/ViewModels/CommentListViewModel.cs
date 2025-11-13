@@ -5,7 +5,7 @@ namespace Artemis.API.Services;
 public class CommentListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<CommentResultViewModel> ResultViewModels { get; set; } = new();
+    public IEnumerable<CommentResultViewModel> ResultViewModels { get; set; } = new List<CommentResultViewModel>();
 }
 
 public class CommentResultViewModel

@@ -9,7 +9,7 @@ public class TopicController : ControllerBase
 {
     private readonly ITopicService _topicService;
 
-    public PartyController(ITopicService topicService)
+    public TopicController(ITopicService topicService)
     {
         _topicService = topicService;
     }
@@ -36,21 +36,57 @@ public class TopicController : ControllerBase
     [HttpPost("create")]
     public async Task<IActionResult> CreateAsync(CreateOrUpdateTopicViewModel viewModel)
     {
-        await _topicService.Create(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _topicService.Create(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 
     [HttpPost("update")]
     public async Task<IActionResult> UpdateAsync(CreateOrUpdateTopicViewModel viewModel)
     {
-        await _topicService.Update(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _topicService.Update(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        await _topicService.Delete(id);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _topicService.Delete(id);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 }

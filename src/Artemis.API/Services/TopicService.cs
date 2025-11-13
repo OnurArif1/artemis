@@ -8,35 +8,16 @@ namespace Artemis.API.Services;
 public class TopicService : ITopicService
 {
     private readonly ArtemisDbContext _artemisDbContext;
+    private readonly IQueryable<Topic> query;
 
     public TopicService(ArtemisDbContext artemisDbContext)
     {
         _artemisDbContext = artemisDbContext;
-    }
-
-    public async ValueTask Create(CreateOrUpdateTopicViewModel viewModel)
-    {
-        var topic = new Topic()
-        {
-            PartyId = viewModel.PartyId,
-            Title = viewModel.Title,
-            Type = viewModel.Type,
-            LocationX = viewModel.LocationX,
-            LocationY = viewModel.LocationY,
-            CategoryId = viewModel.CategoryId,
-            MentionId = viewModel.MentionId,
-            Upvote = viewModel.Upvote,
-            Downvote = viewModel.Downvote,
-            LastUpdateDate = DateTime.UtcNow
-        };
-
-        await _artemisDbContext.Topics.AddAsync(topic);
-        _artemisDbContext.SaveChanges();
+        query = _artemisDbContext.Topics.AsQueryable();
     }
 
     public async ValueTask<TopicListViewModel> GetList(TopicFilterViewModel filterViewModel)
     {
-        var query = _artemisDbContext.Subscribes.AsQueryable();
         var count = await query.CountAsync();
 
         var topics = await query.OrderByDescending(i => i.CreateDate)
@@ -65,9 +46,8 @@ public class TopicService : ITopicService
         };
     }
 
-    public async Task<TopicGetViewModel?> GetById(int id)
+    public async ValueTask<TopicGetViewModel?> GetById(int id)
     {
-        var query = _artemisDbContext.Subscribes.AsQueryable();
         var topic = await query.FirstOrDefaultAsync(i => i.Id == id);
 
         if (topic is not null)
@@ -92,35 +72,121 @@ public class TopicService : ITopicService
         return null;
     }
 
-    public async ValueTask Update(CreateOrUpdateTopicViewModel viewModel)
+    public async ValueTask<ResultViewModel> Create(CreateOrUpdateTopicViewModel viewModel)
     {
-        var query = _artemisDbContext.Subscribes.AsQueryable();
-        var topic = await query.FirstOrDefaultAsync(i => i.Id == viewModel.Id);
+        ResultViewModel resultViewModel = new ResultViewModel();
 
+        if (viewModel.PartyId <= 0)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = "PartyId must be greater than zero.";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.GreaterThanZero;
+
+            return resultViewModel;
+        }
+
+        if (string.IsNullOrWhiteSpace(viewModel.Title))
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = "Title cannot be null or whitespace.";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.NullOrWhiteSpace;
+
+            return resultViewModel;
+        }
+
+        await _artemisDbContext.Topics.AddAsync(new Topic
+        {
+            PartyId = viewModel.PartyId,
+            Title = viewModel.Title,
+            Type = viewModel.Type,
+            LocationX = viewModel.LocationX,
+            LocationY = viewModel.LocationY,
+            CategoryId = viewModel.CategoryId,
+            MentionId = viewModel.MentionId,
+            Upvote = viewModel.Upvote,
+            Downvote = viewModel.Downvote,
+            LastUpdateDate = DateTime.UtcNow,
+            CreateDate = DateTime.UtcNow
+        });
+        _artemisDbContext.SaveChanges();
+
+        resultViewModel.IsSuccess = true;
+        return resultViewModel;
+    }
+
+    public async ValueTask<ResultViewModel> Update(CreateOrUpdateTopicViewModel viewModel)
+    {
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        if (viewModel.Id <= 0)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = "Id must be greater than zero.";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.GreaterThanZero;
+
+            return resultViewModel;
+        }
+
+        var topic = await query.FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (topic is not null)
         {
-            topic.PartyId = viewModel.PartyId;
-            topic.Title = viewModel.Title;
-            topic.Type = viewModel.Type;
-            topic.LocationX = viewModel.LocationX;
-            topic.LocationY = viewModel.LocationY;
-            topic.CategoryId = viewModel.CategoryId;
-            topic.MentionId = viewModel.MentionId;
-            topic.Upvote = viewModel.Upvote;
-            topic.Downvote = viewModel.Downvote;
+            if (topic.PartyId != viewModel.PartyId)
+                topic.PartyId = viewModel.PartyId;
+
+            if (topic.Title != viewModel.Title)
+                topic.Title = viewModel.Title;
+            
+            if (topic.Type != viewModel.Type)
+                topic.Type = viewModel.Type;
+
+            if (topic.LocationX != viewModel.LocationX)
+                topic.LocationX = viewModel.LocationX;
+
+            if (topic.LocationY != viewModel.LocationY)
+                topic.LocationY = viewModel.LocationY;
+
+            if (topic.CategoryId != viewModel.CategoryId)
+                topic.CategoryId = viewModel.CategoryId;
+
+            if (topic.MentionId != viewModel.MentionId)
+                topic.MentionId = viewModel.MentionId;
+
+            if (topic.Upvote != viewModel.Upvote)
+                topic.Upvote = viewModel.Upvote;
+
+            if (topic.Downvote != viewModel.Downvote)
+                topic.Downvote = viewModel.Downvote;
+
             topic.LastUpdateDate = DateTime.UtcNow;
             await _artemisDbContext.SaveChangesAsync();
         }    
+
+        resultViewModel.IsSuccess = true;
+        return resultViewModel;
     }
 
-    public async ValueTask Delete(int id)
+    public async ValueTask<ResultViewModel> Delete(int id)
     {
-        var topic = await _artemisDbContext.Topics.FirstOrDefaultAsync(i => i.Id == id);
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        if (id <= 0)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = "Id must be greater than zero.";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.GreaterThanZero;
+
+            return resultViewModel;
+        }
+
+        var topic = await query.FirstOrDefaultAsync(i => i.Id == id);
 
         if (topic is not null)
         {
             _artemisDbContext.Topics.Remove(topic);
             await _artemisDbContext.SaveChangesAsync();
         }
+
+        resultViewModel.IsSuccess = true;
+        return resultViewModel;
     }
 }

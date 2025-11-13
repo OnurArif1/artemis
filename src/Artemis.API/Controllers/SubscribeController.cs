@@ -24,21 +24,57 @@ public class SubscribeController : ControllerBase
     [HttpPost("create")]
     public async Task<IActionResult> CreateAsync(CreateOrUpdateSubscribeViewModel viewModel)
     {
-        await _subscribeService.Create(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _subscribeService.Create(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 
     [HttpPost("update")]
     public async Task<IActionResult> UpdateAsync(CreateOrUpdateSubscribeViewModel viewModel)
     {
-        await _subscribeService.Update(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _subscribeService.Update(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        await _subscribeService.Delete(id);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _subscribeService.Delete(id);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 }

@@ -5,7 +5,7 @@ namespace Artemis.API.Services;
 public class TopicListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<TopicResultViewModel> ResultViewModels { get; set; } = new();
+    public IEnumerable<TopicResultViewModel> ResultViewModels { get; set; } = new List<TopicResultViewModel>();
 }
 
 public class TopicResultViewModel

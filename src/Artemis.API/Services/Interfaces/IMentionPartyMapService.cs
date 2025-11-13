@@ -4,8 +4,9 @@ namespace Artemis.API.Services.Interfaces;
 
 public interface IMentionPartyMapService
 {
-    ValueTask<MentionPartyMapViewModel> GetList(MentionPartyMapFilterViewModel filterViewModel);
-    ValueTask Create(CreateOrUpdateMentionPartyMapViewModel viewModel);
-    ValueTask Update(CreateOrUpdateMentionPartyMapViewModel viewModel);
-    ValueTask Delete(int id);
+    ValueTask<MentionPartyMapListViewModel> GetList(MentionPartyMapFilterViewModel filterViewModel);
+    ValueTask<MentionPartyMapGetViewModel?> GetById(int id);
+    ValueTask<ResultViewModel> Create(CreateOrUpdateMentionPartyMapViewModel viewModel);
+    ValueTask<ResultViewModel> Update(CreateOrUpdateMentionPartyMapViewModel viewModel);
+    ValueTask<ResultViewModel> Delete(int id);
 }
