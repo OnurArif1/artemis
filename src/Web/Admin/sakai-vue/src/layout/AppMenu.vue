@@ -44,7 +44,13 @@ const model = ref([
             { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
             { label: 'Rooms', icon: 'pi pi-fw pi-table', to: '/room/list' },
             { label: 'Parties', icon: 'pi pi-fw pi-users', to: '/party/list' },
-            { label: 'Categories', icon: 'pi pi-fw pi-align-center', to: '/category/list' }
+            { label: 'Categories', icon: 'pi pi-fw pi-align-center', to: '/category/list' },
+            { label: 'Hashtags', icon: 'pi pi-fw pi-tag', to: '/hashtag/list' },
+            { label: 'Room Hashtag Maps', icon: 'pi pi-fw pi-link', to: '/roomhashtagmap/list' },
+            { label: 'Category Hashtag Maps', icon: 'pi pi-fw pi-sitemap', to: '/categoryhashtagmap/list' },
+            { label: 'Topic Hashtag Maps', icon: 'pi pi-fw pi-bookmark', to: '/topichashtagmap/list' },
+            { label: 'Mentions', icon: 'pi pi-fw pi-at', to: '/mention/list' },
+            { label: 'Messages', icon: 'pi pi-fw pi-comments', to: '/message/list' }
         ]
     },
     {

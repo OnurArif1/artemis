@@ -1,4 +1,4 @@
-export default class PartyService {
+export default class HashtagService {
     constructor(request) {
         this.request = request;
     }
@@ -6,7 +6,7 @@ export default class PartyService {
     async getList(filter = {}) {
         const response = await this.request({
             method: 'get',
-            url: '/party/list',
+            url: '/hashtag/list',
             params: filter
         });
         return response?.data ?? response;
@@ -15,7 +15,7 @@ export default class PartyService {
     async create(payload) {
         await this.request({
             method: 'post',
-            url: '/party/create',
+            url: '/hashtag/create',
             data: payload
         });
     }
@@ -23,18 +23,22 @@ export default class PartyService {
     async update(payload) {
         await this.request({
             method: 'post',
-            url: '/party/update',
+            url: '/hashtag/update',
             data: payload
         });
     }
-    async delete(partyId) {
-        return this.request({ method: 'delete', url: `/party/delete/${partyId}` });
+
+    async delete(hashtagId) {
+        return this.request({
+            method: 'delete',
+            url: `/hashtag/delete/${hashtagId}`
+        });
     }
 
     async getLookup(filter = {}) {
         const response = await this.request({
             method: 'get',
-            url: '/party/lookup',
+            url: '/hashtag/lookup',
             params: filter
         });
         return response?.data ?? response;

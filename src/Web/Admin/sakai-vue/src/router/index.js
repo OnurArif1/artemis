@@ -29,6 +29,36 @@ const router = createRouter({
                     path: '/category/list',
                     name: 'category-list',
                     component: () => import('@/views/category/CategoryList.vue')
+                },
+                {
+                    path: '/hashtag/list',
+                    name: 'hashtag-list',
+                    component: () => import('@/views/hashtag/HashtagList.vue')
+                },
+                {
+                    path: '/roomhashtagmap/list',
+                    name: 'roomhashtagmap-list',
+                    component: () => import('@/views/roomHashtagMap/RoomHashtagMapList.vue')
+                },
+                {
+                    path: '/categoryhashtagmap/list',
+                    name: 'categoryhashtagmap-list',
+                    component: () => import('@/views/categoryHashtagMap/CategoryHashtagMapList.vue')
+                },
+                {
+                    path: '/topichashtagmap/list',
+                    name: 'topichashtagmap-list',
+                    component: () => import('@/views/topicHashtagMap/TopicHashtagMapList.vue')
+                },
+                {
+                    path: '/mention/list',
+                    name: 'mention-list',
+                    component: () => import('@/views/mention/MentionList.vue')
+                },
+                {
+                    path: '/message/list',
+                    name: 'message-list',
+                    component: () => import('@/views/message/MessageList.vue')
                 }
             ]
         },

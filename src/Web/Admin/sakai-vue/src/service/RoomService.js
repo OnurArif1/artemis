@@ -30,4 +30,13 @@ export default class RoomService {
     async delete(roomId) {
         return this.request({ method: 'delete', url: `/room/delete/${roomId}` });
     }
+
+    async getLookup(filter = {}) {
+        const response = await this.request({
+            method: 'get',
+            url: '/room/lookup',
+            params: filter
+        });
+        return response?.data ?? response;
+    }
 }

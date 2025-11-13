@@ -1,4 +1,4 @@
-export default class PartyService {
+export default class MessageService {
     constructor(request) {
         this.request = request;
     }
@@ -6,7 +6,7 @@ export default class PartyService {
     async getList(filter = {}) {
         const response = await this.request({
             method: 'get',
-            url: '/party/list',
+            url: '/message/list',
             params: filter
         });
         return response?.data ?? response;
@@ -15,7 +15,7 @@ export default class PartyService {
     async create(payload) {
         await this.request({
             method: 'post',
-            url: '/party/create',
+            url: '/message/create',
             data: payload
         });
     }
@@ -23,20 +23,12 @@ export default class PartyService {
     async update(payload) {
         await this.request({
             method: 'post',
-            url: '/party/update',
+            url: '/message/update',
             data: payload
         });
     }
-    async delete(partyId) {
-        return this.request({ method: 'delete', url: `/party/delete/${partyId}` });
-    }
-
-    async getLookup(filter = {}) {
-        const response = await this.request({
-            method: 'get',
-            url: '/party/lookup',
-            params: filter
-        });
-        return response?.data ?? response;
+    async delete(messageId) {
+        return this.request({ method: 'delete', url: `/message/delete/${messageId}` });
     }
 }
+
