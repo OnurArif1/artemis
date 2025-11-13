@@ -24,7 +24,7 @@ public class PersonService : IPersonService
             DeviceId = viewModel.DeviceId
         };
 
-        await _artemisDbContext.Persons.AddAsync(party);
+        await _artemisDbContext.Persons.AddAsync(person);
         _artemisDbContext.SaveChanges();
     }
 
