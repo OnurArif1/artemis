@@ -71,9 +71,10 @@ public class OrganizationService : IOrganizationService
     public async ValueTask Delete(int id)
     {
         var organization = await _artemisDbContext.Organizations.FirstOrDefaultAsync(i => i.Id == id);
+        
         if (organization is not null)
         {
-            _artemisDbContext.Organizations.Remove(room);
+            _artemisDbContext.Organizations.Remove(organization);
             await _artemisDbContext.SaveChangesAsync();
         }
     }
