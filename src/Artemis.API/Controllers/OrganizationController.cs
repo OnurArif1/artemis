@@ -1,23 +1,32 @@
+using Artemis.API.Entities;
 using Artemis.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+
 
 namespace Artemis.API.Services;
 
 [Route("api/[controller]")]
 [ApiController]
-public class TopicController : ControllerBase
+public class OrganizationController : ControllerBase
 {
-    private readonly ITopicService _topicService;
+    private readonly IOrganizationService _organizationService;
 
-    public TopicController(ITopicService topicService)
+    public OrganizationController(IOrganizationService organizationService)
     {
-        _topicService = topicService;
+        _organizationService = organizationService;
+    }
+
+    [HttpGet("list")]
+    public async Task<IActionResult> GetListAsync([FromQuery] OrganizationFilterViewModel viewModel)
+    {
+        var viewModels = await _organizationService.GetList(viewModel);
+        return Ok(viewModels);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
-        var viewModel = await _topicService.GetById(id);
+        var viewModel = await _organizationService.GetById(id);
         if (viewModel == null)
         {
             return NotFound();
@@ -26,21 +35,14 @@ public class TopicController : ControllerBase
         return Ok(viewModel);
     }
 
-    [HttpGet("list")]
-    public async Task<IActionResult> GetListAsync([FromQuery] TopicFilterViewModel viewModel)
-    {
-        var viewModels = await _topicService.GetList(viewModel);
-        return Ok(viewModels);
-    }
-
     [HttpPost("create")]
-    public async Task<IActionResult> CreateAsync(CreateOrUpdateTopicViewModel viewModel)
+    public async Task<IActionResult> CreateAsync(CreateOrUpdateOrganizationViewModel viewModel)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Create(viewModel);
+            resultViewModel = await _organizationService.Create(viewModel);
         }
         catch (System.Exception ex)
         {
@@ -53,13 +55,13 @@ public class TopicController : ControllerBase
     }
 
     [HttpPost("update")]
-    public async Task<IActionResult> UpdateAsync(CreateOrUpdateTopicViewModel viewModel)
+    public async Task<IActionResult> UpdateAsync(CreateOrUpdateOrganizationViewModel viewModel)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Update(viewModel);
+            resultViewModel = await _organizationService.Update(viewModel);
         }
         catch (System.Exception ex)
         {
@@ -71,14 +73,14 @@ public class TopicController : ControllerBase
         return Ok(resultViewModel);
     }
 
-    [HttpDelete("delete/{id}")]
+    [HttpPost("delete")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Delete(id);
+            resultViewModel = await _organizationService.Delete(id);
         }
         catch (System.Exception ex)
         {

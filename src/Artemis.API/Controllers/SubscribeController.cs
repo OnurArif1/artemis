@@ -5,42 +5,30 @@ namespace Artemis.API.Services;
 
 [Route("api/[controller]")]
 [ApiController]
-public class TopicController : ControllerBase
+public class SubscribeController : ControllerBase
 {
-    private readonly ITopicService _topicService;
+    private readonly ISubscribeService _subscribeService;
 
-    public TopicController(ITopicService topicService)
+    public SubscribeController(ISubscribeService subscribeService)
     {
-        _topicService = topicService;
-    }
-
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetByIdAsync(int id)
-    {
-        var viewModel = await _topicService.GetById(id);
-        if (viewModel == null)
-        {
-            return NotFound();
-        }
-        
-        return Ok(viewModel);
+        _subscribeService = subscribeService;
     }
 
     [HttpGet("list")]
-    public async Task<IActionResult> GetListAsync([FromQuery] TopicFilterViewModel viewModel)
+    public async Task<IActionResult> GetListAsync([FromQuery] SubscribeFilterViewModel viewModel)
     {
-        var viewModels = await _topicService.GetList(viewModel);
+        var viewModels = await _subscribeService.GetList(viewModel);
         return Ok(viewModels);
     }
 
     [HttpPost("create")]
-    public async Task<IActionResult> CreateAsync(CreateOrUpdateTopicViewModel viewModel)
+    public async Task<IActionResult> CreateAsync(CreateOrUpdateSubscribeViewModel viewModel)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Create(viewModel);
+            resultViewModel = await _subscribeService.Create(viewModel);
         }
         catch (System.Exception ex)
         {
@@ -53,13 +41,13 @@ public class TopicController : ControllerBase
     }
 
     [HttpPost("update")]
-    public async Task<IActionResult> UpdateAsync(CreateOrUpdateTopicViewModel viewModel)
+    public async Task<IActionResult> UpdateAsync(CreateOrUpdateSubscribeViewModel viewModel)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Update(viewModel);
+            resultViewModel = await _subscribeService.Update(viewModel);
         }
         catch (System.Exception ex)
         {
@@ -78,7 +66,7 @@ public class TopicController : ControllerBase
 
         try
         {
-            resultViewModel = await _topicService.Delete(id);
+            resultViewModel = await _subscribeService.Delete(id);
         }
         catch (System.Exception ex)
         {

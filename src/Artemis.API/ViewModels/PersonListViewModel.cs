@@ -2,13 +2,13 @@ using Artemis.API.Entities.Enums;
 
 namespace Artemis.API.Services;
 
-public class PartyListViewModel
+public class PersonListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<PartyResultViewModel> ResultViewmodels { get; set; } = new List<PartyResultViewModel>();
+    public IEnumerable<PersonResultViewModel> ResultViewModels { get; set; } = new List<PersonResultViewModel>();
 }
 
-public class PartyResultViewModel
+public class PersonResultViewModel
 {
     public int Id { get; set; }
     public string PartyName { get; set; }

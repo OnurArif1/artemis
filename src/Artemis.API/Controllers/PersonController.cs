@@ -5,19 +5,26 @@ namespace Artemis.API.Services;
 
 [Route("api/[controller]")]
 [ApiController]
-public class TopicController : ControllerBase
+public class PersonController : ControllerBase
 {
-    private readonly ITopicService _topicService;
+    private readonly IPersonService _personService;
 
-    public TopicController(ITopicService topicService)
+    public PersonController(IPersonService personService)
     {
-        _topicService = topicService;
+        _personService = personService;
+    }
+
+    [HttpGet("list")]
+    public async Task<IActionResult> GetListAsync([FromQuery] PersonFilterViewModel viewModel)
+    {
+        var viewModels = await _personService.GetList(viewModel);
+        return Ok(viewModels);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
-        var viewModel = await _topicService.GetById(id);
+        var viewModel = await _personService.GetById(id);
         if (viewModel == null)
         {
             return NotFound();
@@ -26,21 +33,14 @@ public class TopicController : ControllerBase
         return Ok(viewModel);
     }
 
-    [HttpGet("list")]
-    public async Task<IActionResult> GetListAsync([FromQuery] TopicFilterViewModel viewModel)
-    {
-        var viewModels = await _topicService.GetList(viewModel);
-        return Ok(viewModels);
-    }
-
     [HttpPost("create")]
-    public async Task<IActionResult> CreateAsync(CreateOrUpdateTopicViewModel viewModel)
+    public async Task<IActionResult> CreateAsync(CreateOrUpdatePersonViewModel viewModel)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Create(viewModel);
+            resultViewModel = await _personService.Create(viewModel);
         }
         catch (System.Exception ex)
         {
@@ -53,13 +53,13 @@ public class TopicController : ControllerBase
     }
 
     [HttpPost("update")]
-    public async Task<IActionResult> UpdateAsync(CreateOrUpdateTopicViewModel viewModel)
+    public async Task<IActionResult> UpdateAsync(CreateOrUpdatePersonViewModel viewModel)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Update(viewModel);
+            resultViewModel = await _personService.Update(viewModel);
         }
         catch (System.Exception ex)
         {
@@ -78,7 +78,7 @@ public class TopicController : ControllerBase
 
         try
         {
-            resultViewModel = await _topicService.Delete(id);
+            resultViewModel = await _personService.Delete(id);
         }
         catch (System.Exception ex)
         {

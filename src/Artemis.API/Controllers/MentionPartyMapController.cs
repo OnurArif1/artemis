@@ -2,7 +2,6 @@ using Artemis.API.Entities;
 using Artemis.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-
 namespace Artemis.API.Services;
 
 [Route("api/[controller]")]
@@ -11,7 +10,7 @@ public class MentionPartyMapController : ControllerBase
 {
     private readonly IMentionPartyMapService _mentionPartyMapService;
 
-    public RoomController(IMentionPartyMapService mentionPartyMapService)
+    public MentionPartyMapController(IMentionPartyMapService mentionPartyMapService)
     {
         _mentionPartyMapService = mentionPartyMapService;
     }
@@ -23,23 +22,72 @@ public class MentionPartyMapController : ControllerBase
         return Ok(viewModels);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetByIdAsync(int id)
+    {
+        var viewModel = await _mentionPartyMapService.GetById(id);
+        if (viewModel == null)
+        {
+            return NotFound();
+        }
+        
+        return Ok(viewModel);
+    }
+
     [HttpPost("create")]
     public async Task<IActionResult> CreateAsync(CreateOrUpdateMentionPartyMapViewModel viewModel)
     {
-        await _roomService.Create(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _mentionPartyMapService.Create(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 
     [HttpPost("update")]
     public async Task<IActionResult> UpdateAsync(CreateOrUpdateMentionPartyMapViewModel viewModel)
     {
-        await _mentionPartyMapService.Update(viewModel);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _mentionPartyMapService.Update(viewModel);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
+
     [HttpPost("delete")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
-        await _mentionPartyMapService.Delete(id);
-        return Ok();
+        ResultViewModel resultViewModel = new ResultViewModel();
+
+        try
+        {
+            resultViewModel = await _mentionPartyMapService.Delete(id);
+        }
+        catch (System.Exception ex)
+        {
+            resultViewModel.IsSuccess = false;
+            resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
+            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.UnknownError;
+        }
+
+        return Ok(resultViewModel);
     }
 }

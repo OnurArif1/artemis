@@ -5,19 +5,19 @@ namespace Artemis.API.Services;
 
 [Route("api/[controller]")]
 [ApiController]
-public class TopicController : ControllerBase
+public class CommentController : ControllerBase
 {
-    private readonly ITopicService _topicService;
+    private readonly ICommentService _commentService;
 
-    public TopicController(ITopicService topicService)
+    public CommentController(ICommentService commentService)
     {
-        _topicService = topicService;
+        _commentService = commentService;
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetByIdAsync(int id)
     {
-        var viewModel = await _topicService.GetById(id);
+        var viewModel = await _commentService.GetById(id);
         if (viewModel == null)
         {
             return NotFound();
@@ -27,20 +27,20 @@ public class TopicController : ControllerBase
     }
 
     [HttpGet("list")]
-    public async Task<IActionResult> GetListAsync([FromQuery] TopicFilterViewModel viewModel)
+    public async Task<IActionResult> GetListAsync([FromQuery] CommentFilterViewModel viewModel)
     {
-        var viewModels = await _topicService.GetList(viewModel);
+        var viewModels = await _commentService.GetList(viewModel);
         return Ok(viewModels);
     }
 
     [HttpPost("create")]
-    public async Task<IActionResult> CreateAsync(CreateOrUpdateTopicViewModel viewModel)
+    public async Task<IActionResult> CreateAsync(CreateOrUpdateCommentViewModel viewModel)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Create(viewModel);
+            resultViewModel = await _commentService.Create(viewModel);
         }
         catch (System.Exception ex)
         {
@@ -53,13 +53,13 @@ public class TopicController : ControllerBase
     }
 
     [HttpPost("update")]
-    public async Task<IActionResult> UpdateAsync(CreateOrUpdateTopicViewModel viewModel)
+    public async Task<IActionResult> UpdateAsync(CreateOrUpdateCommentViewModel viewModel)
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
         try
         {
-            resultViewModel = await _topicService.Update(viewModel);
+            resultViewModel = await _commentService.Update(viewModel);
         }
         catch (System.Exception ex)
         {
@@ -78,7 +78,7 @@ public class TopicController : ControllerBase
 
         try
         {
-            resultViewModel = await _topicService.Delete(id);
+            resultViewModel = await _commentService.Delete(id);
         }
         catch (System.Exception ex)
         {

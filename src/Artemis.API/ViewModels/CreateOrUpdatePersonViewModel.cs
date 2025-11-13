@@ -2,15 +2,9 @@ using Artemis.API.Entities.Enums;
 
 namespace Artemis.API.Services;
 
-public class PartyListViewModel
+public class CreateOrUpdatePersonViewModel
 {
-    public int? Count { get; set; }
-    public IEnumerable<PartyResultViewModel> ResultViewmodels { get; set; } = new List<PartyResultViewModel>();
-}
-
-public class PartyResultViewModel
-{
-    public int Id { get; set; }
+    public int? Id { get; set; } = null;
     public string PartyName { get; set; }
     public PartyType PartyType { get; set; }
     public bool IsBanned { get; set; }
