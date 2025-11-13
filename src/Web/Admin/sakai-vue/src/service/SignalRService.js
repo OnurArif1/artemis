@@ -3,10 +3,12 @@ import { HubConnectionBuilder } from '@microsoft/signalr';
 class SignalRService {
     constructor() {
         this.connection = null;
+        // Environment variable'dan SignalR Hub URL'ini al, yoksa varsayılan olarak localhost kullan
+        this.hubUrl = import.meta.env.VITE_SIGNALR_HUB_URL || 'http://localhost:5094/hubs/chat';
     }
 
     startConnection() {
-        this.connection = new HubConnectionBuilder().withUrl('http://10.58.2.78:5094/hubs/chat').build();
+        this.connection = new HubConnectionBuilder().withUrl(this.hubUrl).build();
 
         this.connection
             .start()
