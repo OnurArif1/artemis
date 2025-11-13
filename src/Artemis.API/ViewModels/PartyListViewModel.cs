@@ -17,5 +17,3 @@ public class PartyResultViewModel
     public int DeviceId { get; set; }
     public DateTime CreateDate { get; set; }
 }
-
-
