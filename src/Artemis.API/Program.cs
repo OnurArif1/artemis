@@ -12,6 +12,13 @@ builder.Services.AddCors();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IPartyService, PartyService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ITopicService, TopicService>();
+builder.Services.AddScoped<IHashtagService, HashtagService>();
+builder.Services.AddScoped<IRoomHashtagMapService, RoomHashtagMapService>();
+builder.Services.AddScoped<ICategoryHashtagMapService, CategoryHashtagMapService>();
+builder.Services.AddScoped<ITopicHashtagMapService, TopicHashtagMapService>();
+builder.Services.AddScoped<IMentionService, MentionService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 

@@ -49,19 +49,26 @@ const isEditMode = computed(() => !!props.room?.id);
 
 async function getPartyLookup(filterText = '') {
     const filter = {
-        searchText: filterText,
-        partyLookupSearchType: 1
+        searchText: filterText || '',
+        partyLooukpSearchType: filterText ? 1 : 0
     };
 
     try {
         partyLoading.value = true;
         const response = await partyService.getLookup(filter);
-        partyOptions.value = response?.viewModels.map((p) => ({
-            label: p.partyName || p.name || p.title || 'Unnamed Party',
-            value: p.partyId || p.id
+
+        // Backend'den gelen response yapısı: { count: number, viewModels: PartyLookupViewModel[] }
+        const list = response?.viewModels || response?.ViewModels || response?.resultViewmodels || response?.result || [];
+
+        partyOptions.value = list.map((p) => ({
+            label: `${p.partyName || p.PartyName || 'Unnamed Party'} (ID: ${p.partyId || p.PartyId || p.id || p.Id})`,
+            value: p.partyId || p.PartyId || p.id || p.Id
         }));
+
+        console.log('✅ Party options loaded:', partyOptions.value.length, 'parties');
     } catch (error) {
         console.error('❌ Party lookup error:', error);
+        partyOptions.value = [];
     } finally {
         partyLoading.value = false;
     }
@@ -69,11 +76,7 @@ async function getPartyLookup(filterText = '') {
 
 function onPartyFilter(event) {
     const filterValue = event.value?.trim() ?? '';
-    if (filterValue.length >= 2) {
-        getPartyLookup(filterValue);
-    } else if (!filterValue) {
-        getPartyLookup();
-    }
+    getPartyLookup(filterValue);
 }
 
 async function getCategoryLookup(filterText = '') {
@@ -105,6 +108,13 @@ function onCategoryFilter(event) {
     }
 }
 
+// ✅ Component mount olduğunda verileri yükle
+onMounted(() => {
+    getPartyLookup();
+    getCategoryLookup();
+});
+
+// ✅ Sadece bir tane watch bloğu (hem edit hem create durumunu kapsar)
 watch(
     () => props.room,
     (newRoom) => {

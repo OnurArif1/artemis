@@ -1,4 +1,4 @@
-export default class RoomService {
+export default class HashtagService {
     constructor(request) {
         this.request = request;
     }
@@ -6,7 +6,7 @@ export default class RoomService {
     async getList(filter = {}) {
         const response = await this.request({
             method: 'get',
-            url: '/room/list',
+            url: '/hashtag/list',
             params: filter
         });
         return response?.data ?? response;
@@ -15,7 +15,7 @@ export default class RoomService {
     async create(payload) {
         await this.request({
             method: 'post',
-            url: '/room/create',
+            url: '/hashtag/create',
             data: payload
         });
     }
@@ -23,18 +23,22 @@ export default class RoomService {
     async update(payload) {
         await this.request({
             method: 'post',
-            url: '/room/update',
+            url: '/hashtag/update',
             data: payload
         });
     }
-    async delete(roomId) {
-        return this.request({ method: 'delete', url: `/room/delete/${roomId}` });
+
+    async delete(hashtagId) {
+        return this.request({
+            method: 'delete',
+            url: `/hashtag/delete/${hashtagId}`
+        });
     }
 
     async getLookup(filter = {}) {
         const response = await this.request({
             method: 'get',
-            url: '/room/lookup',
+            url: '/hashtag/lookup',
             params: filter
         });
         return response?.data ?? response;
