@@ -9,7 +9,7 @@ public class SubscribeController : ControllerBase
 {
     private readonly ISubscribeService _subscribeService;
 
-    public PartyController(ISubscribeService subscribeService)
+    public SubscribeController(ISubscribeService subscribeService)
     {
         _subscribeService = subscribeService;
     }

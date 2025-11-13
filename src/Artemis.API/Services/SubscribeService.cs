@@ -43,7 +43,7 @@ public class SubscribeService : ISubscribeService
             })
             .ToListAsync();
 
-        return new SubscribeResultViewModel
+        return new SubscribeListViewModel
         {
             Count = count,
             ResultViewModels = subscribes
