@@ -3,7 +3,6 @@ import { ref, watch, computed, onMounted } from 'vue';
 import request from '@/service/request';
 import PartyService from '@/service/PartyService';
 import CategoryService from '@/service/CategoryService';
-import signalRService from '@/service/SignalRService';
 
 const partyService = new PartyService(request);
 const categoryService = new CategoryService(request);
@@ -149,25 +148,11 @@ async function submit() {
 function cancel() {
     emit('cancel');
 }
-
-function handleReceiveMessage(from, message) {
-
-    console.log(`${from}: ${message}`);
-}
-
-onMounted(() => {
-    signalRService.startConnection();
-    signalRService.onReceiveMessage(handleReceiveMessage);
-});
 </script>
 
 <template>
     <div>
         <form @submit.prevent="submit" class="card p-4">
-            <div class="mt-4">
-                <Button type="button" label="Send Test Message" @click="() => signalRService.sendMessage('RoomCreator', 'Everyone', 'Room created!')" />
-            </div>
-
             <div class="flex flex-col gap-2 mb-3">
                 <label for="title">Title</label>
                 <InputText id="title" v-model="form.title" type="text" />

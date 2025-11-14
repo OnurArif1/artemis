@@ -59,6 +59,11 @@ const router = createRouter({
                     path: '/message/list',
                     name: 'message-list',
                     component: () => import('@/views/message/MessageList.vue')
+                },
+                {
+                    path: '/chat',
+                    name: 'chat',
+                    component: () => import('@/views/chat/Chat.vue')
                 }
             ]
         },

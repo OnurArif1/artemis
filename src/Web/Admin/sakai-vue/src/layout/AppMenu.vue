@@ -50,7 +50,8 @@ const model = ref([
             { label: 'Category Hashtag Maps', icon: 'pi pi-fw pi-sitemap', to: '/categoryhashtagmap/list' },
             { label: 'Topic Hashtag Maps', icon: 'pi pi-fw pi-bookmark', to: '/topichashtagmap/list' },
             { label: 'Mentions', icon: 'pi pi-fw pi-at', to: '/mention/list' },
-            { label: 'Messages', icon: 'pi pi-fw pi-comments', to: '/message/list' }
+            { label: 'Messages', icon: 'pi pi-fw pi-comments', to: '/message/list' },
+            { label: 'Chat (SignalR)', icon: 'pi pi-fw pi-comment', to: '/chat' }
         ]
     },
     {
