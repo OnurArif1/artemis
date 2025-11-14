@@ -25,8 +25,12 @@ onMounted(async () => {
         connectionStatus.value = isConnected.value ? 'Bağlı' : 'Bağlantı hatası';
         
         // Mesaj dinleyicisini ayarla
+        // Kendi gönderdiğiniz mesajları backend'den tekrar eklememek için kontrol ediyoruz
         signalRService.onReceiveMessage((from, message) => {
-            addMessage(from, message, false);
+            // Eğer mesaj kendinizden geliyorsa ekleme (zaten sendMessage'da ekledik)
+            if (from !== userName.value) {
+                addMessage(from, message, false);
+            }
         });
     } catch (error) {
         console.error('SignalR bağlantı hatası:', error);
