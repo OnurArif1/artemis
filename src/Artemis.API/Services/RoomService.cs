@@ -104,6 +104,12 @@ public class RoomService : IRoomService
             room.Upvote = viewModel.Upvote;
             room.Downvote = viewModel.Downvote;
 
+            if (viewModel.PartyId > 0)
+            {
+                var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId);  
+                ((List<Party>)room.Parties).Add(party);
+            }
+
             await _artemisDbContext.SaveChangesAsync();
         }
     }
