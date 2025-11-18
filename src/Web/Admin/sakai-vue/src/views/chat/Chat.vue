@@ -23,7 +23,7 @@ onMounted(async () => {
         await signalRService.startConnection();
         isConnected.value = signalRService.isConnected();
         connectionStatus.value = isConnected.value ? 'Bağlı' : 'Bağlantı hatası';
-        
+
         // Mesaj dinleyicisini ayarla
         // Kendi gönderdiğiniz mesajları backend'den tekrar eklememek için kontrol ediyoruz
         signalRService.onReceiveMessage((from, message) => {
@@ -51,7 +51,7 @@ function addMessage(from, message, isOwn = false) {
         timestamp: new Date(),
         isOwn: isOwn
     });
-    
+
     // Mesajları en alta kaydır
     nextTick(() => {
         if (messageContainer.value) {
@@ -109,13 +109,7 @@ function updateUserName() {
             <div class="chat-body">
                 <div class="user-info mb-3">
                     <label for="userName" class="text-sm font-semibold">Kullanıcı Adı:</label>
-                    <InputText 
-                        id="userName" 
-                        v-model="userName" 
-                        @blur="updateUserName"
-                        placeholder="Kullanıcı adınızı girin"
-                        class="w-full"
-                    />
+                    <InputText id="userName" v-model="userName" @blur="updateUserName" placeholder="Kullanıcı adınızı girin" class="w-full" />
                 </div>
 
                 <div ref="messageContainer" class="messages-container">
@@ -123,12 +117,7 @@ function updateUserName() {
                         <i class="pi pi-inbox text-4xl text-300"></i>
                         <p class="text-500">Henüz mesaj yok. İlk mesajı siz gönderin!</p>
                     </div>
-                    <div 
-                        v-for="msg in messages" 
-                        :key="msg.id" 
-                        class="message-item"
-                        :class="{ 'own-message': msg.isOwn }"
-                    >
+                    <div v-for="msg in messages" :key="msg.id" class="message-item" :class="{ 'own-message': msg.isOwn }">
                         <div class="message-header">
                             <span class="message-author">{{ msg.from }}</span>
                             <span class="message-time">
@@ -142,19 +131,8 @@ function updateUserName() {
 
             <div class="chat-footer">
                 <div class="flex gap-2 align-items-center w-full">
-                    <InputText
-                        v-model="messageText"
-                        @keydown="onEnterKey"
-                        placeholder="Mesajınızı yazın... (Enter ile gönder)"
-                        class="flex-1"
-                        :disabled="!isConnected"
-                    />
-                    <Button
-                        label="Gönder"
-                        icon="pi pi-send"
-                        @click="sendMessage"
-                        :disabled="!isConnected || !messageText.trim()"
-                    />
+                    <InputText v-model="messageText" @keydown="onEnterKey" placeholder="Mesajınızı yazın... (Enter ile gönder)" class="flex-1" :disabled="!isConnected" />
+                    <Button label="Gönder" icon="pi pi-send" @click="sendMessage" :disabled="!isConnected || !messageText.trim()" />
                 </div>
             </div>
         </div>
@@ -297,4 +275,3 @@ function updateUserName() {
     background: var(--surface-400);
 }
 </style>
-

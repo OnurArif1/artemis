@@ -16,10 +16,9 @@ public class RoomService : IRoomService
 
     public async ValueTask Create(CreateOrUpdateRoomViewModel viewModel)
     {
-        // todo ask. how to unique rooms?
         var room = new Room()
         {
-            TopicId = 11,
+            TopicId = viewModel.TopicId,
             PartyId = viewModel.PartyId,
             CategoryId = viewModel.CategoryId,
             Title = viewModel.Title,
@@ -32,6 +31,13 @@ public class RoomService : IRoomService
             Upvote = viewModel.Upvote,
             Downvote = viewModel.Downvote
         };
+
+        if (viewModel.PartyId > 0)
+        {
+            var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId);  
+            ((List<Party>)room.Parties).Add(party);
+        }
+              
         await _artemisDbContext.Rooms.AddAsync(room);
         _artemisDbContext.SaveChanges();
     }

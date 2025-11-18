@@ -54,9 +54,7 @@ class SignalRService {
             // Bağlantıyı yeniden başlatmayı dene
             this.startConnection()
                 .then(() => {
-                    this.connection.invoke('SendMessage', from, to, message).catch((err) => 
-                        console.error('Send error:', err)
-                    );
+                    this.connection.invoke('SendMessage', from, to, message).catch((err) => console.error('Send error:', err));
                 })
                 .catch((err) => {
                     console.error('Failed to reconnect:', err);
@@ -64,9 +62,7 @@ class SignalRService {
             return;
         }
 
-        this.connection.invoke('SendMessage', from, to, message).catch((err) => 
-            console.error('Send error:', err)
-        );
+        this.connection.invoke('SendMessage', from, to, message).catch((err) => console.error('Send error:', err));
     }
 
     onReceiveMessage(callback) {

@@ -32,4 +32,3 @@ export default class TopicHashtagMapService {
         return this.request({ method: 'delete', url: `/topicHashtagMap/delete/${mapId}` });
     }
 }
-

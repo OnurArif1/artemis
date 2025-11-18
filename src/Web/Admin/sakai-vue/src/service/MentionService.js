@@ -32,4 +32,3 @@ export default class MentionService {
         return this.request({ method: 'delete', url: `/mention/delete/${mentionId}` });
     }
 }
-

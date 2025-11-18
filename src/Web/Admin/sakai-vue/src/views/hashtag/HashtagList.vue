@@ -156,7 +156,8 @@ function onCancel() {
         <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Hashtag" style="width: 400px">
             <div class="p-4 text-center">
                 <p>
-                    Are you sure you want to delete <b>{{ selectedHashtag?.hashtagName }}</b>?
+                    Are you sure you want to delete <b>{{ selectedHashtag?.hashtagName }}</b
+                    >?
                 </p>
                 <div class="flex justify-center gap-3 mt-4">
                     <Button label="Cancel" class="p-button-text" @click="showDeleteDialog = false" />
@@ -166,4 +167,3 @@ function onCancel() {
         </Dialog>
     </div>
 </template>
-

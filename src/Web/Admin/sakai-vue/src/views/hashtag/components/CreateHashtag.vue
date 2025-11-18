@@ -35,7 +35,7 @@ async function submit() {
     if (!form.value.hashtagName || form.value.hashtagName.trim() === '') {
         return;
     }
-    
+
     loading.value = true;
     try {
         if (isEditMode.value) {
@@ -62,9 +62,7 @@ function cancel() {
             <div class="flex flex-col gap-2 mb-3">
                 <label for="hashtagName">Name</label>
                 <InputText id="hashtagName" v-model="form.hashtagName" type="text" />
-                <Message v-if="!form.hashtagName" size="small" severity="error" variant="simple">
-                    Name is required.
-                </Message>
+                <Message v-if="!form.hashtagName" size="small" severity="error" variant="simple"> Name is required. </Message>
             </div>
 
             <div class="flex gap-2 justify-end mt-4">
@@ -74,4 +72,3 @@ function cancel() {
         </form>
     </div>
 </template>
-

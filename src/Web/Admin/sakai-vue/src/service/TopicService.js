@@ -12,4 +12,3 @@ export default class TopicService {
         return response?.data ?? response;
     }
 }
-

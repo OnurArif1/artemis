@@ -31,4 +31,3 @@ export default class MessageService {
         return this.request({ method: 'delete', url: `/message/delete/${messageId}` });
     }
 }
-

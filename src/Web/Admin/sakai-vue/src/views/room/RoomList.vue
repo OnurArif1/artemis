@@ -29,7 +29,7 @@ async function load() {
         };
 
         const data = await roomService.getList(roomFilter);
-        rooms.value = Array.isArray(data.resultViewmodels) ? data.resultViewmodels : (data?.resultViewmodels ?? []);
+        rooms.value = Array.isArray(data.resultViewModels) ? data.resultViewModels : (data?.resultViewModels ?? []);
         totalRecords.value = data?.count ?? 0;
     } catch (err) {
         console.error('Room list load error:', err);

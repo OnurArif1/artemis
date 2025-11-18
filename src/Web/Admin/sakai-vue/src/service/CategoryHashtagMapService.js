@@ -32,4 +32,3 @@ export default class CategoryHashtagMapService {
         return this.request({ method: 'delete', url: `/categoryHashtagMap/delete/${mapId}` });
     }
 }
-

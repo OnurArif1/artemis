@@ -45,7 +45,7 @@ async function loadRooms() {
     roomLoading.value = true;
     try {
         const data = await roomService.getList({ pageIndex: 1, pageSize: 100 });
-        roomOptions.value = (data.resultViewmodels || []).map(r => ({
+        roomOptions.value = (data.resultViewmodels || []).map((r) => ({
             label: `${r.title || 'Room'} (ID: ${r.id})`,
             value: r.id
         }));
@@ -101,18 +101,7 @@ function cancel() {
         <form @submit.prevent="submit" class="card p-4">
             <div class="flex flex-col gap-2 mb-3">
                 <label for="roomId">Room (Optional)</label>
-                <Dropdown 
-                    id="roomId" 
-                    v-model="form.roomId" 
-                    :options="roomOptions" 
-                    optionLabel="label" 
-                    optionValue="value"
-                    placeholder="Select Room (Optional)"
-                    :loading="roomLoading"
-                    filter
-                    class="w-full"
-                    :showClear="true"
-                />
+                <Dropdown id="roomId" v-model="form.roomId" :options="roomOptions" optionLabel="label" optionValue="value" placeholder="Select Room (Optional)" :loading="roomLoading" filter class="w-full" :showClear="true" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
@@ -137,4 +126,3 @@ function cancel() {
         </form>
     </div>
 </template>
-

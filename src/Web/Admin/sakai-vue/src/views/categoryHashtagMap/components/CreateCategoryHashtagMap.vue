@@ -47,7 +47,7 @@ async function loadCategories() {
     categoryLoading.value = true;
     try {
         const data = await categoryService.getLookup({});
-        categoryOptions.value = (data.viewModels || []).map(c => ({
+        categoryOptions.value = (data.viewModels || []).map((c) => ({
             label: `${c.title} (ID: ${c.categoryId || c.id})`,
             value: c.categoryId || c.id
         }));
@@ -62,7 +62,7 @@ async function loadHashtags() {
     hashtagLoading.value = true;
     try {
         const data = await hashtagService.getLookup({});
-        hashtagOptions.value = (data.viewModels || []).map(h => ({
+        hashtagOptions.value = (data.viewModels || []).map((h) => ({
             label: `${h.hashtagName} (ID: ${h.hashtagId})`,
             value: h.hashtagId
         }));
@@ -85,7 +85,7 @@ async function submit() {
     if (form.value.hashtagId === null || form.value.hashtagId === undefined || form.value.hashtagId <= 0) {
         return;
     }
-    
+
     loading.value = true;
     try {
         if (isEditMode.value) {
@@ -111,38 +111,14 @@ function cancel() {
         <form @submit.prevent="submit" class="card p-4">
             <div class="flex flex-col gap-2 mb-3">
                 <label for="categoryId">Category</label>
-                <Dropdown 
-                    id="categoryId" 
-                    v-model="form.categoryId" 
-                    :options="categoryOptions" 
-                    optionLabel="label" 
-                    optionValue="value"
-                    placeholder="Select Category"
-                    :loading="categoryLoading"
-                    filter
-                    class="w-full"
-                />
-                <Message v-if="form.categoryId === null || form.categoryId === undefined || form.categoryId <= 0" size="small" severity="error" variant="simple">
-                    Category is required.
-                </Message>
+                <Dropdown id="categoryId" v-model="form.categoryId" :options="categoryOptions" optionLabel="label" optionValue="value" placeholder="Select Category" :loading="categoryLoading" filter class="w-full" />
+                <Message v-if="form.categoryId === null || form.categoryId === undefined || form.categoryId <= 0" size="small" severity="error" variant="simple"> Category is required. </Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
                 <label for="hashtagId">Hashtag</label>
-                <Dropdown 
-                    id="hashtagId" 
-                    v-model="form.hashtagId" 
-                    :options="hashtagOptions" 
-                    optionLabel="label" 
-                    optionValue="value"
-                    placeholder="Select Hashtag"
-                    :loading="hashtagLoading"
-                    filter
-                    class="w-full"
-                />
-                <Message v-if="form.hashtagId === null || form.hashtagId === undefined || form.hashtagId <= 0" size="small" severity="error" variant="simple">
-                    Hashtag is required.
-                </Message>
+                <Dropdown id="hashtagId" v-model="form.hashtagId" :options="hashtagOptions" optionLabel="label" optionValue="value" placeholder="Select Hashtag" :loading="hashtagLoading" filter class="w-full" />
+                <Message v-if="form.hashtagId === null || form.hashtagId === undefined || form.hashtagId <= 0" size="small" severity="error" variant="simple"> Hashtag is required. </Message>
             </div>
 
             <div class="flex gap-2 justify-end mt-4">
@@ -152,4 +128,3 @@ function cancel() {
         </form>
     </div>
 </template>
-

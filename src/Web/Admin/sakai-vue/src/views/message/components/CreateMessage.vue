@@ -49,7 +49,7 @@ async function loadRooms() {
     roomLoading.value = true;
     try {
         const data = await roomService.getList({ pageIndex: 1, pageSize: 100 });
-        roomOptions.value = (data.resultViewmodels || []).map(r => ({
+        roomOptions.value = (data.resultViewmodels || []).map((r) => ({
             label: `${r.title || 'Room'} (ID: ${r.id})`,
             value: r.id
         }));
@@ -64,7 +64,7 @@ async function loadParties() {
     partyLoading.value = true;
     try {
         const data = await partyService.getList({ pageIndex: 1, pageSize: 100 });
-        partyOptions.value = (data.resultViewmodels || []).map(p => ({
+        partyOptions.value = (data.resultViewmodels || []).map((p) => ({
             label: `${p.partyName || 'Party'} (ID: ${p.id})`,
             value: p.id
         }));
@@ -116,33 +116,13 @@ function cancel() {
         <form @submit.prevent="submit" class="card p-4">
             <div class="flex flex-col gap-2 mb-3">
                 <label for="roomId">Room <span class="text-red-500">*</span></label>
-                <Dropdown 
-                    id="roomId" 
-                    v-model="form.roomId" 
-                    :options="roomOptions" 
-                    optionLabel="label" 
-                    optionValue="value"
-                    placeholder="Select Room"
-                    :loading="roomLoading"
-                    filter
-                    class="w-full"
-                />
+                <Dropdown id="roomId" v-model="form.roomId" :options="roomOptions" optionLabel="label" optionValue="value" placeholder="Select Room" :loading="roomLoading" filter class="w-full" />
                 <Message v-if="!form.roomId || form.roomId === 0" size="small" severity="error" variant="simple">Room is required.</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
                 <label for="partyId">Party <span class="text-red-500">*</span></label>
-                <Dropdown 
-                    id="partyId" 
-                    v-model="form.partyId" 
-                    :options="partyOptions" 
-                    optionLabel="label" 
-                    optionValue="value"
-                    placeholder="Select Party"
-                    :loading="partyLoading"
-                    filter
-                    class="w-full"
-                />
+                <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" optionLabel="label" optionValue="value" placeholder="Select Party" :loading="partyLoading" filter class="w-full" />
                 <Message v-if="!form.partyId || form.partyId === 0" size="small" severity="error" variant="simple">Party is required.</Message>
             </div>
 
@@ -163,4 +143,3 @@ function cancel() {
         </form>
     </div>
 </template>
-
