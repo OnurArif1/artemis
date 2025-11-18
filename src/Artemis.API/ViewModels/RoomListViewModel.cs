@@ -5,10 +5,10 @@ namespace Artemis.API.Services;
 public class RoomListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<RoomResultViewmodel> ResultViewmodels { get; set; } = new List<RoomResultViewmodel>();
+    public IEnumerable<RoomResultViewModel> ResultViewModels { get; set; } = new List<RoomResultViewModel>();
 }
 
-public class RoomResultViewmodel
+public class RoomResultViewModel
 {
     public int Id { get; set; }
     public string Title { get; set; }
@@ -19,5 +19,7 @@ public class RoomResultViewmodel
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime CreateDate { get; set; }
-    public int PartyId { get; set; }
+    public int? PartyId { get; set; }
+    public string? PartyName { get; set; }
+    public string? CategoryTitle { get; set; }
 }

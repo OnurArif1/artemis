@@ -20,6 +20,20 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.Property(r => r.ReferenceId);
             builder.Property(r => r.Upvote);
             builder.Property(r => r.Downvote);
+
+            builder.HasOne(r => r.Category)
+                .WithOne(c => c.Room)
+                .HasForeignKey<Room>(r => r.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(r => r.Topic)
+                .WithOne(t => t.Room)
+                .HasForeignKey<Room>(r => r.TopicId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasMany(r => r.Parties)
+                .WithMany(p => p.Rooms)
+                .UsingEntity(j => j.ToTable("PartyRoom"));
         }
     }
 }

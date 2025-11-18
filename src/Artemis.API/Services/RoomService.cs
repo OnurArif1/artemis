@@ -19,7 +19,7 @@ public class RoomService : IRoomService
         // todo ask. how to unique rooms?
         var room = new Room()
         {
-            TopicId = viewModel.TopicId,
+            TopicId = 11,
             PartyId = viewModel.PartyId,
             CategoryId = viewModel.CategoryId,
             Title = viewModel.Title,
@@ -38,36 +38,44 @@ public class RoomService : IRoomService
 
     public async ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel)
     {
-        var query = _artemisDbContext.Rooms.AsQueryable();
-        var count = await query.CountAsync();
+        var baseQuery = _artemisDbContext.Rooms.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filterViewModel.Title))
         {
-            query = query.Where(x => x.Title.Contains(filterViewModel.Title));
+            baseQuery = baseQuery.Where(x => x.Title.Contains(filterViewModel.Title));
         }
 
-        var rooms = await query.OrderByDescending(i => i.CreateDate)
+        var count = await baseQuery.CountAsync();
+
+        var query = baseQuery.Include(r => r.Parties).Include(r => r.Category);
+
+        var rooms = await query
+            .OrderByDescending(r => r.CreateDate)
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
             .Take(filterViewModel.PageSize)
-            .Select(r => new RoomResultViewmodel
-            {
-                Id = r.Id,
-                Title = r.Title,
-                LocationX = r.LocationX,
-                LocationY = r.LocationY,
-                RoomType = r.RoomType,
-                LifeCycle = r.LifeCycle,
-                Upvote = r.Upvote,
-                Downvote = r.Downvote,
-                CreateDate = r.CreateDate,
-                PartyId = r.PartyId
-            })
-            .ToListAsync();
+            .AsSplitQuery() 
+            .ToListAsync();  
+
+        var roomViewModels = rooms.Select(r => new RoomResultViewModel
+        {
+            Id = r.Id,
+            Title = r.Title,
+            LocationX = r.LocationX,
+            LocationY = r.LocationY,
+            RoomType = r.RoomType,
+            LifeCycle = r.LifeCycle,
+            Upvote = r.Upvote,
+            Downvote = r.Downvote,
+            CreateDate = r.CreateDate,
+            PartyId = r.PartyId,
+            PartyName = r.Parties.FirstOrDefault(i => i.Id == r.PartyId)?.PartyName,
+            CategoryTitle = r.Category?.Title
+        }).ToList();
 
         return new RoomListViewModel
         {
             Count = count,
-            ResultViewmodels = rooms
+            ResultViewModels = roomViewModels
         };
     }
 

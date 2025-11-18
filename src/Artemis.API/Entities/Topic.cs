@@ -17,4 +17,6 @@ public class Topic : BaseEntity, IChangingDate
     public int Downvote { get; set; }
     public DateTime LastUpdateDate { get; set; }
     public DateTime CreateDate { get; set; }
+    public int? RoomId { get; set; }
+    public Room? Room { get; set; }
 }
