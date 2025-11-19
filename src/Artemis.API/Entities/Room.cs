@@ -19,4 +19,8 @@ public class Room : BaseEntity, IChangingDate
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime CreateDate { get; set; }
+
+    public ICollection<RoomHashtagMap> RoomHashtagMaps { get; set; } = [];
+    public ICollection<Message> Messages { get; set; } = new List<Message>();
+
 }

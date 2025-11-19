@@ -26,5 +26,10 @@ public class CommentEntityTypeConfiguration : IEntityTypeConfiguration<Comment>
             .WithMany()
             .HasForeignKey(c => c.PartyId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(c => c.Topic)
+            .WithMany(t => t.Comments)
+            .HasForeignKey(c => c.TopicId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

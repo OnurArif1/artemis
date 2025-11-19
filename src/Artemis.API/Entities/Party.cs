@@ -11,4 +11,8 @@ public class Party : BaseEntity, IChangingDate
     public DateTime CreateDate { get; set; }
     public int? RoomId { get; set; }
     public ICollection<Room> Rooms { get; set; } = new List<Room>();
+    
+    public ICollection<MentionPartyMap> MentionPartyMaps { get; set; } = new List<MentionPartyMap>();
+    public ICollection<Subscribe> CreatedSubscribes { get; set; } = new List<Subscribe>();
+    public ICollection<Subscribe> SubscribedTo { get; set; } = new List<Subscribe>();
 }

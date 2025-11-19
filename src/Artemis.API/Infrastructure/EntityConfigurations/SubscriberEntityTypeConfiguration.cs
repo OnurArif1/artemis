@@ -23,7 +23,20 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.HasOne(s => s.SubscriberParty)
                 .WithMany()
                 .HasForeignKey(s => s.SubscriberPartyId)
-                .OnDelete(DeleteBehavior.Cascade);           
+                .OnDelete(DeleteBehavior.Cascade);    
+
+            builder
+            .HasOne(s => s.CreatedParty)
+            .WithMany(p => p.CreatedSubscribes)
+            .HasForeignKey(s => s.CreatedPartyId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // SubscriberParty 1 - n Subscribe
+        builder
+            .HasOne(s => s.SubscriberParty)
+            .WithMany(p => p.SubscribedTo)
+            .HasForeignKey(s => s.SubscriberPartyId)
+            .OnDelete(DeleteBehavior.Cascade);       
         }
     }
 }

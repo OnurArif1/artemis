@@ -15,14 +15,22 @@ public class MentionPartyMapEntityTypeConfiguration : IEntityTypeConfiguration<M
         builder.Property(mpm => mpm.MentionId);
         builder.Property(mpm => mpm.PartyId);
 
-        builder.HasOne(mpm => mpm.Mention)
-            .WithMany()
-            .HasForeignKey(mpm => mpm.MentionId)
+        builder.HasOne(m => m.Party)
+            .WithMany(p => p.MentionPartyMaps)
+            .HasForeignKey(m => m.PartyId)
             .OnDelete(DeleteBehavior.Cascade);
-            
-        builder.HasOne(mpm => mpm.Party)
-            .WithMany()
-            .HasForeignKey(mpm => mpm.PartyId)
+
+
+            builder
+            .HasOne(mp => mp.Mention)
+            .WithMany(m => m.MentionPartyMaps)
+            .HasForeignKey(mp => mp.MentionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder
+            .HasOne(mp => mp.Party)
+            .WithMany(p => p.MentionPartyMaps)
+            .HasForeignKey(mp => mp.PartyId)
             .OnDelete(DeleteBehavior.Cascade);
 
     }

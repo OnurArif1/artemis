@@ -5,8 +5,8 @@ namespace Artemis.API.Entities;
 public class Subscribe : BaseEntity, IChangingDate
 {
     public int CreatedPartyId { get; set; }
-    public virtual Party CreatedParty { get; set; }
+    public Party? CreatedParty { get; set; }
     public int SubscriberPartyId { get; set; }
-    public virtual Party SubscriberParty { get; set; }
+    public Party? SubscriberParty { get; set; }
     public DateTime CreateDate { get; set; }
 }

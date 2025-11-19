@@ -11,7 +11,7 @@ public class Topic : BaseEntity, IChangingDate
     public double? LocationX { get; set; }
     public double? LocationY { get; set; }
     public int CategoryId { get; set; }
-    public Category Category { get; set; }
+    public Category? Category { get; set; }
     public int? MentionId { get; set; }
     public Mention? Mention { get; set; }
     public int? Upvote { get; set; }
@@ -20,4 +20,7 @@ public class Topic : BaseEntity, IChangingDate
     public DateTime CreateDate { get; set; }
     public int? RoomId { get; set; }
     public Room? Room { get; set; }
+
+    public ICollection<TopicHashtagMap> TopicHashtagMaps { get; set; } = new List<TopicHashtagMap>();
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }

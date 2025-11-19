@@ -10,4 +10,5 @@ public class Mention : BaseEntity, IChangingDate
     public int? TopicId { get; set; }
     public virtual Topic? Topic { get; set; }
     public DateTime CreateDate { get; set; }    
+    public ICollection<MentionPartyMap> MentionPartyMaps { get; set; } = new List<MentionPartyMap>();
 }

@@ -20,6 +20,16 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
                 .WithMany()
                 .HasForeignKey(m => m.CategoryId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(ch => ch.Hashtag)
+                .WithMany(h => h.CategoryHashtagMaps)
+                .HasForeignKey(ch => ch.HashtagId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(ch => ch.Category)
+                .WithMany(c => c.CategoryHashtagMaps)
+                .HasForeignKey(ch => ch.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
