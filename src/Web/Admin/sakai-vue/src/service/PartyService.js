@@ -39,13 +39,4 @@ export default class PartyService {
     async delete(partyId) {
         return this.request({ method: 'delete', url: `/party/delete/${partyId}` });
     }
-
-    async getLookup(filter = {}) {
-        const response = await this.request({
-            method: 'get',
-            url: '/party/lookup',
-            params: filter
-        });
-        return response?.data ?? response;
-    }
 }

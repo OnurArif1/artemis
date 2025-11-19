@@ -257,4 +257,3 @@ const getTypeLabel = (type) => {
         </Dialog>
     </div>
 </template>
-

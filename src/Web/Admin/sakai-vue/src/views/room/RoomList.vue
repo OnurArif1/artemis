@@ -119,19 +119,6 @@ function onUpdated(payload) {
     })();
 }
 
-function onDeleted(roomId) {
-    (async () => {
-        try {
-            await roomService.delete(roomId);
-            showFormDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Deleted', life: 3000 });
-            await load();
-        } catch (err) {
-            console.error('Room delete error:', err);
-        }
-    })();
-}
-
 async function confirmDelete() {
     try {
         await roomService.delete(selectedRoom.value.id);
@@ -198,12 +185,8 @@ const getSeverity = (status) => {
 
             <Column header="Update">
                 <template #body="{ data }">
-                    <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" />
-                </template>
-            </Column>
-            <Column header="Delete">
-                <template #body="{ data }">
-                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" />
+                    <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" v-tooltip.bottom="'Update'" />
+                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" v-tooltip.bottom="'Delete'" />
                 </template>
             </Column>
 
@@ -212,7 +195,7 @@ const getSeverity = (status) => {
         </DataTable>
 
         <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedRoom ? 'Update Room' : 'Create Room'" style="width: 500px">
-            <CreateRoom :room="selectedRoom" @created="onCreated" @updated="onUpdated" @deleted="onDeleted" @cancel="onCancel" />
+            <CreateRoom :room="selectedRoom" @created="onCreated" @updated="onUpdated" @cancel="onCancel" />
         </Dialog>
 
         <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Room" style="width: 400px">

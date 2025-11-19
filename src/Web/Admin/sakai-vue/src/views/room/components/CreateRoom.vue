@@ -17,18 +17,18 @@ const props = defineProps({
 const emit = defineEmits(['created', 'updated', 'cancel', 'deleted']);
 
 const initial = {
-    topicId: 1,
+    topicId: null,
     partyId: null,
-    categoryId: 1,
+    categoryId: null,
     title: '',
-    locationX: 0,
-    locationY: 0,
+    locationX: null,
+    locationY: null,
     roomType: 1,
-    lifeCycle: 0,
-    channelId: 0,
-    referenceId: 'onurarifciftci',
-    upvote: 0,
-    downvote: 0
+    lifeCycle: null,
+    channelId: null,
+    referenceId: null,
+    upvote: null,
+    downvote: null
 };
 
 const form = ref({ ...initial });
@@ -49,24 +49,19 @@ const isEditMode = computed(() => !!props.room?.id);
 async function getPartyLookup(filterText = '') {
     const filter = {
         searchText: filterText || '',
-        partyLooukpSearchType: filterText ? 1 : 0
+        partyLookupSearchType: filterText ? 1 : 0
     };
 
     try {
         partyLoading.value = true;
         const response = await partyService.getLookup(filter);
 
-        // Backend'den gelen response yapısı: { count: number, viewModels: PartyLookupViewModel[] }
-        const list = response?.viewModels || response?.ViewModels || response?.resultViewmodels || response?.result || [];
-
-        partyOptions.value = list.map((p) => ({
-            label: `${p.partyName || p.PartyName || 'Unnamed Party'} (ID: ${p.partyId || p.PartyId || p.id || p.Id})`,
-            value: p.partyId || p.PartyId || p.id || p.Id
+        partyOptions.value = response?.viewModels.map((p) => ({
+            label: `${p.partyName}`,
+            value: p.partyId
         }));
-
-        console.log('✅ Party options loaded:', partyOptions.value.length, 'parties');
     } catch (error) {
-        console.error('❌ Party lookup error:', error);
+        console.error('Party lookup error:', error);
         partyOptions.value = [];
     } finally {
         partyLoading.value = false;
@@ -107,13 +102,11 @@ function onCategoryFilter(event) {
     }
 }
 
-// ✅ Component mount olduğunda verileri yükle
 onMounted(() => {
     getPartyLookup();
     getCategoryLookup();
 });
 
-// ✅ Sadece bir tane watch bloğu (hem edit hem create durumunu kapsar)
 watch(
     () => props.room,
     (newRoom) => {
@@ -162,7 +155,6 @@ function cancel() {
             <div class="flex flex-col gap-2 mb-3">
                 <label for="partyId">Party</label>
                 <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" option-label="label" option-value="value" placeholder="Select a Party" :loading="partyLoading" filter @filter="onPartyFilter" />
-                <Message v-if="!form.partyId" size="small" severity="error" variant="simple"> Party is required. </Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
