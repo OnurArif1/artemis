@@ -46,6 +46,11 @@ const router = createRouter({
                     component: () => import('@/views/categoryHashtagMap/CategoryHashtagMapList.vue')
                 },
                 {
+                    path: '/topic/list',
+                    name: 'topic-list',
+                    component: () => import('@/views/topic/TopicList.vue')
+                },
+                {
                     path: '/topichashtagmap/list',
                     name: 'topichashtagmap-list',
                     component: () => import('@/views/topicHashtagMap/TopicHashtagMapList.vue')

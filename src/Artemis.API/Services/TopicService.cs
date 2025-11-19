@@ -27,14 +27,15 @@ public class TopicService : ITopicService
             .Select(r => new TopicResultViewModel
             {
                 Id = r.Id,
-                PartyId = r.PartyId,
+                PartyId = r.PartyId ?? 0,
+                Title = r.Title,
                 Type = r.Type,
-                LocationX = r.LocationX,
-                LocationY = r.LocationY,
+                LocationX = r.LocationX ?? 0,
+                LocationY = r.LocationY ?? 0,
                 CategoryId = r.CategoryId,
                 MentionId = r.MentionId,
-                Upvote = r.Upvote,
-                Downvote = r.Downvote,
+                Upvote = r.Upvote ?? 0,
+                Downvote = r.Downvote ?? 0,
                 LastUpdateDate = r.LastUpdateDate,
                 CreateDate = r.CreateDate
             })
@@ -56,15 +57,15 @@ public class TopicService : ITopicService
             return new TopicGetViewModel
             {
                 Id = topic.Id,
-                PartyId = topic.PartyId,
+                PartyId = topic.PartyId ?? 0,
                 Title = topic.Title,
                 Type = topic.Type,
-                LocationX = topic.LocationX,
-                LocationY = topic.LocationY,
+                LocationX = topic.LocationX ?? 0,
+                LocationY = topic.LocationY ?? 0,
                 CategoryId = topic.CategoryId,
                 MentionId = topic.MentionId,
-                Upvote = topic.Upvote,
-                Downvote = topic.Downvote,
+                Upvote = topic.Upvote ?? 0,
+                Downvote = topic.Downvote ?? 0,
                 LastUpdateDate = topic.LastUpdateDate,
                 CreateDate = topic.CreateDate
             };
@@ -131,7 +132,7 @@ public class TopicService : ITopicService
         var topic = await query.FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (topic is not null)
         {
-            if (topic.PartyId != viewModel.PartyId)
+            if ((topic.PartyId ?? 0) != viewModel.PartyId)
                 topic.PartyId = viewModel.PartyId;
 
             if (topic.Title != viewModel.Title)
@@ -140,10 +141,10 @@ public class TopicService : ITopicService
             if (topic.Type != viewModel.Type)
                 topic.Type = viewModel.Type;
 
-            if (topic.LocationX != viewModel.LocationX)
+            if ((topic.LocationX ?? 0) != viewModel.LocationX)
                 topic.LocationX = viewModel.LocationX;
 
-            if (topic.LocationY != viewModel.LocationY)
+            if ((topic.LocationY ?? 0) != viewModel.LocationY)
                 topic.LocationY = viewModel.LocationY;
 
             if (topic.CategoryId != viewModel.CategoryId)
@@ -152,10 +153,10 @@ public class TopicService : ITopicService
             if (topic.MentionId != viewModel.MentionId)
                 topic.MentionId = viewModel.MentionId;
 
-            if (topic.Upvote != viewModel.Upvote)
+            if ((topic.Upvote ?? 0) != viewModel.Upvote)
                 topic.Upvote = viewModel.Upvote;
 
-            if (topic.Downvote != viewModel.Downvote)
+            if ((topic.Downvote ?? 0) != viewModel.Downvote)
                 topic.Downvote = viewModel.Downvote;
 
             topic.LastUpdateDate = DateTime.UtcNow;
