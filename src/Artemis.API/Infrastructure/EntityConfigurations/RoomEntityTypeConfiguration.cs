@@ -22,8 +22,8 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.Property(r => r.Downvote);
 
             builder.HasOne(r => r.Category)
-                .WithOne(c => c.Room)
-                .HasForeignKey<Room>(r => r.CategoryId)
+                .WithMany(c => c.Rooms)
+                .HasForeignKey(r => r.CategoryId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(r => r.Topic)

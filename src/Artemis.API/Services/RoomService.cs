@@ -83,6 +83,7 @@ public class RoomService : IRoomService
             LocationY = r.LocationY,
             RoomType = r.RoomType,
             LifeCycle = r.LifeCycle,
+            ChannelId = r.ChannelId,
             Upvote = r.Upvote,
             Downvote = r.Downvote,
             CreateDate = r.CreateDate,

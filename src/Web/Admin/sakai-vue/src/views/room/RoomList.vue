@@ -131,7 +131,7 @@ function onUpdated(payload) {
                 locationY: payload.locationY || 0,
                 roomType: payload.roomType || 1,
                 lifeCycle: payload.lifeCycle || 0,
-                channelId: payload.channelId || 0,
+                channelId: payload.channelId || '',
                 referenceId: payload.referenceId || '',
                 upvote: payload.upvote || 0,
                 downvote: payload.downvote || 0
@@ -199,6 +199,12 @@ const getSeverity = (status) => {
             <Column field="roomType" header="RoomType">
                 <template #body="{ data }">
                     <Tag :value="data.roomType === 1 ? 'Public' : 'Private'" :severity="getSeverity(data.roomType)" />
+                </template>
+            </Column>
+            <Column field="channelId" header="Channel ID">
+                <template #body="{ data }">
+                    <span v-if="data.channelId" class="text-sm font-mono">{{ data.channelId }}</span>
+                    <span v-else class="text-300 text-sm">-</span>
                 </template>
             </Column>
             <Column field="lifeCycle" header="LifeCycle" />

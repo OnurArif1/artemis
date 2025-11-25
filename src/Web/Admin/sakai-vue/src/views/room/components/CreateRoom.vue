@@ -3,6 +3,7 @@ import { ref, watch, computed, onMounted } from 'vue';
 import request from '@/service/request';
 import PartyService from '@/service/PartyService';
 import CategoryService from '@/service/CategoryService';
+import signalRService from '@/service/SignalRService';
 
 const partyService = new PartyService(request);
 const categoryService = new CategoryService(request);
@@ -109,13 +110,39 @@ onMounted(() => {
 
 watch(
     () => props.room,
-    (newRoom) => {
+    async (newRoom) => {
         if (newRoom) {
             form.value = { ...newRoom };
         } else {
             form.value = { ...initial };
             getPartyLookup();
             getCategoryLookup();
+            
+            // Yeni room oluşturulurken SignalR ConnectionId'yi al ve ekle
+            try {
+                // SignalR bağlantısı yoksa başlat
+                if (!signalRService.isConnected()) {
+                    await signalRService.startConnection();
+                }
+                
+                // ConnectionId'yi al
+                const connectionId = signalRService.getConnectionId();
+                if (connectionId) {
+                    form.value.channelId = connectionId;
+                    console.log('📡 ChannelId form\'a eklendi:', connectionId);
+                } else {
+                    // ConnectionId henüz hazır değilse, biraz bekle ve tekrar dene
+                    setTimeout(async () => {
+                        const retryConnectionId = signalRService.getConnectionId();
+                        if (retryConnectionId) {
+                            form.value.channelId = retryConnectionId;
+                            console.log('📡 ChannelId form\'a eklendi (retry):', retryConnectionId);
+                        }
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('SignalR ConnectionId alma hatası:', error);
+            }
         }
     },
     { immediate: true }
@@ -175,6 +202,12 @@ function cancel() {
             <div class="flex flex-col gap-2 mb-3">
                 <label for="roomType">Room Type</label>
                 <Dropdown id="roomType" v-model="form.roomType" :options="roomTypeOptions" option-label="label" option-value="value" />
+            </div>
+
+            <div class="flex flex-col gap-2 mb-3">
+                <label for="channelId">Channel ID (SignalR Connection ID)</label>
+                <InputText id="channelId" v-model="form.channelId" type="text" placeholder="Otomatik olarak SignalR ConnectionId eklenecek" />
+                <small class="text-500">SignalR bağlantı ID'si. Yeni room oluştururken otomatik olarak eklenir.</small>
             </div>
 
             <div class="flex gap-2 justify-end mt-4">

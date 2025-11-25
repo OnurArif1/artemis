@@ -138,6 +138,7 @@ function onCancel() {
             <Column field="id" header="Id" />
             <Column field="roomId" header="Room Id" />
             <Column field="partyId" header="Party Id" />
+            <Column field="content" header="Content" />
             <Column field="upvote" header="Upvote" />
             <Column field="downvote" header="Downvote" />
             <Column field="lastUpdateDate" header="Last Update Date" />

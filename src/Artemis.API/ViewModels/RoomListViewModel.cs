@@ -16,6 +16,7 @@ public class RoomResultViewModel
     public double LocationY { get; set; }
     public RoomType RoomType { get; set; }
     public double LifeCycle { get; set; }
+    public string ChannelId { get; set; } = string.Empty;
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime CreateDate { get; set; }

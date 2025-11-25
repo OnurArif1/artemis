@@ -20,6 +20,7 @@ public class MessageService : IMessageService
         {
             RoomId = viewModel.RoomId,
             PartyId = viewModel.PartyId,
+            Content = viewModel.Content,
             Upvote = viewModel.Upvote,
             Downvote = viewModel.Downvote,
             LastUpdateDate = viewModel.LastUpdateDate ?? DateTime.UtcNow
@@ -51,6 +52,7 @@ public class MessageService : IMessageService
                 Id = m.Id,
                 RoomId = m.RoomId,
                 PartyId = m.PartyId,
+                Content = m.Content,
                 Upvote = m.Upvote,
                 Downvote = m.Downvote,
                 LastUpdateDate = m.LastUpdateDate,
@@ -78,6 +80,7 @@ public class MessageService : IMessageService
         {
             message.RoomId = viewModel.RoomId;
             message.PartyId = viewModel.PartyId;
+            message.Content = viewModel.Content;
             message.Upvote = viewModel.Upvote;
             message.Downvote = viewModel.Downvote;
             message.LastUpdateDate = viewModel.LastUpdateDate ?? DateTime.UtcNow;
