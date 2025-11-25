@@ -4,6 +4,7 @@ import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import CreateRoom from './components/CreateRoom.vue';
 import { useToast } from 'primevue/usetoast';
+import AddPartyToRoom from './components/AddPartyToRoom.vue';
 
 const toast = useToast();
 const rooms = ref([]);
@@ -17,6 +18,7 @@ const filters = ref({
 });
 
 const showFormDialog = ref(false);
+const showAddPartyDialog = ref(false);
 const showDeleteDialog = ref(false);
 const selectedRoom = ref(null);
 
@@ -59,6 +61,11 @@ function openUpdate(room) {
     showFormDialog.value = true;
 }
 
+function openAddPartyToRoom(room) {
+    selectedRoom.value = { ...room };
+    showAddPartyDialog.value = true;
+}
+
 function openDelete(room) {
     selectedRoom.value = { ...room };
     showDeleteDialog.value = true;
@@ -68,7 +75,7 @@ function onCreated(payload) {
     (async () => {
         try {
             const data = {
-                topicId: payload.topicId || null,
+                topicId: payload.topicId || 1,
                 partyId: payload.partyId,
                 categoryId: payload.categoryId || null,
                 title: payload.title,
@@ -76,7 +83,7 @@ function onCreated(payload) {
                 locationY: payload.locationY || 0,
                 roomType: payload.roomType || 1,
                 lifeCycle: payload.lifeCycle || 0,
-                channelId: payload.channelId || 0,
+                channelId: payload.channelId || '',
                 referenceId: payload.referenceId || '',
                 upvote: payload.upvote || 0,
                 downvote: payload.downvote || 0
@@ -87,6 +94,26 @@ function onCreated(payload) {
             await load();
         } catch (err) {
             console.error('Room create error:', err);
+        }
+    })();
+}
+
+function onAddPartyToRoom(payload) {
+    (async () => {
+        try {
+            console.log('Payload received in onAddPartyToRoom:', payload);
+            const data = {
+                roomId: payload.id,
+                partyId: payload.partyId
+            };
+            console.log('Data to be sent to addPartyToRoom:', data);
+
+            await roomService.addPartyToRoom(data);
+            showAddPartyDialog.value = false;
+            toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Added to Room', life: 3000 });
+            await load();
+        } catch (err) {
+            console.error('Add Party to Room error:', err);
         }
     })();
 }
@@ -182,11 +209,11 @@ const getSeverity = (status) => {
                     <Tag :value="formatDate(data.createDate)" severity="success" />
                 </template>
             </Column>
-
-            <Column header="Update">
+            <Column header="Operation">
                 <template #body="{ data }">
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" v-tooltip.bottom="'Update'" />
                     <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" v-tooltip.bottom="'Delete'" />
+                    <Button icon="pi pi-plus" class="p-button-text p-button-sm" @click="openAddPartyToRoom(data)" v-tooltip.bottom="'AddPartyToRoom'" />
                 </template>
             </Column>
 
@@ -196,6 +223,10 @@ const getSeverity = (status) => {
 
         <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedRoom ? 'Update Room' : 'Create Room'" style="width: 500px">
             <CreateRoom :room="selectedRoom" @created="onCreated" @updated="onUpdated" @cancel="onCancel" />
+        </Dialog>
+
+        <Dialog v-model:visible="showAddPartyDialog" modal :closable="false" header="Add Party To Room" style="width: 500px">
+            <AddPartyToRoom :room="selectedRoom" @addPartyToRoom="onAddPartyToRoom" @cancel="onCancel" />
         </Dialog>
 
         <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Room" style="width: 400px">

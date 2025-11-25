@@ -1,6 +1,7 @@
 using Artemis.API.Entities;
 using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
+using Artemis.API.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Artemis.API.Services;
@@ -40,6 +41,18 @@ public class RoomService : IRoomService
               
         await _artemisDbContext.Rooms.AddAsync(room);
         _artemisDbContext.SaveChanges();
+    }
+
+    public async ValueTask AddParty(AddPartyToRoomViewModel viewModel)
+    {
+        var query = _artemisDbContext.Rooms.AsQueryable();
+        var room = await query.FirstOrDefaultAsync(i => i.Id == viewModel.RoomId);
+        if (room is not null)
+        {
+            var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId);  
+            ((List<Party>)room.Parties).Add(party);
+            await  _artemisDbContext.SaveChangesAsync();
+        }
     }
 
     public async ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel)

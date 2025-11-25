@@ -1,4 +1,4 @@
-using Artemis.API.Entities;
+using Artemis.API.ViewModels;
 
 namespace Artemis.API.Services.Interfaces;
 
@@ -8,4 +8,5 @@ public interface IRoomService
     ValueTask Create(CreateOrUpdateRoomViewModel viewModel);
     ValueTask Update(CreateOrUpdateRoomViewModel viewModel);
     ValueTask Delete(int id);
+    ValueTask AddParty(AddPartyToRoomViewModel viewModel);
 }

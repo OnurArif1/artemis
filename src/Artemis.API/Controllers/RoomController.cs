@@ -1,5 +1,6 @@
 using Artemis.API.Entities;
 using Artemis.API.Services.Interfaces;
+using Artemis.API.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -36,10 +37,18 @@ public class RoomController : ControllerBase
         await _roomService.Update(viewModel);
         return Ok();
     }
+
     [HttpPost("delete")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
         await _roomService.Delete(id);
+        return Ok();
+    }
+
+    [HttpPost("addParty")]
+    public async Task<IActionResult> AddPartyAsync(AddPartyToRoomViewModel viewModel)
+    {
+        await _roomService.AddParty(viewModel);
         return Ok();
     }
 }
