@@ -5,6 +5,7 @@ public class Message : BaseEntity, IChangingDate
     public Room? Room { get; set; }
     public int PartyId { get; set; }
     public Party? Party { get; set; }
+    public string Content { get; set; } = string.Empty;
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime LastUpdateDate { get; set; }

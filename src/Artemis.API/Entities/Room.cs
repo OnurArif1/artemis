@@ -6,7 +6,7 @@ public class Room : BaseEntity, IChangingDate
     public int? TopicId { get; set; }
     public Topic? Topic { get; set; }
     public int? PartyId { get; set; }
-    public ICollection<Party> Parties { get; set; } = new List<Party>();
+    public ICollection<Party> Parties { get; set; } = [];
     public int? CategoryId { get; set; }
     public Category? Category { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -14,7 +14,7 @@ public class Room : BaseEntity, IChangingDate
     public double LocationY { get; set; }
     public RoomType RoomType { get; set; }
     public double LifeCycle { get; set; }
-    public double ChannelId { get; set; }
+    public string ChannelId { get; set; } = string.Empty;
     public string ReferenceId { get; set; } = string.Empty;
     public int Upvote { get; set; }
     public int Downvote { get; set; }

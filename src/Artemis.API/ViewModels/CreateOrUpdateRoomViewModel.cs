@@ -8,13 +8,13 @@ public class CreateOrUpdateRoomViewModel
      public int? TopicId { get; set; }
     public int PartyId { get; set; }
     public int? CategoryId { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     public double LocationX { get; set; }
     public double LocationY { get; set; }
     public RoomType RoomType { get; set; }
     public double LifeCycle { get; set; }
-    public double ChannelId { get; set; }
-    public string ReferenceId { get; set; }
+    public string ChannelId { get; set; } = string.Empty;
+    public string ReferenceId { get; set; } = string.Empty;
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime CreateDate { get; set; }
