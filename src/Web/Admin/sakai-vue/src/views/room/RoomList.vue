@@ -1,10 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import CreateRoom from './components/CreateRoom.vue';
 import { useToast } from 'primevue/usetoast';
 import AddPartyToRoom from './components/AddPartyToRoom.vue';
+
+const router = useRouter();
 
 const toast = useToast();
 const rooms = ref([]);
@@ -161,6 +164,10 @@ function onCancel() {
     showFormDialog.value = false;
 }
 
+function openChat(room) {
+    router.push({ path: '/chat', query: { roomId: room.id } });
+}
+
 function formatDate(dateString) {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('tr-TR', {
@@ -220,6 +227,7 @@ const getSeverity = (status) => {
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" v-tooltip.bottom="'Update'" />
                     <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" v-tooltip.bottom="'Delete'" />
                     <Button icon="pi pi-plus" class="p-button-text p-button-sm" @click="openAddPartyToRoom(data)" v-tooltip.bottom="'AddPartyToRoom'" />
+                    <Button icon="pi pi-comments" class="p-button-text p-button-sm" @click="openChat(data)" v-tooltip.bottom="'Open Chat'" />
                 </template>
             </Column>
 
