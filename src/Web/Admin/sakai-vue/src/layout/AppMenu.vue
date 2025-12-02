@@ -2,11 +2,13 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useI18n } from '@/composables/useI18n';
 
 import AppMenuItem from './AppMenuItem.vue';
 
 const router = useRouter();
 const auth = useAuthStore();
+const { t } = useI18n();
 
 function onLogout() {
     auth.clearToken();
@@ -31,7 +33,6 @@ function onLogout() {
                     // ignore
                 }
             }
-            // last resort: hard redirect to root
             window.location.href = '/';
         }
     })();
@@ -39,27 +40,27 @@ function onLogout() {
 
 const model = ref([
     {
-        label: 'Home',
+        label: t('common.home'),
         items: [
-            { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
-            { label: 'Rooms', icon: 'pi pi-fw pi-table', to: '/room/list' },
-            { label: 'Parties', icon: 'pi pi-fw pi-users', to: '/party/list' },
-            { label: 'Categories', icon: 'pi pi-fw pi-align-center', to: '/category/list' },
-            { label: 'Topics', icon: 'pi pi-fw pi-book', to: '/topic/list' },
-            { label: 'Hashtags', icon: 'pi pi-fw pi-tag', to: '/hashtag/list' },
-            { label: 'Room Hashtag Maps', icon: 'pi pi-fw pi-link', to: '/roomhashtagmap/list' },
-            { label: 'Category Hashtag Maps', icon: 'pi pi-fw pi-sitemap', to: '/categoryhashtagmap/list' },
-            { label: 'Topic Hashtag Maps', icon: 'pi pi-fw pi-bookmark', to: '/topichashtagmap/list' },
-            { label: 'Mentions', icon: 'pi pi-fw pi-at', to: '/mention/list' },
-            { label: 'Messages', icon: 'pi pi-fw pi-comments', to: '/message/list' },
-            { label: 'Chat (SignalR)', icon: 'pi pi-fw pi-comment', to: '/chat' }
+            { label: t('common.dashboard'), icon: 'pi pi-fw pi-home', to: '/' },
+            { label: t('common.rooms'), icon: 'pi pi-fw pi-table', to: '/room/list' },
+            { label: t('common.parties'), icon: 'pi pi-fw pi-users', to: '/party/list' },
+            { label: t('common.categories'), icon: 'pi pi-fw pi-align-center', to: '/category/list' },
+            { label: t('common.topics'), icon: 'pi pi-fw pi-book', to: '/topic/list' },
+            { label: t('common.hashtags'), icon: 'pi pi-fw pi-tag', to: '/hashtag/list' },
+            { label: t('common.roomHashtagMaps'), icon: 'pi pi-fw pi-link', to: '/roomhashtagmap/list' },
+            { label: t('common.categoryHashtagMaps'), icon: 'pi pi-fw pi-sitemap', to: '/categoryhashtagmap/list' },
+            { label: t('common.topicHashtagMaps'), icon: 'pi pi-fw pi-bookmark', to: '/topichashtagmap/list' },
+            { label: t('common.mentions'), icon: 'pi pi-fw pi-at', to: '/mention/list' },
+            { label: t('common.messages'), icon: 'pi pi-fw pi-comments', to: '/message/list' },
+            { label: t('common.chat'), icon: 'pi pi-fw pi-comment', to: '/chat' }
         ]
     },
     {
-        label: 'Account',
+        label: t('common.account'),
         items: [
             {
-                label: 'Logout',
+                label: t('common.logout'),
                 icon: 'pi pi-fw pi-sign-out',
                 command: onLogout
             }

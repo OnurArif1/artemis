@@ -40,7 +40,22 @@ export default {
         private: 'Private',
         operations: 'İşlemler',
         openChat: 'Chat Aç',
-        loadFailed: 'Veriler yüklenirken hata oluştu'
+        loadFailed: 'Veriler yüklenirken hata oluştu',
+        dashboard: 'Gösterge Paneli',
+        rooms: 'Odalar',
+        parties: 'Partiler',
+        categories: 'Kategoriler',
+        topics: 'Konular',
+        messages: 'Mesajlar',
+        mentions: 'Bahsetmeler',
+        hashtags: 'Hashtagler',
+        roomHashtagMaps: 'Oda-Hashtag Haritaları',
+        categoryHashtagMaps: 'Kategori-Hashtag Haritaları',
+        topicHashtagMaps: 'Konu-Hashtag Haritaları',
+        chat: 'Sohbet',
+        home: 'Ana Sayfa',
+        account: 'Hesap',
+        logout: 'Çıkış Yap'
     },
     room: {
         title: 'Odalar',
