@@ -3,6 +3,7 @@ using System;
 using Artemis.API.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Artemis.API.Infrastructure.Migrations
 {
     [DbContext(typeof(ArtemisDbContext))]
-    partial class ArtemisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251202191610_ForbiddenWordsAdded")]
+    partial class ForbiddenWordsAdded
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -408,7 +411,8 @@ namespace Artemis.API.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("TopicId");
+                    b.HasIndex("TopicId")
+                        .IsUnique();
 
                     b.ToTable("Room", (string)null);
                 });
@@ -507,6 +511,9 @@ namespace Artemis.API.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int?>("PartyId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RoomId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Title")
@@ -703,8 +710,8 @@ namespace Artemis.API.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Artemis.API.Entities.Topic", "Topic")
-                        .WithMany("Rooms")
-                        .HasForeignKey("TopicId")
+                        .WithOne("Room")
+                        .HasForeignKey("Artemis.API.Entities.Room", "TopicId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Category");
@@ -866,7 +873,7 @@ namespace Artemis.API.Infrastructure.Migrations
                 {
                     b.Navigation("Comments");
 
-                    b.Navigation("Rooms");
+                    b.Navigation("Room");
 
                     b.Navigation("TopicHashtagMaps");
                 });

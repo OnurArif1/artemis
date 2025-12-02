@@ -61,6 +61,11 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ArtemisDbContext>();
     dbContext.Database.Migrate();
+    
+    // // Tek seferlik yasak kelime ekleme - kullanmak için yorumu kaldırın
+    // var forbiddenWordsCreator = new ForbiddenWordsCreator(dbContext);
+    // var wordsToAdd = new List<string> { "kelime1", "kelime2", "kelime3" }; // Buraya eklemek istediğiniz kelimeleri yazın
+    // forbiddenWordsCreator.SaveExpandedForbiddenWordsAsync(wordsToAdd).GetAwaiter().GetResult();
 }
 
 app.UseHttpsRedirection();
