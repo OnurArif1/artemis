@@ -7,6 +7,13 @@ import MessageService from '@/service/MessageService';
 import RoomService from '@/service/RoomService';
 import request from '@/service/request';
 
+const props = defineProps({
+    roomIdProp: {
+        type: Number,
+        default: null
+    }
+});
+
 const route = useRoute();
 const partyService = new PartyService(request);
 const messageService = new MessageService(request);
@@ -22,13 +29,23 @@ const connectionStatus = ref('Bağlanılıyor...');
 const connectionId = ref(null);
 const messageContainer = ref(null);
 const partyMap = ref(new Map()); // partyId -> partyName mapping
+const roomParties = ref([]); // Room'un partylerini tutar
+const showMentionList = ref(false);
+const mentionList = ref([]);
+const mentionSearchText = ref('');
+const mentionStartPosition = ref(-1);
+const selectedMentionIndex = ref(-1);
 let connectionIdInterval = null;
 
-// Route query'den roomId'yi al
+// Route query'den veya prop'tan roomId'yi al
 const initializeParams = () => {
-    const roomIdParam = route.query.roomId;
-    if (roomIdParam) {
-        roomId.value = parseInt(roomIdParam);
+    if (props.roomIdProp) {
+        roomId.value = props.roomIdProp;
+    } else {
+        const roomIdParam = route.query.roomId;
+        if (roomIdParam) {
+            roomId.value = parseInt(roomIdParam);
+        }
     }
 };
 
@@ -92,7 +109,7 @@ const loadMessages = async () => {
     }
 };
 
-// Room bilgilerini yükle (title için)
+// Room bilgilerini yükle (title ve partyler için)
 const loadRoomInfo = async () => {
     if (!roomId.value) {
         return;
@@ -112,6 +129,17 @@ const loadRoomInfo = async () => {
                 // Room'un partyId'sini currentPartyId olarak ayarla (mesaj göndermek için)
                 if (room.partyId && !currentPartyId.value) {
                     currentPartyId.value = room.partyId;
+                }
+                // Room'un partylerini yükle
+                if (room.parties && room.parties.length > 0) {
+                    roomParties.value = room.parties.map((p) => ({
+                        id: p.id,
+                        name: p.partyName
+                    }));
+                    // Party map'e de ekle
+                    room.parties.forEach((p) => {
+                        partyMap.value.set(p.id, p.partyName);
+                    });
                 }
             } else {
                 roomTitle.value = `Room ${roomId.value}`;
@@ -200,7 +228,9 @@ function sendMessage() {
     }
 
     const message = messageText.value.trim();
-    signalRService.sendMessage(currentPartyId.value, roomId.value, message);
+    // Mention'ları parse et
+    const mentionedPartyIds = parseMentions(message);
+    signalRService.sendMessage(currentPartyId.value, roomId.value, message, mentionedPartyIds.length > 0 ? mentionedPartyIds : null);
 
     // Mesajı hemen ekle (optimistic update)
     const partyName = partyMap.value.get(currentPartyId.value) || `Kullanıcı ${currentPartyId.value}`;
@@ -228,18 +258,221 @@ function sendMessage() {
     }, 500);
 }
 
+// Mention'ları mesajdan parse et (@PartyName formatından)
+function parseMentions(text) {
+    const mentionRegex = /@([^\s@]+)/g;
+    const mentions = [];
+    let match;
+
+    while ((match = mentionRegex.exec(text)) !== null) {
+        const mentionedName = match[1].trim();
+        // Room'un partylerinden mention edilen party'yi bul (tam eşleşme)
+        const party = roomParties.value.find((p) => {
+            const partyName = p.name.toLowerCase();
+            const searchName = mentionedName.toLowerCase();
+            return partyName === searchName;
+        });
+        if (party) {
+            mentions.push(party.id);
+        }
+    }
+
+    return [...new Set(mentions)]; // Duplicate'leri kaldır
+}
+
+// @ işareti ile mention listesi göster
+function handleMentionInput(event) {
+    const text = event.target.value;
+    const cursorPosition = event.target.selectionStart || 0;
+    const textBeforeCursor = text.substring(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+
+    if (lastAtIndex !== -1) {
+        const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+        // Eğer @ işaretinden sonra boşluk veya yeni satır yoksa ve en az bir karakter varsa
+        if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n') && textAfterAt.length > 0) {
+            mentionStartPosition.value = lastAtIndex;
+            mentionSearchText.value = textAfterAt.toLowerCase();
+
+            // Mention listesini filtrele
+            const filtered = roomParties.value.filter((p) => p.name.toLowerCase().includes(mentionSearchText.value));
+
+            if (filtered.length > 0) {
+                mentionList.value = filtered;
+                showMentionList.value = true;
+                selectedMentionIndex.value = -1;
+            } else {
+                showMentionList.value = false;
+            }
+            return;
+        } else if (textAfterAt.length === 0) {
+            // @ işaretinden hemen sonra, tüm partyler göster
+            mentionStartPosition.value = lastAtIndex;
+            mentionSearchText.value = '';
+            mentionList.value = roomParties.value;
+            showMentionList.value = roomParties.value.length > 0;
+            selectedMentionIndex.value = -1;
+            return;
+        }
+    }
+
+    showMentionList.value = false;
+    mentionStartPosition.value = -1;
+}
+
+// Mention seçildiğinde mesajı güncelle
+function selectMention(party) {
+    if (mentionStartPosition.value === -1) return;
+
+    const text = messageText.value;
+    const cursorPosition = mentionStartPosition.value;
+    const textAfterAt = text.substring(cursorPosition + 1); // @ işaretinden sonrası
+    const spaceIndex = textAfterAt.indexOf(' ');
+    const newlineIndex = textAfterAt.indexOf('\n');
+    let endIndex;
+
+    if (spaceIndex !== -1 && newlineIndex !== -1) {
+        endIndex = cursorPosition + 1 + Math.min(spaceIndex, newlineIndex);
+    } else if (spaceIndex !== -1) {
+        endIndex = cursorPosition + 1 + spaceIndex;
+    } else if (newlineIndex !== -1) {
+        endIndex = cursorPosition + 1 + newlineIndex;
+    } else {
+        endIndex = text.length;
+    }
+
+    const beforeMention = text.substring(0, cursorPosition);
+    const afterMention = text.substring(endIndex);
+    const newText = beforeMention + '@' + party.name + ' ' + afterMention;
+    messageText.value = newText;
+
+    showMentionList.value = false;
+    mentionStartPosition.value = -1;
+    mentionSearchText.value = '';
+
+    // Input'a focus et ve cursor'ı doğru yere koy
+    nextTick(() => {
+        const input = document.getElementById('messageInput');
+        if (input) {
+            const newPosition = cursorPosition + party.name.length + 2; // @ + name + space
+            input.focus();
+            input.setSelectionRange(newPosition, newPosition);
+        }
+    });
+}
+
+// Mention'ı sil (backspace ile)
+function deleteMention(event) {
+    const text = messageText.value;
+    const cursorPosition = event.target.selectionStart || 0;
+    
+    if (cursorPosition === 0) return; // Başta ise silme
+    
+    const textBeforeCursor = text.substring(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    // Eğer @ işareti varsa
+    if (lastAtIndex !== -1) {
+        // @ işaretinden sonraki metni al
+        const textAfterAt = text.substring(lastAtIndex + 1);
+        // Mention'ın sonunu bul (boşluk, yeni satır veya metnin sonu)
+        const spaceIndex = textAfterAt.indexOf(' ');
+        const newlineIndex = textAfterAt.indexOf('\n');
+        let mentionEnd;
+        
+        if (spaceIndex !== -1 && newlineIndex !== -1) {
+            mentionEnd = lastAtIndex + 1 + Math.min(spaceIndex, newlineIndex) + 1; // +1 for space
+        } else if (spaceIndex !== -1) {
+            mentionEnd = lastAtIndex + 1 + spaceIndex + 1; // +1 for space
+        } else if (newlineIndex !== -1) {
+            mentionEnd = lastAtIndex + 1 + newlineIndex;
+        } else {
+            mentionEnd = text.length;
+        }
+        
+        // Eğer cursor mention'ın içindeyse veya hemen sonrasındaysa (boşluk dahil), mention'ı sil
+        if (cursorPosition > lastAtIndex && cursorPosition <= mentionEnd) {
+            event.preventDefault();
+            const beforeMention = text.substring(0, lastAtIndex);
+            const afterMention = text.substring(mentionEnd);
+            messageText.value = beforeMention + afterMention;
+            
+            // Cursor'ı mention'ın başına koy
+            nextTick(() => {
+                const input = document.getElementById('messageInput');
+                if (input) {
+                    input.focus();
+                    input.setSelectionRange(lastAtIndex, lastAtIndex);
+                }
+            });
+        }
+    }
+}
+
+// Klavye ile mention listesinde gezinme
+function handleMentionKeydown(event) {
+    // Backspace tuşu ile mention silme
+    if (event.key === 'Backspace' || event.key === 'Delete') {
+        // Mention listesi açıksa kapat
+        if (showMentionList.value) {
+            showMentionList.value = false;
+            mentionStartPosition.value = -1;
+        }
+        deleteMention(event);
+        return;
+    }
+    
+    if (!showMentionList.value) {
+        return;
+    }
+    
+    if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        selectedMentionIndex.value = Math.min(selectedMentionIndex.value + 1, mentionList.value.length - 1);
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        selectedMentionIndex.value = Math.max(selectedMentionIndex.value - 1, -1);
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        showMentionList.value = false;
+        mentionStartPosition.value = -1;
+    }
+}
+
 function onEnterKey(event) {
+    if (showMentionList.value) {
+        if (selectedMentionIndex.value >= 0) {
+            event.preventDefault();
+            selectMention(mentionList.value[selectedMentionIndex.value]);
+            return;
+        } else if (mentionList.value.length > 0) {
+            event.preventDefault();
+            selectMention(mentionList.value[0]);
+            return;
+        }
+    }
+
     if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         sendMessage();
     }
 }
 
-// RoomId değiştiğinde mesajları yeniden yükle
+watch(
+    () => props.roomIdProp,
+    (newRoomId) => {
+        if (newRoomId) {
+            roomId.value = newRoomId;
+            loadRoomInfo();
+            loadMessages();
+        }
+    }
+);
+
 watch(
     () => route.query.roomId,
     (newRoomId) => {
-        if (newRoomId) {
+        if (newRoomId && !props.roomIdProp) {
             roomId.value = parseInt(newRoomId);
             loadMessages();
         }
@@ -260,10 +493,6 @@ watch(
                         <i :class="isConnected ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
                         <span>{{ connectionStatus }}</span>
                     </div>
-                    <div v-if="roomId" class="connection-id">
-                        <i class="pi pi-home text-sm"></i>
-                        <span class="text-sm">Room ID: {{ roomId }}</span>
-                    </div>
                 </div>
             </div>
 
@@ -275,11 +504,9 @@ watch(
                     </div>
                     <template v-else>
                         <div v-for="(msg, index) in messages" :key="msg.id" class="message-group">
-                            <!-- Party ismi (sadece önceki mesajdan farklıysa göster) -->
                             <div v-if="index === 0 || messages[index - 1].partyId !== msg.partyId" class="message-party-name">
                                 {{ msg.partyName }}
                             </div>
-                            <!-- Mesaj içeriği -->
                             <div class="message-item">
                                 <div class="message-content">{{ msg.content }}</div>
                                 <div class="message-time">
@@ -292,8 +519,27 @@ watch(
             </div>
 
             <div class="chat-footer">
-                <div class="flex gap-2 align-items-center w-full">
-                    <InputText v-model="messageText" @keydown="onEnterKey" placeholder="Mesajınızı yazın... (Enter ile gönder)" class="flex-1" :disabled="!isConnected || !roomId" />
+                <div class="flex gap-2 align-items-center w-full" style="position: relative">
+                    <div class="flex-1" style="position: relative">
+                        <InputText
+                            id="messageInput"
+                            v-model="messageText"
+                            @keydown="
+                                (e) => {
+                                    handleMentionKeydown(e);
+                                    onEnterKey(e);
+                                }
+                            "
+                            @input="handleMentionInput"
+                            placeholder="Mesajınızı yazın... (Enter ile gönder, @ ile mention)"
+                            class="w-full"
+                        />
+                        <div v-if="showMentionList && mentionList.length > 0" class="mention-list" @click.stop>
+                            <div v-for="(party, index) in mentionList" :key="party.id" :class="['mention-item', { selected: index === selectedMentionIndex }]" @click="selectMention(party)" @mouseenter="selectedMentionIndex = index">
+                                {{ party.name }}
+                            </div>
+                        </div>
+                    </div>
                     <Button label="Gönder" icon="pi pi-send" @click="sendMessage" :disabled="!isConnected || !messageText.trim() || !roomId" />
                 </div>
             </div>
@@ -303,10 +549,12 @@ watch(
 
 <style scoped>
 .chat-container {
-    padding: 2rem;
-    max-width: 1200px;
+    padding: 1rem;
+    max-width: 100%;
     margin: 0 auto;
-    height: calc(100vh - 200px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .chat-header {
@@ -350,8 +598,9 @@ watch(
 .chat-body {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 350px);
-    min-height: 400px;
+    flex: 1;
+    min-height: 300px;
+    max-height: 500px;
 }
 
 .messages-container {
@@ -443,5 +692,42 @@ watch(
 
 .messages-container::-webkit-scrollbar-thumb:hover {
     background: var(--surface-400);
+}
+
+.mention-list {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface-0);
+    border: 1px solid var(--surface-border);
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mention-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.mention-item:hover,
+.mention-item.selected {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.mention-item:first-child {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.mention-item:last-child {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
 }
 </style>

@@ -24,7 +24,7 @@ public class ChatHub : Hub
         await base.OnConnectedAsync();
     }
 
-    public async Task SendMessage(int partyId, int roomId, string message)
+    public async Task SendMessage(int partyId, int roomId, string message, List<int>? mentionedPartyIds = null)
     {
         try
         {
@@ -35,7 +35,8 @@ public class ChatHub : Hub
                 RoomId = roomId,
                 Content = message,
                 Upvote = 0,
-                Downvote = 0
+                Downvote = 0,
+                MentionedPartyIds = mentionedPartyIds
             };
             
             await _messageService.Create(viewModel);

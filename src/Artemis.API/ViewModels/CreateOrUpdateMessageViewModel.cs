@@ -11,5 +11,6 @@ public class CreateOrUpdateMessageViewModel
     public int Downvote { get; set; }
     public DateTime? LastUpdateDate { get; set; }
     public DateTime? CreateDate { get; set; }
+    public List<int>? MentionedPartyIds { get; set; }
 }
 

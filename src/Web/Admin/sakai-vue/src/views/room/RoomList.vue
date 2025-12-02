@@ -1,13 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import CreateRoom from './components/CreateRoom.vue';
 import { useToast } from 'primevue/usetoast';
 import AddPartyToRoom from './components/AddPartyToRoom.vue';
-
-const router = useRouter();
+import Chat from '@/views/chat/Chat.vue';
 
 const toast = useToast();
 const rooms = ref([]);
@@ -23,6 +21,7 @@ const filters = ref({
 const showFormDialog = ref(false);
 const showAddPartyDialog = ref(false);
 const showDeleteDialog = ref(false);
+const showChatDialog = ref(false);
 const selectedRoom = ref(null);
 
 async function load() {
@@ -165,7 +164,8 @@ function onCancel() {
 }
 
 function openChat(room) {
-    router.push({ path: '/chat', query: { roomId: room.id } });
+    selectedRoom.value = room;
+    showChatDialog.value = true;
 }
 
 function formatDate(dateString) {
@@ -236,7 +236,7 @@ const getSeverity = (status) => {
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" v-tooltip.bottom="'Update'" />
                     <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" v-tooltip.bottom="'Delete'" />
                     <Button icon="pi pi-plus" class="p-button-text p-button-sm" @click="openAddPartyToRoom(data)" v-tooltip.bottom="'AddPartyToRoom'" />
-                    <Button icon="pi pi-comments" class="p-button-text p-button-sm" @click="openChat(data)" v-tooltip.bottom="'Open Chat'" />
+                    <Button v-if="data.channelId" icon="pi pi-comments" class="p-button-text p-button-sm" @click="openChat(data)" v-tooltip.bottom="'Open Chat'" />
                 </template>
             </Column>
 
@@ -263,6 +263,10 @@ const getSeverity = (status) => {
                     <Button label="Delete" severity="danger" @click="confirmDelete" />
                 </div>
             </div>
+        </Dialog>
+
+        <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`Chat - ${selectedRoom?.title || 'Room'}`" :style="{ width: '800px', height: '600px' }" :maximizable="true">
+            <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
         </Dialog>
     </div>
 </template>

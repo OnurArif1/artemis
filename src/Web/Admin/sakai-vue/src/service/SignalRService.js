@@ -59,7 +59,7 @@ class SignalRService {
             });
     }
 
-    sendMessage(partyId, roomId, message) {
+    sendMessage(partyId, roomId, message, mentionedPartyIds = null) {
         if (!this.connection) {
             console.error('SignalR connection is not initialized. Call startConnection() first.');
             return;
@@ -70,7 +70,7 @@ class SignalRService {
             // Bağlantıyı yeniden başlatmayı dene
             this.startConnection()
                 .then(() => {
-                    this.connection.invoke('SendMessage', partyId, roomId, message).catch((err) => console.error('Send error:', err));
+                    this.connection.invoke('SendMessage', partyId, roomId, message, mentionedPartyIds).catch((err) => console.error('Send error:', err));
                 })
                 .catch((err) => {
                     console.error('Failed to reconnect:', err);
@@ -78,7 +78,7 @@ class SignalRService {
             return;
         }
 
-        this.connection.invoke('SendMessage', partyId, roomId, message).catch((err) => console.error('Send error:', err));
+        this.connection.invoke('SendMessage', partyId, roomId, message, mentionedPartyIds).catch((err) => console.error('Send error:', err));
     }
 
     onReceiveMessage(callback) {

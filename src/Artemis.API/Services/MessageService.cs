@@ -27,6 +27,33 @@ public class MessageService : IMessageService
         };
         await _artemisDbContext.Messages.AddAsync(message);
         await _artemisDbContext.SaveChangesAsync();
+
+        // Mention ve MentionPartyMap kayıtlarını oluştur
+        if (viewModel.MentionedPartyIds != null && viewModel.MentionedPartyIds.Any())
+        {
+            var mention = new Mention()
+            {
+                RoomId = viewModel.RoomId,
+                MessageId = message.Id
+            };
+            await _artemisDbContext.Mentions.AddAsync(mention);
+            await _artemisDbContext.SaveChangesAsync();
+
+            // Her mention edilen party için MentionPartyMap oluştur
+            foreach (var mentionedPartyId in viewModel.MentionedPartyIds)
+            {
+                if (mentionedPartyId > 0)
+                {
+                    var mentionPartyMap = new MentionPartyMap()
+                    {
+                        MentionId = mention.Id,
+                        PartyId = mentionedPartyId
+                    };
+                    await _artemisDbContext.MentionPartyMaps.AddAsync(mentionPartyMap);
+                }
+            }
+            await _artemisDbContext.SaveChangesAsync();
+        }
     }
 
     public async ValueTask<MessageListViewModel> GetList(MessageFilterViewModel filterViewModel)
