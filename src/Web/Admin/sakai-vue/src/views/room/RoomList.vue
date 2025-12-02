@@ -6,7 +6,9 @@ import CreateRoom from './components/CreateRoom.vue';
 import { useToast } from 'primevue/usetoast';
 import AddPartyToRoom from './components/AddPartyToRoom.vue';
 import Chat from '@/views/chat/Chat.vue';
+import { useI18n } from '@/composables/useI18n';
 
+const { t, locale } = useI18n();
 const toast = useToast();
 const rooms = ref([]);
 const roomService = new RoomService(request);
@@ -92,11 +94,11 @@ function onCreated(payload) {
             };
             await roomService.create(data);
             showFormDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Created', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('room.created'), life: 3000 });
             await load();
         } catch (err) {
             console.error('Room create error:', err);
-            toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.message || err.message || 'Room creation failed', life: 3000 });
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err.response?.data?.message || err.message || t('room.creationFailed'), life: 3000 });
         }
     })();
 }
@@ -111,10 +113,10 @@ function onAddPartyToRoom(payload) {
 
             await roomService.addPartyToRoom(data);
             showAddPartyDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Added to Room', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('room.partyAdded'), life: 3000 });
             await load();
         } catch (err) {
-            toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.message || err.message || 'Add Party to Room failed', life: 3000 });
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err.response?.data?.message || err.message || t('room.partyAddFailed'), life: 3000 });
         }
     })();
 }
@@ -139,10 +141,10 @@ function onUpdated(payload) {
             };
             await roomService.update(data);
             showFormDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Updated', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('room.updated'), life: 3000 });
             await load();
         } catch (err) {
-            toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.message || err.message || 'Room update failed', life: 3000 });
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err.response?.data?.message || err.message || t('room.updateFailed'), life: 3000 });
         }
     })();
 }
@@ -151,11 +153,11 @@ async function confirmDelete() {
     try {
         await roomService.delete(selectedRoom.value.id);
         showDeleteDialog.value = false;
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Deleted', life: 3000 });
+        toast.add({ severity: 'success', summary: t('common.success'), detail: t('room.deleted'), life: 3000 });
         await load();
     } catch (err) {
         console.error('Room delete error:', err);
-        toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.message || err.message || 'Room delete failed', life: 3000 });
+        toast.add({ severity: 'error', summary: t('common.error'), detail: err.response?.data?.message || err.message || t('room.deleteFailed'), life: 3000 });
     }
 }
 
@@ -170,7 +172,7 @@ function openChat(room) {
 
 function formatDate(dateString) {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('tr-TR', {
+    return new Date(dateString).toLocaleDateString(locale.value === 'tr' ? 'tr-TR' : 'en-US', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
@@ -193,37 +195,37 @@ const getSeverity = (status) => {
             <template #header>
                 <div class="flex justify-between items-center mb-3">
                     <div class="relative w-64">
-                        <InputText v-model="filters.global.value" placeholder="Search by Title" @input="onSearch" class="w-full pr-10" />
+                        <InputText v-model="filters.global.value" :placeholder="t('common.searchByTitle')" @input="onSearch" class="w-full pr-10" />
                         <i class="pi pi-search absolute top-1/2 -translate-y-1/2 right-3 text-surface-400 pointer-events-none" />
                     </div>
-                    <Button icon="pi pi-plus" @click="openCreate" v-tooltip.bottom="'Add New Room'" />
+                    <Button icon="pi pi-plus" @click="openCreate" :v-tooltip.bottom="t('room.create')" />
                 </div>
             </template>
-            <Column field="id" header="Id" />
-            <Column field="title" header="Title" />
-            <Column field="topicTitle" header="Topic">
+            <Column field="id" :header="t('room.id')" />
+            <Column field="title" :header="t('room.titleLabel')" />
+            <Column field="topicTitle" :header="t('room.topic')">
                 <template #body="{ data }">
                     <span v-if="data.topicTitle" class="text-sm">{{ data.topicTitle }}</span>
                     <span v-else class="text-300 text-sm">-</span>
                 </template>
             </Column>
-            <Column field="roomType" header="RoomType">
+            <Column field="roomType" :header="t('room.roomType')">
                 <template #body="{ data }">
-                    <Tag :value="data.roomType === 1 ? 'Public' : 'Private'" :severity="getSeverity(data.roomType)" />
+                    <Tag :value="data.roomType === 1 ? t('common.public') : t('common.private')" :severity="getSeverity(data.roomType)" />
                 </template>
             </Column>
-            <Column field="channelId" header="Channel ID">
+            <Column field="channelId" :header="t('room.channelId')">
                 <template #body="{ data }">
                     <span v-if="data.channelId" class="text-sm font-mono">{{ data.channelId }}</span>
                     <span v-else class="text-300 text-sm">-</span>
                 </template>
             </Column>
-            <Column field="createDate" header="CreateDate">
+            <Column field="createDate" :header="t('room.createDate')">
                 <template #body="{ data }">
                     <Tag :value="formatDate(data.createDate)" severity="success" />
                 </template>
             </Column>
-            <Column field="parties" header="Parties">
+            <Column field="parties" :header="t('room.parties')">
                 <template #body="{ data }">
                     <div v-if="data.parties && data.parties.length > 0" class="flex flex-wrap gap-1">
                         <Tag v-for="party in data.parties" :key="party.id" :value="party.partyName" severity="info" class="mr-1" />
@@ -231,41 +233,40 @@ const getSeverity = (status) => {
                     <span v-else class="text-300 text-sm">-</span>
                 </template>
             </Column>
-            <Column header="Operation">
+            <Column :header="t('common.operations')">
                 <template #body="{ data }">
-                    <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" v-tooltip.bottom="'Update'" />
-                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" v-tooltip.bottom="'Delete'" />
-                    <Button icon="pi pi-plus" class="p-button-text p-button-sm" @click="openAddPartyToRoom(data)" v-tooltip.bottom="'AddPartyToRoom'" />
-                    <Button v-if="data.channelId" icon="pi pi-comments" class="p-button-text p-button-sm" @click="openChat(data)" v-tooltip.bottom="'Open Chat'" />
+                    <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" :v-tooltip.bottom="t('common.update')" />
+                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" :v-tooltip.bottom="t('common.delete')" />
+                    <Button icon="pi pi-plus" class="p-button-text p-button-sm" @click="openAddPartyToRoom(data)" :v-tooltip.bottom="t('room.addPartyToRoom')" />
+                    <Button v-if="data.channelId" icon="pi pi-comments" class="p-button-text p-button-sm" @click="openChat(data)" :v-tooltip.bottom="t('common.openChat')" />
                 </template>
             </Column>
 
-            <template #empty>No room data found.</template>
-            <template #loading>Loading room data. Please wait.</template>
+            <template #empty>{{ t('room.noRoomData') }}</template>
+            <template #loading>{{ t('room.loadingRoomData') }}</template>
         </DataTable>
 
-        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedRoom ? 'Update Room' : 'Create Room'" style="width: 500px">
+        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedRoom ? t('room.updateRoom') : t('room.createRoom')" style="width: 500px">
             <CreateRoom :room="selectedRoom" @created="onCreated" @updated="onUpdated" @cancel="onCancel" />
         </Dialog>
 
-        <Dialog v-model:visible="showAddPartyDialog" modal :closable="false" header="Add Party To Room" style="width: 500px">
+        <Dialog v-model:visible="showAddPartyDialog" modal :closable="false" :header="t('room.addPartyToRoom')" style="width: 500px">
             <AddPartyToRoom :room="selectedRoom" @addPartyToRoom="onAddPartyToRoom" @cancel="onCancel" />
         </Dialog>
 
-        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Room" style="width: 400px">
+        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" :header="t('room.deleteRoom')" style="width: 400px">
             <div class="p-4 text-center">
                 <p>
-                    Are you sure you want to delete <b>{{ selectedRoom?.title }}</b
-                    >?
+                    {{ t('common.areYouSureDelete') }} <b>{{ selectedRoom?.title }}</b>?
                 </p>
                 <div class="flex justify-center gap-3 mt-4">
-                    <Button label="Cancel" class="p-button-text" @click="showDeleteDialog = false" />
-                    <Button label="Delete" severity="danger" @click="confirmDelete" />
+                    <Button :label="t('common.cancel')" class="p-button-text" @click="showDeleteDialog = false" />
+                    <Button :label="t('common.delete')" severity="danger" @click="confirmDelete" />
                 </div>
             </div>
         </Dialog>
 
-        <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`Chat - ${selectedRoom?.title || 'Room'}`" :style="{ width: '800px', height: '600px' }" :maximizable="true">
+        <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${t('room.chatHeader')} - ${selectedRoom?.title || t('room.title')}`" :style="{ width: '800px', height: '600px' }" :maximizable="true">
             <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
         </Dialog>
     </div>

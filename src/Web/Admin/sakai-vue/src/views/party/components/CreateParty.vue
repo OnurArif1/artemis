@@ -1,6 +1,8 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
+import { useI18n } from '@/composables/useI18n';
 
+const { t } = useI18n();
 const props = defineProps({
     party: {
         type: Object,
@@ -59,29 +61,29 @@ function cancel() {
     <div>
         <form @submit.prevent="submit" class="card p-4">
             <div class="flex flex-col gap-2 mb-3">
-                <label for="partyName">Name</label>
+                <label for="partyName">{{ t('party.name') }}</label>
                 <InputText id="partyName" v-model="form.partyName" type="text" />
-                <Message v-if="!form.partyName" size="small" severity="error" variant="simple">Name is required.</Message>
+                <Message v-if="!form.partyName" size="small" severity="error" variant="simple">{{ t('party.nameRequired') }}</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="partyType">Type</label>
+                <label for="partyType">{{ t('party.type') }}</label>
                 <InputNumber id="partyType" v-model="form.partyType" :min="0" :max="10" />
             </div>
 
             <div class="flex items-center gap-2 mb-3">
                 <Checkbox inputId="isBanned" v-model="form.isBanned" :binary="true" />
-                <label for="isBanned">Banned</label>
+                <label for="isBanned">{{ t('party.banned') }}</label>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="deviceId">Device Id</label>
+                <label for="deviceId">{{ t('party.deviceId') }}</label>
                 <InputNumber id="deviceId" v-model="form.deviceId" />
             </div>
 
             <div class="flex gap-2 justify-end mt-4">
-                <Button type="button" label="Cancel" class="p-button-text" @click="cancel" />
-                <Button type="submit" :loading="loading" :label="isEditMode ? 'Update' : 'Create'" />
+                <Button type="button" :label="t('common.cancel')" class="p-button-text" @click="cancel" />
+                <Button type="submit" :loading="loading" :label="isEditMode ? t('common.update') : t('common.create')" />
             </div>
         </form>
     </div>

@@ -5,7 +5,9 @@ import PartyService from '@/service/PartyService';
 import CategoryService from '@/service/CategoryService';
 import TopicService from '@/service/TopicService';
 import signalRService from '@/service/SignalRService';
+import { useI18n } from '@/composables/useI18n';
 
+const { t } = useI18n();
 const partyService = new PartyService(request);
 const categoryService = new CategoryService(request);
 const topicService = new TopicService(request);
@@ -44,10 +46,10 @@ const categoryLoading = ref(false);
 const topicOptions = ref([]);
 const topicLoading = ref(false);
 
-const roomTypeOptions = [
-    { label: 'Public', value: 1 },
-    { label: 'Private', value: 2 }
-];
+const roomTypeOptions = ref([
+    { label: t('common.public'), value: 1 },
+    { label: t('common.private'), value: 2 }
+]);
 
 const isEditMode = computed(() => !!props.room?.id);
 
@@ -138,7 +140,6 @@ watch(
     () => props.room,
     async (newRoom) => {
         if (newRoom) {
-            // Önce topic options'ı yükle, sonra form'u set et
             await getTopicLookup();
             await getPartyLookup();
             await getCategoryLookup();
@@ -213,52 +214,52 @@ function cancel() {
     <div>
         <form @submit.prevent="submit" class="card p-4">
             <div class="flex flex-col gap-2 mb-3">
-                <label for="title">Title <span class="text-red-500">*</span></label>
+                <label for="title">{{ t('room.titleLabel') }} <span class="text-red-500">*</span></label>
                 <InputText id="title" v-model="form.title" type="text" />
-                <Message v-if="!form.title || form.title.trim() === ''" size="small" severity="error" variant="simple"> Title is required. </Message>
+                <Message v-if="!form.title || form.title.trim() === ''" size="small" severity="error" variant="simple">{{ t('room.titleRequired') }}</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="topicId">Topic <span class="text-red-500">*</span></label>
-                <Dropdown id="topicId" v-model="form.topicId" :options="topicOptions" option-label="label" option-value="value" placeholder="Select a Topic" :loading="topicLoading" />
-                <Message v-if="!form.topicId" size="small" severity="error" variant="simple"> Topic is required. </Message>
+                <label for="topicId">{{ t('room.topic') }} <span class="text-red-500">*</span></label>
+                <Dropdown id="topicId" v-model="form.topicId" :options="topicOptions" option-label="label" option-value="value" :placeholder="t('room.selectTopic')" :loading="topicLoading" />
+                <Message v-if="!form.topicId" size="small" severity="error" variant="simple">{{ t('room.topicRequired') }}</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="partyId">Party</label>
-                <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" option-label="label" option-value="value" placeholder="Select a Party" :loading="partyLoading" filter @filter="onPartyFilter" />
+                <label for="partyId">{{ t('party.title') }}</label>
+                <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" option-label="label" option-value="value" :placeholder="t('room.selectParty')" :loading="partyLoading" filter @filter="onPartyFilter" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="categoryId">Category</label>
-                <Dropdown id="categoryId" v-model="form.categoryId" :options="categoryOptions" option-label="label" option-value="value" placeholder="Select a Category" :loading="categoryLoading" filter @filter="onCategoryFilter" />
+                <label for="categoryId">{{ t('room.category') }}</label>
+                <Dropdown id="categoryId" v-model="form.categoryId" :options="categoryOptions" option-label="label" option-value="value" :placeholder="t('room.selectCategory')" :loading="categoryLoading" filter @filter="onCategoryFilter" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="locationX">Location X</label>
+                <label for="locationX">{{ t('room.locationX') }}</label>
                 <InputText id="locationX" v-model="form.locationX" type="number" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="locationY">Location Y</label>
+                <label for="locationY">{{ t('room.locationY') }}</label>
                 <InputText id="locationY" v-model="form.locationY" type="number" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="roomType">Room Type <span class="text-red-500">*</span></label>
+                <label for="roomType">{{ t('room.roomType') }} <span class="text-red-500">*</span></label>
                 <Dropdown id="roomType" v-model="form.roomType" :options="roomTypeOptions" option-label="label" option-value="value" />
-                <Message v-if="!form.roomType" size="small" severity="error" variant="simple"> Room Type is required. </Message>
+                <Message v-if="!form.roomType" size="small" severity="error" variant="simple">{{ t('room.roomType') }} {{ t('common.required') }}</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="channelId">Channel ID (SignalR Connection ID)</label>
-                <InputText id="channelId" v-model="form.channelId" type="text" placeholder="Otomatik olarak SignalR ConnectionId eklenecek" />
-                <small class="text-500">SignalR bağlantı ID'si. Yeni room oluştururken otomatik olarak eklenir.</small>
+                <label for="channelId">{{ t('room.channelId') }}</label>
+                <InputText id="channelId" v-model="form.channelId" type="text" :placeholder="t('room.channelIdPlaceholder')" />
+                <small class="text-500">{{ t('room.channelIdDescription') }}</small>
             </div>
 
             <div class="flex gap-2 justify-end mt-4">
-                <Button type="button" label="Cancel" class="p-button-text" @click="cancel" />
-                <Button type="submit" :loading="loading" :label="isEditMode ? 'Update' : 'Create'" />
+                <Button type="button" :label="t('common.cancel')" class="p-button-text" @click="cancel" />
+                <Button type="submit" :loading="loading" :label="isEditMode ? t('common.update') : t('common.create')" />
             </div>
         </form>
     </div>

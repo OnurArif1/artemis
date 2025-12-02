@@ -4,7 +4,9 @@ import request from '@/service/request';
 import MessageService from '@/service/MessageService';
 import { useToast } from 'primevue/usetoast';
 import CreateMessage from './components/CreateMessage.vue';
+import { useI18n } from '@/composables/useI18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const messages = ref([]);
 const messageService = new MessageService(request);
@@ -71,12 +73,12 @@ async function onCreated(payload) {
     try {
         await messageService.create(payload);
         showFormDialog.value = false;
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Message Created', life: 3000 });
+        toast.add({ severity: 'success', summary: t('common.success'), detail: t('message.created'), life: 3000 });
         await load();
     } catch (err) {
         console.error('Message create error:', err);
         const errorMessage = err?.response?.data?.message || err?.response?.data?.Message || err?.message || 'Failed to create Message';
-        toast.add({ severity: 'error', summary: 'Error', detail: errorMessage, life: 5000 });
+        toast.add({ severity: 'error', summary: t('common.error'), detail: errorMessage, life: 5000 });
     }
 }
 
@@ -84,11 +86,11 @@ async function onUpdated(payload) {
     try {
         await messageService.update(payload);
         showFormDialog.value = false;
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Message Updated', life: 3000 });
+        toast.add({ severity: 'success', summary: t('common.success'), detail: t('message.updated'), life: 3000 });
         await load();
     } catch (err) {
         console.error('Message update error:', err);
-        toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.message || err?.message || 'Failed to update Message', life: 5000 });
+        toast.add({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || err?.message || t('message.failedToUpdate'), life: 5000 });
     }
 }
 
@@ -97,7 +99,7 @@ function onDeleted(messageId) {
         try {
             await messageService.delete(messageId);
             showDeleteDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Message Deleted', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('message.deleted'), life: 3000 });
             await load();
         } catch (err) {
             console.error('Message delete error:', err);
@@ -113,7 +115,7 @@ async function confirmDelete() {
         await load();
     } catch (err) {
         console.error('Message delete error:', err);
-        toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.message || err?.message || 'Failed to delete Message', life: 5000 });
+        toast.add({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || err?.message || t('message.failedToDelete'), life: 5000 });
     }
 }
 
@@ -128,51 +130,50 @@ function onCancel() {
             <template #header>
                 <div class="flex justify-between items-center mb-3">
                     <div class="relative w-64">
-                        <InputText v-model="filters.global.value" placeholder="Search by RoomId" @input="onSearch" class="w-full pr-10" />
+                        <InputText v-model="filters.global.value" :placeholder="t('message.searchByRoomId')" @input="onSearch" class="w-full pr-10" />
                         <i class="pi pi-search absolute top-1/2 -translate-y-1/2 right-3 text-surface-400 pointer-events-none" />
                     </div>
-                    <Button icon="pi pi-plus" @click="openCreate" v-tooltip.bottom="'Yeni Message oluştur'" />
+                    <Button icon="pi pi-plus" @click="openCreate" :v-tooltip.bottom="t('message.create')" />
                 </div>
             </template>
 
-            <Column field="id" header="Id" />
-            <Column field="roomId" header="Room Id" />
-            <Column field="partyId" header="Party Id" />
-            <Column field="content" header="Content" />
-            <Column field="upvote" header="Upvote" />
-            <Column field="downvote" header="Downvote" />
-            <Column field="lastUpdateDate" header="Last Update Date" />
-            <Column field="createDate" header="Created At" />
+            <Column field="id" :header="t('message.id')" />
+            <Column field="roomId" :header="t('message.roomId')" />
+            <Column field="partyId" :header="t('message.partyId')" />
+            <Column field="content" :header="t('message.content')" />
+            <Column field="upvote" :header="t('message.upvote')" />
+            <Column field="downvote" :header="t('message.downvote')" />
+            <Column field="lastUpdateDate" :header="t('message.lastUpdateDate')" />
+            <Column field="createDate" :header="t('message.createdAt')" />
 
-            <Column header="Update">
+            <Column :header="t('common.update')">
                 <template #body="{ data }">
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" />
                 </template>
             </Column>
 
-            <Column header="Delete">
+            <Column :header="t('common.delete')">
                 <template #body="{ data }">
                     <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" />
                 </template>
             </Column>
 
-            <template #empty>No Messages found.</template>
-            <template #loading>Loading Message data. Please wait.</template>
+            <template #empty>{{ t('message.noMessagesFound') }}</template>
+            <template #loading>{{ t('message.loadingMessages') }}</template>
         </DataTable>
 
-        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedMessage ? 'Update Message' : 'Create Message'" style="width: 600px">
+        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedMessage ? t('message.updateMessage') : t('message.createMessage')" style="width: 600px">
             <CreateMessage :message="selectedMessage" @created="onCreated" @updated="onUpdated" @deleted="onDeleted" @cancel="onCancel" />
         </Dialog>
 
-        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Message" style="width: 400px">
+        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" :header="t('message.deleteMessage')" style="width: 400px">
             <div class="p-4 text-center">
                 <p>
-                    Are you sure you want to delete Message <b>#{{ selectedMessage?.id }}</b
-                    >?
+                    {{ t('common.areYouSureDelete') }} {{ t('message.title') }} <b>#{{ selectedMessage?.id }}</b>?
                 </p>
                 <div class="flex justify-center gap-3 mt-4">
-                    <Button label="Cancel" class="p-button-text" @click="showDeleteDialog = false" />
-                    <Button label="Delete" severity="danger" @click="confirmDelete" />
+                    <Button :label="t('common.cancel')" class="p-button-text" @click="showDeleteDialog = false" />
+                    <Button :label="t('common.delete')" severity="danger" @click="confirmDelete" />
                 </div>
             </div>
         </Dialog>

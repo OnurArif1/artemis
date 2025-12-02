@@ -16,7 +16,6 @@ public class MentionService : IMentionService
 
     public async ValueTask Create(CreateOrUpdateMentionViewModel viewModel)
     {
-        // Normalize 0 or negative values to null
         var roomId = viewModel.RoomId.HasValue && viewModel.RoomId.Value > 0 ? viewModel.RoomId : null;
         var messageId = viewModel.MessageId.HasValue && viewModel.MessageId.Value > 0 ? viewModel.MessageId : null;
         var commentId = viewModel.CommentId.HasValue && viewModel.CommentId.Value > 0 ? viewModel.CommentId : null;
@@ -86,7 +85,6 @@ public class MentionService : IMentionService
             .FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (mention is not null)
         {
-            // Normalize 0 or negative values to null
             var roomId = viewModel.RoomId.HasValue && viewModel.RoomId.Value > 0 ? viewModel.RoomId : null;
             var messageId = viewModel.MessageId.HasValue && viewModel.MessageId.Value > 0 ? viewModel.MessageId : null;
             var commentId = viewModel.CommentId.HasValue && viewModel.CommentId.Value > 0 ? viewModel.CommentId : null;

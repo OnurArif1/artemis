@@ -3,7 +3,9 @@ import { ref, watch, computed, onMounted } from 'vue';
 import request from '@/service/request';
 import PartyService from '@/service/PartyService';
 import CategoryService from '@/service/CategoryService';
+import { useI18n } from '@/composables/useI18n';
 
+const { t } = useI18n();
 const partyService = new PartyService(request);
 const categoryService = new CategoryService(request);
 
@@ -36,11 +38,11 @@ const partyLoading = ref(false);
 const categoryOptions = ref([]);
 const categoryLoading = ref(false);
 
-const typeOptions = [
-    { label: 'None', value: 0 },
-    { label: 'Public', value: 1 },
-    { label: 'Private', value: 2 }
-];
+const typeOptions = ref([
+    { label: t('topic.typeNone'), value: 0 },
+    { label: t('common.public'), value: 1 },
+    { label: t('common.private'), value: 2 }
+]);
 
 const isEditMode = computed(() => !!props.topic?.id);
 
@@ -149,54 +151,54 @@ function cancel() {
     <div>
         <form @submit.prevent="submit" class="card p-4">
             <div class="flex flex-col gap-2 mb-3">
-                <label for="title">Title</label>
+                <label for="title">{{ t('topic.titleLabel') }}</label>
                 <InputText id="title" v-model="form.title" type="text" />
-                <Message v-if="!form.title" size="small" severity="error" variant="simple"> Title is required. </Message>
+                <Message v-if="!form.title" size="small" severity="error" variant="simple">{{ t('topic.titleRequired') }}</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="partyId">Party</label>
-                <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" option-label="label" option-value="value" placeholder="Select a Party" :loading="partyLoading" filter @filter="onPartyFilter" />
+                <label for="partyId">{{ t('topic.party') }}</label>
+                <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" option-label="label" option-value="value" :placeholder="t('topic.selectParty')" :loading="partyLoading" filter @filter="onPartyFilter" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="categoryId">Category</label>
-                <Dropdown id="categoryId" v-model="form.categoryId" :options="categoryOptions" option-label="label" option-value="value" placeholder="Select a Category" :loading="categoryLoading" filter @filter="onCategoryFilter" />
+                <label for="categoryId">{{ t('topic.category') }}</label>
+                <Dropdown id="categoryId" v-model="form.categoryId" :options="categoryOptions" option-label="label" option-value="value" :placeholder="t('topic.selectCategory')" :loading="categoryLoading" filter @filter="onCategoryFilter" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="type">Type</label>
+                <label for="type">{{ t('topic.type') }}</label>
                 <Dropdown id="type" v-model="form.type" :options="typeOptions" option-label="label" option-value="value" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="locationX">Location X</label>
+                <label for="locationX">{{ t('topic.locationX') }}</label>
                 <InputNumber id="locationX" v-model="form.locationX" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="locationY">Location Y</label>
+                <label for="locationY">{{ t('topic.locationY') }}</label>
                 <InputNumber id="locationY" v-model="form.locationY" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="mentionId">Mention Id (Optional)</label>
+                <label for="mentionId">{{ t('topic.mentionId') }} ({{ t('common.optional') }})</label>
                 <InputNumber id="mentionId" v-model="form.mentionId" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="upvote">Upvote</label>
+                <label for="upvote">{{ t('topic.upvote') }}</label>
                 <InputNumber id="upvote" v-model="form.upvote" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="downvote">Downvote</label>
+                <label for="downvote">{{ t('topic.downvote') }}</label>
                 <InputNumber id="downvote" v-model="form.downvote" />
             </div>
 
             <div class="flex gap-2 justify-end mt-4">
-                <Button type="button" label="Cancel" class="p-button-text" @click="cancel" />
-                <Button type="submit" :loading="loading" :label="isEditMode ? 'Update' : 'Create'" />
+                <Button type="button" :label="t('common.cancel')" class="p-button-text" @click="cancel" />
+                <Button type="submit" :loading="loading" :label="isEditMode ? t('common.update') : t('common.create')" />
             </div>
         </form>
     </div>

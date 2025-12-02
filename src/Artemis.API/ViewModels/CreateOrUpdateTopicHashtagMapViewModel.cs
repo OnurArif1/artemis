@@ -6,4 +6,3 @@ public class CreateOrUpdateTopicHashtagMapViewModel
     public int TopicId { get; set; }
     public int HashtagId { get; set; }
 }
-

@@ -16,7 +16,6 @@ public class RoomHashtagMapService : IRoomHashtagMapService
 
     public async ValueTask Create(CreateOrUpdateRoomHashtagMapViewModel viewModel)
     {
-        // Validate Room exists
         var roomExists = await _artemisDbContext.Rooms
             .AnyAsync(r => r.Id == viewModel.RoomId);
         if (!roomExists)
@@ -24,7 +23,6 @@ public class RoomHashtagMapService : IRoomHashtagMapService
             throw new InvalidOperationException($"Room with Id {viewModel.RoomId} does not exist.");
         }
 
-        // Validate Hashtag exists
         var hashtagExists = await _artemisDbContext.Hashtags
             .AnyAsync(h => h.Id == viewModel.HashtagId);
         if (!hashtagExists)
@@ -76,7 +74,6 @@ public class RoomHashtagMapService : IRoomHashtagMapService
             .FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (map is not null)
         {
-            // Validate Room exists
             var roomExists = await _artemisDbContext.Rooms
                 .AnyAsync(r => r.Id == viewModel.RoomId);
             if (!roomExists)
@@ -84,7 +81,6 @@ public class RoomHashtagMapService : IRoomHashtagMapService
                 throw new InvalidOperationException($"Room with Id {viewModel.RoomId} does not exist.");
             }
 
-            // Validate Hashtag exists
             var hashtagExists = await _artemisDbContext.Hashtags
                 .AnyAsync(h => h.Id == viewModel.HashtagId);
             if (!hashtagExists)

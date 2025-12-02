@@ -1,11 +1,12 @@
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import signalRService from '@/service/SignalRService';
 import PartyService from '@/service/PartyService';
 import MessageService from '@/service/MessageService';
 import RoomService from '@/service/RoomService';
 import request from '@/service/request';
+import { useI18n } from '@/composables/useI18n';
 
 const props = defineProps({
     roomIdProp: {
@@ -15,6 +16,7 @@ const props = defineProps({
 });
 
 const route = useRoute();
+const { t, locale } = useI18n();
 const partyService = new PartyService(request);
 const messageService = new MessageService(request);
 const roomService = new RoomService(request);
@@ -22,14 +24,23 @@ const roomService = new RoomService(request);
 const messages = ref([]);
 const messageText = ref('');
 const roomId = ref(null);
-const currentPartyId = ref(null); // Mesaj göndermek için kullanılacak partyId
+const currentPartyId = ref(null);
 const roomTitle = ref('');
 const isConnected = ref(false);
-const connectionStatus = ref('Bağlanılıyor...');
+const connectionError = ref(false);
+const connectionStatus = computed(() => {
+    if (connectionError.value) {
+        return t('chat.connectionError');
+    }
+    if (!isConnected.value) {
+        return t('chat.connecting');
+    }
+    return t('chat.connected');
+});
 const connectionId = ref(null);
 const messageContainer = ref(null);
-const partyMap = ref(new Map()); // partyId -> partyName mapping
-const roomParties = ref([]); // Room'un partylerini tutar
+const partyMap = ref(new Map());
+const roomParties = ref([]);
 const showMentionList = ref(false);
 const mentionList = ref([]);
 const mentionSearchText = ref('');
@@ -37,7 +48,6 @@ const mentionStartPosition = ref(-1);
 const selectedMentionIndex = ref(-1);
 let connectionIdInterval = null;
 
-// Route query'den veya prop'tan roomId'yi al
 const initializeParams = () => {
     if (props.roomIdProp) {
         roomId.value = props.roomIdProp;
@@ -49,7 +59,6 @@ const initializeParams = () => {
     }
 };
 
-// Mesajları veritabanından yükle
 const loadMessages = async () => {
     if (!roomId.value) {
         return;
@@ -59,11 +68,10 @@ const loadMessages = async () => {
         const result = await messageService.getList({
             roomId: roomId.value,
             pageIndex: 1,
-            pageSize: 1000 // Tüm mesajları al
+            pageSize: 1000
         });
 
         if (result && result.resultViewmodels) {
-            // Party bilgilerini yükle
             const partyIds = [...new Set(result.resultViewmodels.map((m) => m.partyId))];
             for (const pid of partyIds) {
                 if (!partyMap.value.has(pid)) {
@@ -72,7 +80,7 @@ const loadMessages = async () => {
                         if (partyResult && partyResult.ViewModels && partyResult.ViewModels.length > 0) {
                             partyMap.value.set(pid, partyResult.ViewModels[0].PartyName);
                         } else {
-                            partyMap.value.set(pid, `Kullanıcı ${pid}`);
+                            partyMap.value.set(pid, `${t('chat.user')} ${pid}`);
                         }
                     } catch {
                         partyMap.value.set(pid, `Kullanıcı ${pid}`);
@@ -80,24 +88,21 @@ const loadMessages = async () => {
                 }
             }
 
-            // Mesajları formatla ve sırala
             messages.value = result.resultViewmodels
                 .map((m) => ({
                     id: m.id,
                     partyId: m.partyId,
-                    partyName: partyMap.value.get(m.partyId) || `Kullanıcı ${m.partyId}`,
+                    partyName: partyMap.value.get(m.partyId) || `${t('chat.user')} ${m.partyId}`,
                     content: m.content,
                     timestamp: new Date(m.createDate),
                     createDate: m.createDate
                 }))
                 .sort((a, b) => new Date(a.createDate) - new Date(b.createDate));
 
-            // İlk party'yi currentPartyId olarak ayarla (mesaj göndermek için)
             if (messages.value.length > 0 && !currentPartyId.value) {
                 currentPartyId.value = messages.value[0].partyId;
             }
 
-            // Scroll to bottom
             nextTick(() => {
                 if (messageContainer.value) {
                     messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
@@ -105,18 +110,16 @@ const loadMessages = async () => {
             });
         }
     } catch (error) {
-        console.error('Mesajlar yüklenirken hata:', error);
+        console.error(t('chat.errorLoadingMessages') + ':', error);
     }
 };
 
-// Room bilgilerini yükle (title ve partyler için)
 const loadRoomInfo = async () => {
     if (!roomId.value) {
         return;
     }
 
     try {
-        // Room listesinden bu room'u bul
         const result = await roomService.getList({
             pageIndex: 1,
             pageSize: 1000
@@ -126,17 +129,14 @@ const loadRoomInfo = async () => {
             const room = result.resultViewModels.find((r) => r.id === roomId.value);
             if (room) {
                 roomTitle.value = room.title || `Room ${roomId.value}`;
-                // Room'un partyId'sini currentPartyId olarak ayarla (mesaj göndermek için)
                 if (room.partyId && !currentPartyId.value) {
                     currentPartyId.value = room.partyId;
                 }
-                // Room'un partylerini yükle
                 if (room.parties && room.parties.length > 0) {
                     roomParties.value = room.parties.map((p) => ({
                         id: p.id,
                         name: p.partyName
                     }));
-                    // Party map'e de ekle
                     room.parties.forEach((p) => {
                         partyMap.value.set(p.id, p.partyName);
                     });
@@ -148,34 +148,29 @@ const loadRoomInfo = async () => {
             roomTitle.value = `Room ${roomId.value}`;
         }
     } catch (error) {
-        console.error('Room bilgisi yüklenirken hata:', error);
+        console.error(t('chat.errorLoadingRoom') + ':', error);
         roomTitle.value = `Room ${roomId.value}`;
     }
 };
 
 onMounted(async () => {
-    // Route parametrelerini al
     initializeParams();
 
     if (!roomId.value) {
-        alert('Room ID bulunamadı! Lütfen geçerli bir Room ID ile girin.');
+        alert(t('chat.roomIdNotFound'));
         return;
     }
 
-    // Room bilgilerini yükle
     await loadRoomInfo();
 
-    // Mesajları yükle
     await loadMessages();
 
-    // SignalR bağlantısını başlat
     try {
         await signalRService.startConnection();
         isConnected.value = signalRService.isConnected();
         connectionId.value = signalRService.getConnectionId();
-        connectionStatus.value = isConnected.value ? 'Bağlı' : 'Bağlantı hatası';
+        connectionError.value = false;
 
-        // ConnectionId güncellemelerini dinle
         connectionIdInterval = setInterval(() => {
             const newConnectionId = signalRService.getConnectionId();
             if (newConnectionId && newConnectionId !== connectionId.value) {
@@ -183,20 +178,14 @@ onMounted(async () => {
             }
         }, 1000);
 
-        // Room'a bağlan (bağlantı kurulduktan sonra)
         if (roomId.value && isConnected.value) {
             signalRService.joinRoom(roomId.value);
         }
 
-        // Mesaj dinleyicisini ayarla - anlık mesaj ekleme
         signalRService.onReceiveMessage((partyId, partyName, message, receivedRoomId) => {
-            // Sadece bu room'un mesajlarını göster
             if (receivedRoomId === roomId.value) {
-                // Mesajı direkt ekle (anlık haberleşme)
-                const partyNameToUse = partyMap.value.get(partyId) || partyName || `Kullanıcı ${partyId}`;
+                const partyNameToUse = partyMap.value.get(partyId) || partyName || `${t('chat.user')} ${partyId}`;
 
-                // Eğer mesaj zaten listede yoksa ekle (duplicate kontrolü)
-                // Son 5 saniye içinde aynı partyId ve aynı içerikli mesaj var mı kontrol et
                 const now = new Date();
                 const messageExists = messages.value.some(
                     (m) => m.partyId === partyId && m.content === message && Math.abs(now - new Date(m.timestamp)) < 5000 // 5 saniye içinde aynı mesaj
@@ -212,12 +201,9 @@ onMounted(async () => {
                         createDate: now.toISOString()
                     });
 
-                    // Party map'e ekle
                     if (!partyMap.value.has(partyId)) {
                         partyMap.value.set(partyId, partyNameToUse);
                     }
-
-                    // Scroll to bottom
                     nextTick(() => {
                         if (messageContainer.value) {
                             messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
@@ -227,23 +213,20 @@ onMounted(async () => {
             }
         });
 
-        // Hata dinleyicisini ayarla
         signalRService.onReceiveError((errorMessage) => {
             alert(errorMessage);
         });
     } catch (error) {
-        console.error('SignalR bağlantı hatası:', error);
-        connectionStatus.value = 'Bağlantı hatası';
+        console.error(t('chat.connectionErrorTitle') + ':', error);
+        connectionError.value = true;
     }
 });
 
 onUnmounted(() => {
-    // Interval'i temizle
     if (connectionIdInterval) {
         clearInterval(connectionIdInterval);
     }
 
-    // Room'dan ayrıl
     if (roomId.value) {
         signalRService.leaveRoom(roomId.value);
     }
@@ -255,30 +238,26 @@ function sendMessage() {
     }
 
     if (!isConnected.value) {
-        alert('Bağlantı yok! Lütfen bekleyin...');
+        alert(t('chat.noConnection'));
         return;
     }
 
     if (!roomId.value || roomId.value <= 0) {
-        alert('Geçerli bir Room ID gerekli!');
+        alert(t('chat.invalidRoomId'));
         return;
     }
 
     if (!currentPartyId.value) {
-        alert('Party ID bulunamadı! Lütfen önce bir mesaj gönderilmiş olmalı.');
+        alert(t('chat.partyIdNotFound'));
         return;
     }
 
     const message = messageText.value.trim();
-    // Mention'ları parse et
     const mentionedPartyIds = parseMentions(message);
-    console.log('Mention edilen partyIdler:', mentionedPartyIds);
 
-    // Mesajı gönder (backend'den ReceiveMessage ile geri gelecek)
     signalRService.sendMessage(currentPartyId.value, roomId.value, message, mentionedPartyIds.length > 0 ? mentionedPartyIds : null);
 
-    // Mesajı hemen ekle (optimistic update - kullanıcı kendi mesajını hemen görsün)
-    const partyName = partyMap.value.get(currentPartyId.value) || `Kullanıcı ${currentPartyId.value}`;
+    const partyName = partyMap.value.get(currentPartyId.value) || `${t('chat.user')} ${currentPartyId.value}`;
     messages.value.push({
         id: Date.now(),
         partyId: currentPartyId.value,
@@ -290,7 +269,6 @@ function sendMessage() {
 
     messageText.value = '';
 
-    // Scroll to bottom
     nextTick(() => {
         if (messageContainer.value) {
             messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
@@ -298,7 +276,6 @@ function sendMessage() {
     });
 }
 
-// Mention'ları mesajdan parse et (@PartyName formatından)
 function parseMentions(text) {
     const mentionRegex = /@([^\s@]+)/g;
     const mentions = [];
@@ -306,7 +283,6 @@ function parseMentions(text) {
 
     while ((match = mentionRegex.exec(text)) !== null) {
         const mentionedName = match[1].trim();
-        // Room'un partylerinden mention edilen party'yi bul (tam eşleşme)
         const party = roomParties.value.find((p) => {
             const partyName = p.name.toLowerCase();
             const searchName = mentionedName.toLowerCase();
@@ -317,10 +293,9 @@ function parseMentions(text) {
         }
     }
 
-    return [...new Set(mentions)]; // Duplicate'leri kaldır
+    return [...new Set(mentions)];
 }
 
-// @ işareti ile mention listesi göster
 function handleMentionInput(event) {
     const text = event.target.value;
     const cursorPosition = event.target.selectionStart || 0;
@@ -329,12 +304,10 @@ function handleMentionInput(event) {
 
     if (lastAtIndex !== -1) {
         const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
-        // Eğer @ işaretinden sonra boşluk veya yeni satır yoksa ve en az bir karakter varsa
         if (!textAfterAt.includes(' ') && !textAfterAt.includes('\n') && textAfterAt.length > 0) {
             mentionStartPosition.value = lastAtIndex;
             mentionSearchText.value = textAfterAt.toLowerCase();
 
-            // Mention listesini filtrele
             const filtered = roomParties.value.filter((p) => p.name.toLowerCase().includes(mentionSearchText.value));
 
             if (filtered.length > 0) {
@@ -346,7 +319,6 @@ function handleMentionInput(event) {
             }
             return;
         } else if (textAfterAt.length === 0) {
-            // @ işaretinden hemen sonra, tüm partyler göster
             mentionStartPosition.value = lastAtIndex;
             mentionSearchText.value = '';
             mentionList.value = roomParties.value;
@@ -360,13 +332,12 @@ function handleMentionInput(event) {
     mentionStartPosition.value = -1;
 }
 
-// Mention seçildiğinde mesajı güncelle
 function selectMention(party) {
     if (mentionStartPosition.value === -1) return;
 
     const text = messageText.value;
     const cursorPosition = mentionStartPosition.value;
-    const textAfterAt = text.substring(cursorPosition + 1); // @ işaretinden sonrası
+    const textAfterAt = text.substring(cursorPosition + 1);
     const spaceIndex = textAfterAt.indexOf(' ');
     const newlineIndex = textAfterAt.indexOf('\n');
     let endIndex;
@@ -390,54 +361,47 @@ function selectMention(party) {
     mentionStartPosition.value = -1;
     mentionSearchText.value = '';
 
-    // Input'a focus et ve cursor'ı doğru yere koy
     nextTick(() => {
         const input = document.getElementById('messageInput');
         if (input) {
-            const newPosition = cursorPosition + party.name.length + 2; // @ + name + space
+            const newPosition = cursorPosition + party.name.length + 2;
             input.focus();
             input.setSelectionRange(newPosition, newPosition);
         }
     });
 }
 
-// Mention'ı sil (backspace ile)
 function deleteMention(event) {
     const text = messageText.value;
     const cursorPosition = event.target.selectionStart || 0;
 
-    if (cursorPosition === 0) return; // Başta ise silme
+    if (cursorPosition === 0) return;
 
     const textBeforeCursor = text.substring(0, cursorPosition);
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
 
-    // Eğer @ işareti varsa
     if (lastAtIndex !== -1) {
-        // @ işaretinden sonraki metni al
         const textAfterAt = text.substring(lastAtIndex + 1);
-        // Mention'ın sonunu bul (boşluk, yeni satır veya metnin sonu)
         const spaceIndex = textAfterAt.indexOf(' ');
         const newlineIndex = textAfterAt.indexOf('\n');
         let mentionEnd;
 
         if (spaceIndex !== -1 && newlineIndex !== -1) {
-            mentionEnd = lastAtIndex + 1 + Math.min(spaceIndex, newlineIndex) + 1; // +1 for space
+            mentionEnd = lastAtIndex + 1 + Math.min(spaceIndex, newlineIndex) + 1;
         } else if (spaceIndex !== -1) {
-            mentionEnd = lastAtIndex + 1 + spaceIndex + 1; // +1 for space
+            mentionEnd = lastAtIndex + 1 + spaceIndex + 1;
         } else if (newlineIndex !== -1) {
             mentionEnd = lastAtIndex + 1 + newlineIndex;
         } else {
             mentionEnd = text.length;
         }
 
-        // Eğer cursor mention'ın içindeyse veya hemen sonrasındaysa (boşluk dahil), mention'ı sil
         if (cursorPosition > lastAtIndex && cursorPosition <= mentionEnd) {
             event.preventDefault();
             const beforeMention = text.substring(0, lastAtIndex);
             const afterMention = text.substring(mentionEnd);
             messageText.value = beforeMention + afterMention;
 
-            // Cursor'ı mention'ın başına koy
             nextTick(() => {
                 const input = document.getElementById('messageInput');
                 if (input) {
@@ -449,11 +413,8 @@ function deleteMention(event) {
     }
 }
 
-// Klavye ile mention listesinde gezinme
 function handleMentionKeydown(event) {
-    // Backspace tuşu ile mention silme
     if (event.key === 'Backspace' || event.key === 'Delete') {
-        // Mention listesi açıksa kapat
         if (showMentionList.value) {
             showMentionList.value = false;
             mentionStartPosition.value = -1;
@@ -502,7 +463,6 @@ watch(
     () => props.roomIdProp,
     async (newRoomId, oldRoomId) => {
         if (newRoomId) {
-            // Eski room'dan ayrıl
             if (oldRoomId) {
                 signalRService.leaveRoom(oldRoomId);
             }
@@ -511,7 +471,6 @@ watch(
             await loadRoomInfo();
             await loadMessages();
 
-            // Yeni room'a bağlan
             if (isConnected.value) {
                 signalRService.joinRoom(newRoomId);
             }
@@ -523,7 +482,6 @@ watch(
     () => route.query.roomId,
     async (newRoomId, oldRoomId) => {
         if (newRoomId && !props.roomIdProp) {
-            // Eski room'dan ayrıl
             if (oldRoomId) {
                 signalRService.leaveRoom(parseInt(oldRoomId));
             }
@@ -531,7 +489,6 @@ watch(
             roomId.value = parseInt(newRoomId);
             await loadMessages();
 
-            // Yeni room'a bağlan
             if (isConnected.value) {
                 signalRService.joinRoom(parseInt(newRoomId));
             }
@@ -560,7 +517,7 @@ watch(
                 <div ref="messageContainer" class="messages-container">
                     <div v-if="messages.length === 0" class="empty-messages">
                         <i class="pi pi-inbox text-4xl text-300"></i>
-                        <p class="text-500">Henüz mesaj yok. İlk mesajı siz gönderin!</p>
+                        <p class="text-500">{{ t('chat.noMessages') }}</p>
                     </div>
                     <template v-else>
                         <div v-for="(msg, index) in messages" :key="msg.id" class="message-group">
@@ -570,7 +527,7 @@ watch(
                             <div class="message-item">
                                 <div class="message-content">{{ msg.content }}</div>
                                 <div class="message-time">
-                                    {{ msg.timestamp.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) }}
+                                    {{ msg.timestamp.toLocaleTimeString(locale.value === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' }) }}
                                 </div>
                             </div>
                         </div>
@@ -591,7 +548,7 @@ watch(
                                 }
                             "
                             @input="handleMentionInput"
-                            placeholder="Mesajınızı yazın... (Enter ile gönder, @ ile mention)"
+                            :placeholder="t('chat.messagePlaceholder')"
                             class="w-full"
                         />
                         <div v-if="showMentionList && mentionList.length > 0" class="mention-list" @click.stop>
@@ -600,7 +557,7 @@ watch(
                             </div>
                         </div>
                     </div>
-                    <Button label="Gönder" icon="pi pi-send" @click="sendMessage" :disabled="!isConnected || !messageText.trim() || !roomId" />
+                    <Button :label="t('chat.send')" icon="pi pi-send" @click="sendMessage" :disabled="!isConnected || !messageText.trim() || !roomId" />
                 </div>
             </div>
         </div>

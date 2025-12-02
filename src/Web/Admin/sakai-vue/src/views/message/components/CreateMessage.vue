@@ -3,7 +3,9 @@ import { ref, watch, computed, onMounted } from 'vue';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import PartyService from '@/service/PartyService';
+import { useI18n } from '@/composables/useI18n';
 
+const { t } = useI18n();
 const roomService = new RoomService(request);
 const partyService = new PartyService(request);
 
@@ -115,30 +117,30 @@ function cancel() {
     <div>
         <form @submit.prevent="submit" class="card p-4">
             <div class="flex flex-col gap-2 mb-3">
-                <label for="roomId">Room <span class="text-red-500">*</span></label>
-                <Dropdown id="roomId" v-model="form.roomId" :options="roomOptions" optionLabel="label" optionValue="value" placeholder="Select Room" :loading="roomLoading" filter class="w-full" />
-                <Message v-if="!form.roomId || form.roomId === 0" size="small" severity="error" variant="simple">Room is required.</Message>
+                <label for="roomId">{{ t('message.room') }} <span class="text-red-500">*</span></label>
+                <Dropdown id="roomId" v-model="form.roomId" :options="roomOptions" optionLabel="label" optionValue="value" :placeholder="t('message.selectRoom')" :loading="roomLoading" filter class="w-full" />
+                <Message v-if="!form.roomId || form.roomId === 0" size="small" severity="error" variant="simple">{{ t('message.roomRequired') }}</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="partyId">Party <span class="text-red-500">*</span></label>
-                <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" optionLabel="label" optionValue="value" placeholder="Select Party" :loading="partyLoading" filter class="w-full" />
-                <Message v-if="!form.partyId || form.partyId === 0" size="small" severity="error" variant="simple">Party is required.</Message>
+                <label for="partyId">{{ t('message.party') }} <span class="text-red-500">*</span></label>
+                <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" optionLabel="label" optionValue="value" :placeholder="t('message.selectParty')" :loading="partyLoading" filter class="w-full" />
+                <Message v-if="!form.partyId || form.partyId === 0" size="small" severity="error" variant="simple">{{ t('message.partyRequired') }}</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="upvote">Upvote</label>
+                <label for="upvote">{{ t('message.upvote') }}</label>
                 <InputNumber id="upvote" v-model="form.upvote" :min="0" :showButtons="true" class="w-full" />
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="downvote">Downvote</label>
+                <label for="downvote">{{ t('message.downvote') }}</label>
                 <InputNumber id="downvote" v-model="form.downvote" :min="0" :showButtons="true" class="w-full" />
             </div>
 
             <div class="flex gap-2 justify-end mt-4">
-                <Button type="button" label="Cancel" class="p-button-text" @click="cancel" />
-                <Button type="submit" :loading="loading" :label="isEditMode ? 'Update' : 'Create'" />
+                <Button type="button" :label="t('common.cancel')" class="p-button-text" @click="cancel" />
+                <Button type="submit" :loading="loading" :label="isEditMode ? t('common.update') : t('common.create')" />
             </div>
         </form>
     </div>

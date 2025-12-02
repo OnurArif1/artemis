@@ -6,4 +6,3 @@ public class CreateOrUpdateRoomHashtagMapViewModel
     public int RoomId { get; set; }
     public int HashtagId { get; set; }
 }
-

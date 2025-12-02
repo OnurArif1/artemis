@@ -16,7 +16,6 @@ public class CategoryHashtagMapService : ICategoryHashtagMapService
 
     public async ValueTask Create(CreateOrUpdateCategoryHashtagMapViewModel viewModel)
     {
-        // Validate Category exists
         var categoryExists = await _artemisDbContext.Categories
             .AnyAsync(c => c.Id == viewModel.CategoryId);
         if (!categoryExists)
@@ -24,7 +23,6 @@ public class CategoryHashtagMapService : ICategoryHashtagMapService
             throw new InvalidOperationException($"Category with Id {viewModel.CategoryId} does not exist.");
         }
 
-        // Validate Hashtag exists
         var hashtagExists = await _artemisDbContext.Hashtags
             .AnyAsync(h => h.Id == viewModel.HashtagId);
         if (!hashtagExists)
@@ -76,7 +74,6 @@ public class CategoryHashtagMapService : ICategoryHashtagMapService
             .FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (map is not null)
         {
-            // Validate Category exists
             var categoryExists = await _artemisDbContext.Categories
                 .AnyAsync(c => c.Id == viewModel.CategoryId);
             if (!categoryExists)
@@ -84,7 +81,6 @@ public class CategoryHashtagMapService : ICategoryHashtagMapService
                 throw new InvalidOperationException($"Category with Id {viewModel.CategoryId} does not exist.");
             }
 
-            // Validate Hashtag exists
             var hashtagExists = await _artemisDbContext.Hashtags
                 .AnyAsync(h => h.Id == viewModel.HashtagId);
             if (!hashtagExists)

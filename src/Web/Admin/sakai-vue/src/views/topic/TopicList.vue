@@ -4,7 +4,9 @@ import request from '@/service/request';
 import TopicService from '@/service/TopicService';
 import CreateTopic from './components/CreateTopic.vue';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from '@/composables/useI18n';
 
+const { t, locale } = useI18n();
 const toast = useToast();
 const topics = ref([]);
 const topicService = new TopicService(request);
@@ -32,7 +34,7 @@ async function load() {
         totalRecords.value = data?.count ?? 0;
     } catch (err) {
         console.error('Topic list load error:', err);
-        toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.message || err?.message || 'Failed to load topics', life: 5000 });
+        toast.add({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || err?.message || t('topic.failedToLoad'), life: 5000 });
     }
 }
 
@@ -82,11 +84,11 @@ function onCreated(payload) {
             };
             await topicService.create(data);
             showFormDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Topic Created', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('topic.created'), life: 3000 });
             await load();
         } catch (err) {
             console.error('Topic create error:', err);
-            toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.message || err?.message || 'Failed to create topic', life: 5000 });
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || err?.message || t('topic.failedToCreate'), life: 5000 });
         }
     })();
 }
@@ -110,11 +112,11 @@ function onUpdated(payload) {
             };
             await topicService.update(data);
             showFormDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Topic Updated', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('topic.updated'), life: 3000 });
             await load();
         } catch (err) {
             console.error('Topic update error:', err);
-            toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.message || err?.message || 'Failed to update topic', life: 5000 });
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || err?.message || t('topic.failedToUpdate'), life: 5000 });
         }
     })();
 }
@@ -124,11 +126,11 @@ function onDeleted(topicId) {
         try {
             await topicService.delete(topicId);
             showFormDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Topic Deleted', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('topic.deleted'), life: 3000 });
             await load();
         } catch (err) {
             console.error('Topic delete error:', err);
-            toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.message || err?.message || 'Failed to delete topic', life: 5000 });
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || err?.message || t('topic.failedToDelete'), life: 5000 });
         }
     })();
 }
@@ -137,11 +139,11 @@ async function confirmDelete() {
     try {
         await topicService.delete(selectedTopic.value.id);
         showDeleteDialog.value = false;
-        toast.add({ severity: 'success', summary: 'Successful', detail: 'Topic Deleted', life: 3000 });
+        toast.add({ severity: 'success', summary: t('common.success'), detail: t('topic.deleted'), life: 3000 });
         await load();
     } catch (err) {
         console.error('Topic delete error:', err);
-        toast.add({ severity: 'error', summary: 'Error', detail: err?.response?.data?.message || err?.message || 'Failed to delete topic', life: 5000 });
+        toast.add({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || err?.message || t('topic.failedToDelete'), life: 5000 });
     }
 }
 
@@ -151,7 +153,7 @@ function onCancel() {
 
 function formatDate(dateString) {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('tr-TR', {
+    return new Date(dateString).toLocaleDateString(locale.value === 'tr' ? 'tr-TR' : 'en-US', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -176,13 +178,13 @@ const getSeverity = (type) => {
 const getTypeLabel = (type) => {
     switch (type) {
         case 0:
-            return 'None';
+            return t('topic.typeNone');
         case 1:
-            return 'Public';
+            return t('common.public');
         case 2:
-            return 'Private';
+            return t('common.private');
         default:
-            return 'Unknown';
+            return t('topic.typeUnknown');
     }
 };
 </script>
@@ -193,66 +195,65 @@ const getTypeLabel = (type) => {
             <template #header>
                 <div class="flex justify-between items-center mb-3">
                     <div class="relative w-64">
-                        <InputText v-model="filters.global.value" placeholder="Search by Title" @input="onSearch" class="w-full pr-10" />
+                        <InputText v-model="filters.global.value" :placeholder="t('common.searchByTitle')" @input="onSearch" class="w-full pr-10" />
                         <i class="pi pi-search absolute top-1/2 -translate-y-1/2 right-3 text-surface-400 pointer-events-none" />
                     </div>
-                    <Button icon="pi pi-plus" @click="openCreate" v-tooltip.bottom="'Add New Topic'" />
+                    <Button icon="pi pi-plus" @click="openCreate" :v-tooltip.bottom="t('topic.create')" />
                 </div>
             </template>
-            <Column field="id" header="Id" />
-            <Column field="title" header="Title" />
-            <Column field="partyName" header="Party">
+            <Column field="id" :header="t('topic.id')" />
+            <Column field="title" :header="t('topic.titleLabel')" />
+            <Column field="partyName" :header="t('topic.party')">
                 <template #body="{ data }">
                     <span v-if="data.partyName" class="text-sm">{{ data.partyName }}</span>
                     <span v-else class="text-300 text-sm">-</span>
                 </template>
             </Column>
-            <Column field="type" header="Type">
+            <Column field="type" :header="t('topic.type')">
                 <template #body="{ data }">
                     <Tag :value="getTypeLabel(data.type)" :severity="getSeverity(data.type)" />
                 </template>
             </Column>
-            <Column field="categoryName" header="Category">
+            <Column field="categoryName" :header="t('topic.category')">
                 <template #body="{ data }">
                     <span v-if="data.categoryName" class="text-sm">{{ data.categoryName }}</span>
                     <span v-else class="text-300 text-sm">-</span>
                 </template>
             </Column>
-            <Column field="createDate" header="Create Date">
+            <Column field="createDate" :header="t('topic.createDate')">
                 <template #body="{ data }">
                     <Tag :value="formatDate(data.createDate)" severity="success" />
                 </template>
             </Column>
-            <Column field="lastUpdateDate" header="Last Update">
+            <Column field="lastUpdateDate" :header="t('topic.lastUpdate')">
                 <template #body="{ data }">
                     <Tag :value="formatDate(data.lastUpdateDate)" severity="info" />
                 </template>
             </Column>
 
-            <Column header="Operation">
+            <Column :header="t('common.operations')">
                 <template #body="{ data }">
-                    <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" v-tooltip.bottom="'Update'" />
-                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" v-tooltip.bottom="'Delete'" />
+                    <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" :v-tooltip.bottom="t('common.update')" />
+                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" :v-tooltip.bottom="t('common.delete')" />
                 </template>
             </Column>
 
-            <template #empty>No topic data found.</template>
-            <template #loading>Loading topic data. Please wait.</template>
+            <template #empty>{{ t('topic.noTopicData') }}</template>
+            <template #loading>{{ t('topic.loadingTopicData') }}</template>
         </DataTable>
 
-        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedTopic ? 'Update Topic' : 'Create Topic'" style="width: 500px">
+        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedTopic ? t('topic.updateTopic') : t('topic.createTopic')" style="width: 500px">
             <CreateTopic :topic="selectedTopic" @created="onCreated" @updated="onUpdated" @deleted="onDeleted" @cancel="onCancel" />
         </Dialog>
 
-        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Topic" style="width: 400px">
+        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" :header="t('topic.deleteTopic')" style="width: 400px">
             <div class="p-4 text-center">
                 <p>
-                    Are you sure you want to delete <b>{{ selectedTopic?.title }}</b
-                    >?
+                    {{ t('common.areYouSureDelete') }} <b>{{ selectedTopic?.title }}</b>?
                 </p>
                 <div class="flex justify-center gap-3 mt-4">
-                    <Button label="Cancel" class="p-button-text" @click="showDeleteDialog = false" />
-                    <Button label="Delete" severity="danger" @click="confirmDelete" />
+                    <Button :label="t('common.cancel')" class="p-button-text" @click="showDeleteDialog = false" />
+                    <Button :label="t('common.delete')" severity="danger" @click="confirmDelete" />
                 </div>
             </div>
         </Dialog>

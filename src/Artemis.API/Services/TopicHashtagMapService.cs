@@ -16,7 +16,6 @@ public class TopicHashtagMapService : ITopicHashtagMapService
 
     public async ValueTask Create(CreateOrUpdateTopicHashtagMapViewModel viewModel)
     {
-        // Validate Topic exists
         var topicExists = await _artemisDbContext.Topics
             .AnyAsync(t => t.Id == viewModel.TopicId);
         if (!topicExists)
@@ -24,7 +23,6 @@ public class TopicHashtagMapService : ITopicHashtagMapService
             throw new InvalidOperationException($"Topic with Id {viewModel.TopicId} does not exist.");
         }
 
-        // Validate Hashtag exists
         var hashtagExists = await _artemisDbContext.Hashtags
             .AnyAsync(h => h.Id == viewModel.HashtagId);
         if (!hashtagExists)
@@ -76,7 +74,6 @@ public class TopicHashtagMapService : ITopicHashtagMapService
             .FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (map is not null)
         {
-            // Validate Topic exists
             var topicExists = await _artemisDbContext.Topics
                 .AnyAsync(t => t.Id == viewModel.TopicId);
             if (!topicExists)
@@ -84,7 +81,6 @@ public class TopicHashtagMapService : ITopicHashtagMapService
                 throw new InvalidOperationException($"Topic with Id {viewModel.TopicId} does not exist.");
             }
 
-            // Validate Hashtag exists
             var hashtagExists = await _artemisDbContext.Hashtags
                 .AnyAsync(h => h.Id == viewModel.HashtagId);
             if (!hashtagExists)

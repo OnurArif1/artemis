@@ -5,4 +5,3 @@ public class CreateOrUpdateHashtagViewModel
     public int? Id { get; set; } = null;
     public string HashtagName { get; set; } = string.Empty;
 }
-

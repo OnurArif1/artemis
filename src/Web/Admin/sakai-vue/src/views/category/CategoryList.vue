@@ -4,7 +4,9 @@ import request from '@/service/request';
 import CategoryService from '@/service/CategoryService';
 import { useToast } from 'primevue/usetoast';
 import CreateCategory from './components/CreateCategory.vue';
+import { useI18n } from '@/composables/useI18n';
 
+const { t } = useI18n();
 const toast = useToast();
 const categories = ref([]);
 const categoryService = new CategoryService(request);
@@ -26,7 +28,7 @@ async function load() {
         categories.value = Array.isArray(data.resultViewmodels) ? data.resultViewmodels : (data?.resultViewmodels ?? []);
         totalRecords.value = data?.count ?? 0;
     } catch (err) {
-        console.error('Category list load error:', err);
+        toast.add({ severity: 'error', summary: t('common.error'), detail: err.response?.data?.message || err.message || t('common.loadFailed'), life: 3000 });
     }
 }
 
@@ -67,10 +69,10 @@ function onCreated(payload) {
         try {
             await categoryService.create(payload);
             showFormDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Created', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('category.created'), life: 3000 });
             await load();
         } catch (err) {
-            console.error('Category create error:', err);
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err.response?.data?.message || err.message || t('category.createFailed'), life: 3000 });
         }
     })();
 }
@@ -80,9 +82,10 @@ function onUpdated(payload) {
         try {
             await categoryService.update(payload);
             showFormDialog.value = false;
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Updated', life: 3000 });
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('category.updated'), life: 3000 });
             await load();
         } catch (err) {
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err.response?.data?.message || err.message || t('category.updateFailed'), life: 3000 });
             console.error('Category update error:', err);
         }
     })();
@@ -91,10 +94,10 @@ function onUpdated(payload) {
 function onDeleted(categoryId) {
     (async () => {
         try {
-            await categoryService.delete(categoryId); // ✅ ID’ye göre siler
-            showFormDialog.value = false; // Silme modali kapanır
-            toast.add({ severity: 'success', summary: 'Successful', detail: 'Category Deleted', life: 3000 });
-            await load(); // Listeyi yeniden yükler
+            await categoryService.delete(categoryId);
+            showFormDialog.value = false;
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('category.deleted'), life: 3000 });
+            await load();
         } catch (err) {
             console.error('Category delete error:', err);
         }
@@ -123,41 +126,40 @@ function onCancel() {
             <template #header>
                 <div class="flex justify-between items-center mb-3">
                     <div class="relative w-64">
-                        <InputText v-model="filters.global.value" placeholder="Search by Title" @input="onSearch" class="w-full pr-10" />
+                        <InputText v-model="filters.global.value" :placeholder="t('common.searchByTitle')" @input="onSearch" class="w-full pr-10" />
                         <i class="pi pi-search absolute top-1/2 -translate-y-1/2 right-3 text-surface-400 pointer-events-none" />
                     </div>
-                    <Button icon="pi pi-plus" @click="openCreate" v-tooltip.bottom="'Yeni kategori oluştur'" />
+                    <Button icon="pi pi-plus" @click="openCreate" :v-tooltip.bottom="t('category.create')" />
                 </div>
             </template>
-            <Column field="id" header="Id" />
-            <Column field="title" header="Title" />
-            <Column header="Update">
+            <Column field="id" :header="t('category.id')" />
+            <Column field="title" :header="t('category.titleLabel')" />
+            <Column :header="t('common.update')">
                 <template #body="{ data }">
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" />
                 </template>
             </Column>
-            <Column header="Delete">
+            <Column :header="t('common.delete')">
                 <template #body="{ data }">
                     <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" />
                 </template>
             </Column>
-            <template #empty> No categories found. </template>
-            <template #loading> Loading categories data. Please wait.</template>
+            <template #empty>{{ t('category.noCategoriesFound') }}</template>
+            <template #loading>{{ t('category.loadingCategories') }}</template>
         </DataTable>
 
-        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedCategory ? 'Update Category' : 'Create Category'" style="width: 500px">
+        <Dialog v-model:visible="showFormDialog" modal :closable="false" :header="selectedCategory ? t('category.updateCategory') : t('category.createCategory')" style="width: 500px">
             <CreateCategory :category="selectedCategory" @created="onCreated" @updated="onUpdated" @deleted="onDeleted" @cancel="onCancel" />
         </Dialog>
 
-        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" header="Delete Category" style="width: 400px">
+        <Dialog v-model:visible="showDeleteDialog" modal :closable="false" :header="t('category.deleteCategory')" style="width: 400px">
             <div class="p-4 text-center">
                 <p>
-                    Are you sure you want to delete <b>{{ selectedCategory?.title }}</b
-                    >?
+                    {{ t('common.areYouSureDelete') }} <b>{{ selectedCategory?.title }}</b>?
                 </p>
                 <div class="flex justify-center gap-3 mt-4">
-                    <Button label="Cancel" class="p-button-text" @click="showDeleteDialog = false" />
-                    <Button label="Delete" severity="danger" @click="confirmDelete" />
+                    <Button :label="t('common.cancel')" class="p-button-text" @click="showDeleteDialog = false" />
+                    <Button :label="t('common.delete')" severity="danger" @click="confirmDelete" />
                 </div>
             </div>
         </Dialog>

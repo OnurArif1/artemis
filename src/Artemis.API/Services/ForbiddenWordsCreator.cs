@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Artemis.API.Entities;
 using Artemis.API.Infrastructure;
 using Microsoft.EntityFrameworkCore;
@@ -32,10 +28,6 @@ public class ForbiddenWordsCreator
     };
 
     private readonly char[] Symbols = { '.', '-', '_', '*', '!', '\'' };
-
-    /// <summary>
-    /// Tüm listeyi alıp full genişletilmiş yasaklı kelime setini döner.
-    /// </summary>
     public HashSet<string> ExpandList(IEnumerable<string> words)
     {
         var finalSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -53,9 +45,6 @@ public class ForbiddenWordsCreator
         return finalSet;
     }
 
-    /// <summary>
-    /// Bir kelimenin bütün türevlerini üretir.
-    /// </summary>
     private HashSet<string> ExpandWord(string word)
     {
         var results = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -147,31 +136,22 @@ public class ForbiddenWordsCreator
         return char.ToUpper(word[0]) + word[1..].ToLower();
     }
 
-
-
     public async Task SaveExpandedForbiddenWordsAsync(List<string> inputWords)
     {
         try
-        {
-            Console.WriteLine($"Başlangıç: {inputWords.Count} kelime işleniyor...");
-            
-            // Türevleri üret
+        {            
             var expanded = ExpandList(inputWords);
-            Console.WriteLine($"Türevler üretildi: {expanded.Count} kelime");
 
-            // Mevcut tüm kelimeleri bir kerede çek (case-insensitive karşılaştırma için)
             var existingWords = await _artemisDbContext.ForbiddenWords
                 .Select(x => x.Word.ToLower())
                 .ToListAsync();
             
             var existingWordsSet = new HashSet<string>(existingWords, StringComparer.OrdinalIgnoreCase);
-            Console.WriteLine($"Veritabanında mevcut: {existingWordsSet.Count} kelime");
 
             var toInsert = new List<ForbiddenWord>();
 
             foreach (var word in expanded)
             {
-                // Memory'de kontrol et (case-insensitive)
                 if (!existingWordsSet.Contains(word))
                 {
                     toInsert.Add(new ForbiddenWord
@@ -181,23 +161,20 @@ public class ForbiddenWordsCreator
                 }
             }
 
-            Console.WriteLine($"Eklenecek yeni kelime sayısı: {toInsert.Count}");
 
-            if (toInsert.Any())
+            if (toInsert.Count != 0)
             {
                 await _artemisDbContext.ForbiddenWords.AddRangeAsync(toInsert);
                 var savedCount = await _artemisDbContext.SaveChangesAsync();
-                Console.WriteLine($"Başarıyla kaydedildi: {savedCount} kayıt");
             }
             else
             {
-                Console.WriteLine("Eklenecek yeni kelime yok.");
+                // No new words to insert
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"HATA: {ex.Message}");
-            Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+            Console.WriteLine($"ExceptionMessage: {ex.Message}");
             throw;
         }
     }
