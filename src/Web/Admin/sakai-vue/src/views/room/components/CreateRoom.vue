@@ -3,10 +3,12 @@ import { ref, watch, computed, onMounted } from 'vue';
 import request from '@/service/request';
 import PartyService from '@/service/PartyService';
 import CategoryService from '@/service/CategoryService';
+import TopicService from '@/service/TopicService';
 import signalRService from '@/service/SignalRService';
 
 const partyService = new PartyService(request);
 const categoryService = new CategoryService(request);
+const topicService = new TopicService(request);
 
 const props = defineProps({
     room: {
@@ -39,6 +41,8 @@ const partyOptions = ref([]);
 const partyLoading = ref(false);
 const categoryOptions = ref([]);
 const categoryLoading = ref(false);
+const topicOptions = ref([]);
+const topicLoading = ref(false);
 
 const roomTypeOptions = [
     { label: 'Public', value: 1 },
@@ -103,35 +107,58 @@ function onCategoryFilter(event) {
     }
 }
 
+async function getTopicLookup(filterText = '') {
+    const filter = {
+        searchText: filterText || '',
+        partyLookupSearchType: filterText ? 1 : 0
+    };
+
+    try {
+        topicLoading.value = true;
+        const response = await topicService.getLookup(filter);
+        topicOptions.value = (response?.viewModels || []).map((t) => ({
+            label: `${t.title}`,
+            value: t.topicId
+        }));
+    } catch (error) {
+        console.error('Topic lookup error:', error);
+        topicOptions.value = [];
+    } finally {
+        topicLoading.value = false;
+    }
+}
+
 onMounted(() => {
     getPartyLookup();
     getCategoryLookup();
+    getTopicLookup();
 });
 
 watch(
     () => props.room,
     async (newRoom) => {
         if (newRoom) {
+            // Önce topic options'ı yükle, sonra form'u set et
+            await getTopicLookup();
+            await getPartyLookup();
+            await getCategoryLookup();
             form.value = { ...newRoom };
         } else {
             form.value = { ...initial };
             getPartyLookup();
             getCategoryLookup();
+            getTopicLookup();
 
-            // Yeni room oluşturulurken SignalR ConnectionId'yi al ve ekle
             try {
-                // SignalR bağlantısı yoksa başlat
                 if (!signalRService.isConnected()) {
                     await signalRService.startConnection();
                 }
 
-                // ConnectionId'yi al
                 const connectionId = signalRService.getConnectionId();
                 if (connectionId) {
                     form.value.channelId = connectionId;
                     console.log("📡 ChannelId form'a eklendi:", connectionId);
                 } else {
-                    // ConnectionId henüz hazır değilse, biraz bekle ve tekrar dene
                     setTimeout(async () => {
                         const retryConnectionId = signalRService.getConnectionId();
                         if (retryConnectionId) {
@@ -149,6 +176,18 @@ watch(
 );
 
 async function submit() {
+    if (!form.value.topicId) {
+        return;
+    }
+
+    if (!form.value.title || form.value.title.trim() === '') {
+        return;
+    }
+
+    if (!form.value.roomType) {
+        return;
+    }
+
     loading.value = true;
     try {
         if (isEditMode.value) {
@@ -174,9 +213,15 @@ function cancel() {
     <div>
         <form @submit.prevent="submit" class="card p-4">
             <div class="flex flex-col gap-2 mb-3">
-                <label for="title">Title</label>
+                <label for="title">Title <span class="text-red-500">*</span></label>
                 <InputText id="title" v-model="form.title" type="text" />
-                <Message v-if="!form.title" size="small" severity="error" variant="simple"> Name is required. </Message>
+                <Message v-if="!form.title || form.title.trim() === ''" size="small" severity="error" variant="simple"> Title is required. </Message>
+            </div>
+
+            <div class="flex flex-col gap-2 mb-3">
+                <label for="topicId">Topic <span class="text-red-500">*</span></label>
+                <Dropdown id="topicId" v-model="form.topicId" :options="topicOptions" option-label="label" option-value="value" placeholder="Select a Topic" :loading="topicLoading" />
+                <Message v-if="!form.topicId" size="small" severity="error" variant="simple"> Topic is required. </Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
@@ -200,8 +245,9 @@ function cancel() {
             </div>
 
             <div class="flex flex-col gap-2 mb-3">
-                <label for="roomType">Room Type</label>
+                <label for="roomType">Room Type <span class="text-red-500">*</span></label>
                 <Dropdown id="roomType" v-model="form.roomType" :options="roomTypeOptions" option-label="label" option-value="value" />
+                <Message v-if="!form.roomType" size="small" severity="error" variant="simple"> Room Type is required. </Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">

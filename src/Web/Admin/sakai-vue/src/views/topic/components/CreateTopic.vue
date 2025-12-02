@@ -157,7 +157,6 @@ function cancel() {
             <div class="flex flex-col gap-2 mb-3">
                 <label for="partyId">Party</label>
                 <Dropdown id="partyId" v-model="form.partyId" :options="partyOptions" option-label="label" option-value="value" placeholder="Select a Party" :loading="partyLoading" filter @filter="onPartyFilter" />
-                <Message v-if="!form.partyId" size="small" severity="error" variant="simple"> Party is required. </Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">

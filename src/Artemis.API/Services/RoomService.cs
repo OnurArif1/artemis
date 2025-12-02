@@ -1,4 +1,5 @@
 using Artemis.API.Entities;
+using Artemis.API.Entities.Enums;
 using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
 using Artemis.API.ViewModels;
@@ -17,26 +18,44 @@ public class RoomService : IRoomService
 
     public async ValueTask Create(CreateOrUpdateRoomViewModel viewModel)
     {
+        if (!viewModel.TopicId.HasValue || viewModel.TopicId.Value <= 0)
+        {
+            throw new ArgumentException("TopicId is required and must be greater than zero.");
+        }
+
+        if (string.IsNullOrWhiteSpace(viewModel.Title))
+        {
+            throw new ArgumentException("Title is required.");
+        }
+
+        if (viewModel.RoomType == RoomType.None)
+        {
+            throw new ArgumentException("RoomType is required and must be Public or Private.");
+        }
+
         var room = new Room()
         {
             TopicId = viewModel.TopicId,
             PartyId = viewModel.PartyId,
             CategoryId = viewModel.CategoryId,
             Title = viewModel.Title,
-            LocationX = viewModel.LocationX,
-            LocationY = viewModel.LocationY,
+            LocationX = viewModel.LocationX ?? 0,
+            LocationY = viewModel.LocationY ?? 0,
             RoomType = viewModel.RoomType,
-            LifeCycle = viewModel.LifeCycle,
-            ChannelId = viewModel.ChannelId,
-            ReferenceId = viewModel.ReferenceId,
-            Upvote = viewModel.Upvote,
-            Downvote = viewModel.Downvote
+            LifeCycle = viewModel.LifeCycle ?? 0,
+            ChannelId = viewModel.ChannelId ?? string.Empty,
+            ReferenceId = viewModel.ReferenceId ?? string.Empty,
+            Upvote = viewModel.Upvote ?? 0,
+            Downvote = viewModel.Downvote ?? 0
         };
 
-        if (viewModel.PartyId > 0)
+        if (viewModel.PartyId.HasValue && viewModel.PartyId.Value > 0)
         {
-            var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId);  
-            ((List<Party>)room.Parties).Add(party);
+            var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId.Value);  
+            if (party != null)
+            {
+                ((List<Party>)room.Parties).Add(party);
+            }
         }
               
         await _artemisDbContext.Rooms.AddAsync(room);
@@ -66,7 +85,7 @@ public class RoomService : IRoomService
 
         var count = await baseQuery.CountAsync();
 
-        var query = baseQuery.Include(r => r.Parties).Include(r => r.Category);
+        var query = baseQuery.Include(r => r.Parties).Include(r => r.Category).Include(r => r.Topic);
 
         var rooms = await query
             .OrderByDescending(r => r.CreateDate)
@@ -78,6 +97,8 @@ public class RoomService : IRoomService
         var roomViewModels = rooms.Select(r => new RoomResultViewModel
         {
             Id = r.Id,
+            TopicId = r.TopicId,
+            TopicTitle = r.Topic?.Title,
             Title = r.Title,
             LocationX = r.LocationX,
             LocationY = r.LocationY,
@@ -106,6 +127,21 @@ public class RoomService : IRoomService
 
     public async ValueTask Update(CreateOrUpdateRoomViewModel viewModel)
     {
+        if (!viewModel.TopicId.HasValue || viewModel.TopicId.Value <= 0)
+        {
+            throw new ArgumentException("TopicId is required and must be greater than zero.");
+        }
+
+        if (string.IsNullOrWhiteSpace(viewModel.Title))
+        {
+            throw new ArgumentException("Title is required.");
+        }
+
+        if (viewModel.RoomType == RoomType.None)
+        {
+            throw new ArgumentException("RoomType is required and must be Public or Private.");
+        }
+
         var query = _artemisDbContext.Rooms.AsQueryable();
         var room = await query.FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (room is not null)
@@ -114,19 +150,22 @@ public class RoomService : IRoomService
             room.PartyId = viewModel.PartyId;
             room.CategoryId = viewModel.CategoryId;
             room.Title = viewModel.Title;
-            room.LocationX = viewModel.LocationX;
-            room.LocationY = viewModel.LocationY;
+            room.LocationX = viewModel.LocationX ?? room.LocationX;
+            room.LocationY = viewModel.LocationY ?? room.LocationY;
             room.RoomType = viewModel.RoomType;
-            room.LifeCycle = viewModel.LifeCycle;
-            room.ChannelId = viewModel.ChannelId;
-            room.ReferenceId = viewModel.ReferenceId;
-            room.Upvote = viewModel.Upvote;
-            room.Downvote = viewModel.Downvote;
+            room.LifeCycle = viewModel.LifeCycle ?? room.LifeCycle;
+            room.ChannelId = viewModel.ChannelId ?? room.ChannelId;
+            room.ReferenceId = viewModel.ReferenceId ?? room.ReferenceId;
+            room.Upvote = viewModel.Upvote ?? room.Upvote;
+            room.Downvote = viewModel.Downvote ?? room.Downvote;
 
-            if (viewModel.PartyId > 0)
+            if (viewModel.PartyId.HasValue && viewModel.PartyId.Value > 0)
             {
-                var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId);  
-                ((List<Party>)room.Parties).Add(party);
+                var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId.Value);  
+                if (party != null && !room.Parties.Any(p => p.Id == party.Id))
+                {
+                    ((List<Party>)room.Parties).Add(party);
+                }
             }
 
             await _artemisDbContext.SaveChangesAsync();

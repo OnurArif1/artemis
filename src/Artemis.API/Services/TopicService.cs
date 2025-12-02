@@ -1,5 +1,5 @@
-
 using Artemis.API.Entities;
+using Artemis.API.Entities.Enums;
 using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -21,18 +21,23 @@ public class TopicService : ITopicService
     {
         var count = await query.CountAsync();
 
-        var topics = await query.OrderByDescending(i => i.CreateDate)
+        var topics = await query
+            .Include(t => t.Party)
+            .Include(t => t.Category)
+            .OrderByDescending(i => i.CreateDate)
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
             .Take(filterViewModel.PageSize)
             .Select(r => new TopicResultViewModel
             {
                 Id = r.Id,
-                PartyId = r.PartyId ?? 0,
+                PartyId = r.PartyId,
+                PartyName = r.Party != null ? r.Party.PartyName : null,
                 Title = r.Title,
                 Type = r.Type,
                 LocationX = r.LocationX ?? 0,
                 LocationY = r.LocationY ?? 0,
                 CategoryId = r.CategoryId,
+                CategoryName = r.Category != null ? r.Category.Title : null,
                 MentionId = r.MentionId,
                 Upvote = r.Upvote ?? 0,
                 Downvote = r.Downvote ?? 0,
@@ -78,15 +83,6 @@ public class TopicService : ITopicService
     {
         ResultViewModel resultViewModel = new ResultViewModel();
 
-        if (viewModel.PartyId <= 0)
-        {
-            resultViewModel.IsSuccess = false;
-            resultViewModel.ExceptionMessage = "PartyId must be greater than zero.";
-            resultViewModel.ExceptionType = Entities.Enums.ExceptionType.GreaterThanZero;
-
-            return resultViewModel;
-        }
-
         if (string.IsNullOrWhiteSpace(viewModel.Title))
         {
             resultViewModel.IsSuccess = false;
@@ -131,7 +127,7 @@ public class TopicService : ITopicService
         var topic = await query.FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (topic is not null)
         {
-            if ((topic.PartyId ?? 0) != viewModel.PartyId)
+            if (topic.PartyId != viewModel.PartyId)
                 topic.PartyId = viewModel.PartyId;
 
             if (topic.Title != viewModel.Title)
@@ -189,5 +185,46 @@ public class TopicService : ITopicService
 
         resultViewModel.IsSuccess = true;
         return resultViewModel;
+    }
+
+    public async ValueTask<ResultTopicLookupViewModel> GetTopicLookup(GetLookupTopicViewModel viewModel)
+    {
+        var query = _artemisDbContext.Topics.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(viewModel.SearchText))
+        {
+            if (viewModel.TopicLookupSearchType == TopicLookupSearchType.Title)
+            {
+                query = query.Where(x => x.Title.Contains(viewModel.SearchText));
+            }
+
+            if (viewModel.TopicLookupSearchType == TopicLookupSearchType.TopicId)
+            {
+                if (int.TryParse(viewModel.SearchText, out int topicId))
+                {
+                    query = query.Where(x => x.Id == topicId);
+                }
+            }
+        }
+
+        if (viewModel.TopicId.HasValue)
+        {
+            query = query.Where(x => x.Id == viewModel.TopicId.Value);
+        }
+
+        var topics = await query
+            .OrderBy(x => x.Title)
+            .Select(t => new TopicLookupViewModel
+            {
+                TopicId = t.Id,
+                Title = t.Title
+            })
+            .ToListAsync();
+
+        return new ResultTopicLookupViewModel
+        {
+            Count = topics.Count,
+            ViewModels = topics
+        };
     }
 }

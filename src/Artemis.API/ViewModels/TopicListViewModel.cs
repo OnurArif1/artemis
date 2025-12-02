@@ -11,12 +11,14 @@ public class TopicListViewModel
 public class TopicResultViewModel
 {
     public int Id { get; set; }
-    public int PartyId { get; set; }
+    public int? PartyId { get; set; }
+    public string? PartyName { get; set; }
     public string Title { get; set; }
     public RoomType Type { get; set; }
     public double LocationX { get; set; }
     public double LocationY { get; set; }
     public int CategoryId { get; set; }
+    public string? CategoryName { get; set; }
     public int? MentionId { get; set; }
     public int Upvote { get; set; }
     public int Downvote { get; set; }

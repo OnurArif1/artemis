@@ -27,8 +27,8 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasOne(r => r.Topic)
-                .WithOne(t => t.Room)
-                .HasForeignKey<Room>(r => r.TopicId)
+                .WithMany(t => t.Rooms)
+                .HasForeignKey(r => r.TopicId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasMany(r => r.Parties)

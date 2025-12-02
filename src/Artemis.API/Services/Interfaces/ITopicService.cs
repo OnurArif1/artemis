@@ -10,4 +10,5 @@ public interface ITopicService
     ValueTask<ResultViewModel> Create(CreateOrUpdateTopicViewModel viewModel);
     ValueTask<ResultViewModel> Update(CreateOrUpdateTopicViewModel viewModel);
     ValueTask<ResultViewModel> Delete(int id);
+    ValueTask<ResultTopicLookupViewModel> GetTopicLookup(GetLookupTopicViewModel viewModel);
 }

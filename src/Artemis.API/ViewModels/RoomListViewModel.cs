@@ -11,6 +11,8 @@ public class RoomListViewModel
 public class RoomResultViewModel
 {
     public int Id { get; set; }
+    public int? TopicId { get; set; }
+    public string? TopicTitle { get; set; }
     public string Title { get; set; }
     public double LocationX { get; set; }
     public double LocationY { get; set; }

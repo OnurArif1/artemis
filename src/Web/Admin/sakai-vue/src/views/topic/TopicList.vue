@@ -201,18 +201,23 @@ const getTypeLabel = (type) => {
             </template>
             <Column field="id" header="Id" />
             <Column field="title" header="Title" />
-            <Column field="partyId" header="Party Id" />
+            <Column field="partyName" header="Party">
+                <template #body="{ data }">
+                    <span v-if="data.partyName" class="text-sm">{{ data.partyName }}</span>
+                    <span v-else class="text-300 text-sm">-</span>
+                </template>
+            </Column>
             <Column field="type" header="Type">
                 <template #body="{ data }">
                     <Tag :value="getTypeLabel(data.type)" :severity="getSeverity(data.type)" />
                 </template>
             </Column>
-            <Column field="locationX" header="Location X" />
-            <Column field="locationY" header="Location Y" />
-            <Column field="categoryId" header="Category Id" />
-            <Column field="mentionId" header="Mention Id" />
-            <Column field="upvote" header="Upvote" />
-            <Column field="downvote" header="Downvote" />
+            <Column field="categoryName" header="Category">
+                <template #body="{ data }">
+                    <span v-if="data.categoryName" class="text-sm">{{ data.categoryName }}</span>
+                    <span v-else class="text-300 text-sm">-</span>
+                </template>
+            </Column>
             <Column field="createDate" header="Create Date">
                 <template #body="{ data }">
                     <Tag :value="formatDate(data.createDate)" severity="success" />
@@ -224,14 +229,10 @@ const getTypeLabel = (type) => {
                 </template>
             </Column>
 
-            <Column header="Update">
+            <Column header="Operation">
                 <template #body="{ data }">
-                    <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" />
-                </template>
-            </Column>
-            <Column header="Delete">
-                <template #body="{ data }">
-                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" />
+                    <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" v-tooltip.bottom="'Update'" />
+                    <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" v-tooltip.bottom="'Delete'" />
                 </template>
             </Column>
 

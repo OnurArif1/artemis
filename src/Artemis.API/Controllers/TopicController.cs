@@ -89,4 +89,11 @@ public class TopicController : ControllerBase
 
         return Ok(resultViewModel);
     }
+
+    [HttpGet("lookup")]
+    public async Task<IActionResult> GetLookupAsync([FromQuery] GetLookupTopicViewModel viewModel)
+    {
+        var topics = await _topicService.GetTopicLookup(viewModel);
+        return Ok(topics);
+    }
 }

@@ -5,7 +5,7 @@ namespace Artemis.API.Services;
 public class CreateOrUpdateTopicViewModel
 {
     public int? Id { get; set; }
-    public int PartyId { get; set; }
+    public int? PartyId { get; set; }
     public string Title { get; set; }
     public RoomType Type { get; set; }
     public double LocationX { get; set; }

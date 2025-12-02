@@ -78,18 +78,18 @@ function onCreated(payload) {
     (async () => {
         try {
             const data = {
-                topicId: payload.topicId || 1,
-                partyId: payload.partyId,
-                categoryId: payload.categoryId || null,
+                topicId: payload.topicId,
                 title: payload.title,
-                locationX: payload.locationX || 0,
-                locationY: payload.locationY || 0,
-                roomType: payload.roomType || 1,
-                lifeCycle: payload.lifeCycle || 0,
-                channelId: payload.channelId || '',
-                referenceId: payload.referenceId || '',
-                upvote: payload.upvote || 0,
-                downvote: payload.downvote || 0
+                roomType: payload.roomType,
+                partyId: payload.partyId || null,
+                categoryId: payload.categoryId || null,
+                locationX: payload.locationX ?? null,
+                locationY: payload.locationY ?? null,
+                lifeCycle: payload.lifeCycle ?? null,
+                channelId: payload.channelId || null,
+                referenceId: payload.referenceId || null,
+                upvote: payload.upvote ?? null,
+                downvote: payload.downvote ?? null
             };
             await roomService.create(data);
             showFormDialog.value = false;
@@ -97,6 +97,7 @@ function onCreated(payload) {
             await load();
         } catch (err) {
             console.error('Room create error:', err);
+            toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.message || err.message || 'Room creation failed', life: 3000 });
         }
     })();
 }
@@ -104,19 +105,17 @@ function onCreated(payload) {
 function onAddPartyToRoom(payload) {
     (async () => {
         try {
-            console.log('Payload received in onAddPartyToRoom:', payload);
             const data = {
                 roomId: payload.id,
                 partyId: payload.partyId
             };
-            console.log('Data to be sent to addPartyToRoom:', data);
 
             await roomService.addPartyToRoom(data);
             showAddPartyDialog.value = false;
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Party Added to Room', life: 3000 });
             await load();
         } catch (err) {
-            console.error('Add Party to Room error:', err);
+            toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.message || err.message || 'Add Party to Room failed', life: 3000 });
         }
     })();
 }
@@ -126,25 +125,25 @@ function onUpdated(payload) {
         try {
             const data = {
                 id: payload.id,
-                topicId: payload.topicId || null,
-                partyId: payload.partyId,
-                categoryId: payload.categoryId || null,
+                topicId: payload.topicId,
                 title: payload.title,
-                locationX: payload.locationX || 0,
-                locationY: payload.locationY || 0,
-                roomType: payload.roomType || 1,
-                lifeCycle: payload.lifeCycle || 0,
-                channelId: payload.channelId || '',
-                referenceId: payload.referenceId || '',
-                upvote: payload.upvote || 0,
-                downvote: payload.downvote || 0
+                roomType: payload.roomType,
+                partyId: payload.partyId || null,
+                categoryId: payload.categoryId || null,
+                locationX: payload.locationX ?? null,
+                locationY: payload.locationY ?? null,
+                lifeCycle: payload.lifeCycle ?? null,
+                channelId: payload.channelId || null,
+                referenceId: payload.referenceId || null,
+                upvote: payload.upvote ?? null,
+                downvote: payload.downvote ?? null
             };
             await roomService.update(data);
             showFormDialog.value = false;
             toast.add({ severity: 'success', summary: 'Successful', detail: 'Room Updated', life: 3000 });
             await load();
         } catch (err) {
-            console.error('Room update error:', err);
+            toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.message || err.message || 'Room update failed', life: 3000 });
         }
     })();
 }
@@ -157,6 +156,7 @@ async function confirmDelete() {
         await load();
     } catch (err) {
         console.error('Room delete error:', err);
+        toast.add({ severity: 'error', summary: 'Error', detail: err.response?.data?.message || err.message || 'Room delete failed', life: 3000 });
     }
 }
 
@@ -201,8 +201,12 @@ const getSeverity = (status) => {
             </template>
             <Column field="id" header="Id" />
             <Column field="title" header="Title" />
-            <Column field="locationX" header="LocationX" />
-            <Column field="locationY" header="LocationY" />
+            <Column field="topicTitle" header="Topic">
+                <template #body="{ data }">
+                    <span v-if="data.topicTitle" class="text-sm">{{ data.topicTitle }}</span>
+                    <span v-else class="text-300 text-sm">-</span>
+                </template>
+            </Column>
             <Column field="roomType" header="RoomType">
                 <template #body="{ data }">
                     <Tag :value="data.roomType === 1 ? 'Public' : 'Private'" :severity="getSeverity(data.roomType)" />
@@ -214,9 +218,6 @@ const getSeverity = (status) => {
                     <span v-else class="text-300 text-sm">-</span>
                 </template>
             </Column>
-            <Column field="lifeCycle" header="LifeCycle" />
-            <Column field="upvote" header="Upvote" />
-            <Column field="downvote" header="Downvote" />
             <Column field="createDate" header="CreateDate">
                 <template #body="{ data }">
                     <Tag :value="formatDate(data.createDate)" severity="success" />

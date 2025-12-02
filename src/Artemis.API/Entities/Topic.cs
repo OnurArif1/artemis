@@ -18,9 +18,8 @@ public class Topic : BaseEntity, IChangingDate
     public int? Downvote { get; set; }
     public DateTime LastUpdateDate { get; set; }
     public DateTime CreateDate { get; set; }
-    public int? RoomId { get; set; }
-    public Room? Room { get; set; }
 
+    public ICollection<Room> Rooms { get; set; } = new List<Room>();
     public ICollection<TopicHashtagMap> TopicHashtagMaps { get; set; } = new List<TopicHashtagMap>();
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }
