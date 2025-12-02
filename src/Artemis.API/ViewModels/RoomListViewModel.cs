@@ -22,5 +22,12 @@ public class RoomResultViewModel
     public DateTime CreateDate { get; set; }
     public int? PartyId { get; set; }
     public string? PartyName { get; set; }
+    public List<PartyInfo> Parties { get; set; } = new List<PartyInfo>();
     public string? CategoryTitle { get; set; }
+}
+
+public class PartyInfo
+{
+    public int Id { get; set; }
+    public string PartyName { get; set; } = string.Empty;
 }

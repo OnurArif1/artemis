@@ -47,7 +47,7 @@ const loadMessages = async () => {
 
         if (result && result.resultViewmodels) {
             // Party bilgilerini yükle
-            const partyIds = [...new Set(result.resultViewmodels.map(m => m.partyId))];
+            const partyIds = [...new Set(result.resultViewmodels.map((m) => m.partyId))];
             for (const pid of partyIds) {
                 if (!partyMap.value.has(pid)) {
                     try {
@@ -65,7 +65,7 @@ const loadMessages = async () => {
 
             // Mesajları formatla ve sırala
             messages.value = result.resultViewmodels
-                .map(m => ({
+                .map((m) => ({
                     id: m.id,
                     partyId: m.partyId,
                     partyName: partyMap.value.get(m.partyId) || `Kullanıcı ${m.partyId}`,
@@ -106,7 +106,7 @@ const loadRoomInfo = async () => {
         });
 
         if (result && result.resultViewModels) {
-            const room = result.resultViewModels.find(r => r.id === roomId.value);
+            const room = result.resultViewModels.find((r) => r.id === roomId.value);
             if (room) {
                 roomTitle.value = room.title || `Room ${roomId.value}`;
                 // Room'un partyId'sini currentPartyId olarak ayarla (mesaj göndermek için)
@@ -156,7 +156,7 @@ onMounted(async () => {
         }, 1000);
 
         // Mesaj dinleyicisini ayarla
-        signalRService.onReceiveMessage((receivedPartyId, receivedPartyName, message) => {
+        signalRService.onReceiveMessage(() => {
             // Sadece bu room'un mesajlarını göster
             // Mesajı ekle ve veritabanından yeniden yükle
             loadMessages();
@@ -201,7 +201,7 @@ function sendMessage() {
 
     const message = messageText.value.trim();
     signalRService.sendMessage(currentPartyId.value, roomId.value, message);
-    
+
     // Mesajı hemen ekle (optimistic update)
     const partyName = partyMap.value.get(currentPartyId.value) || `Kullanıcı ${currentPartyId.value}`;
     messages.value.push({
@@ -236,12 +236,15 @@ function onEnterKey(event) {
 }
 
 // RoomId değiştiğinde mesajları yeniden yükle
-watch(() => route.query.roomId, (newRoomId) => {
-    if (newRoomId) {
-        roomId.value = parseInt(newRoomId);
-        loadMessages();
+watch(
+    () => route.query.roomId,
+    (newRoomId) => {
+        if (newRoomId) {
+            roomId.value = parseInt(newRoomId);
+            loadMessages();
+        }
     }
-});
+);
 </script>
 
 <template>

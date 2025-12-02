@@ -222,6 +222,14 @@ const getSeverity = (status) => {
                     <Tag :value="formatDate(data.createDate)" severity="success" />
                 </template>
             </Column>
+            <Column field="parties" header="Parties">
+                <template #body="{ data }">
+                    <div v-if="data.parties && data.parties.length > 0" class="flex flex-wrap gap-1">
+                        <Tag v-for="party in data.parties" :key="party.id" :value="party.partyName" severity="info" class="mr-1" />
+                    </div>
+                    <span v-else class="text-300 text-sm">-</span>
+                </template>
+            </Column>
             <Column header="Operation">
                 <template #body="{ data }">
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" v-tooltip.bottom="'Update'" />

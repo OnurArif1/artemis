@@ -107,8 +107,7 @@ public class TopicService : ITopicService
             MentionId = viewModel.MentionId,
             Upvote = viewModel.Upvote,
             Downvote = viewModel.Downvote,
-            LastUpdateDate = DateTime.UtcNow,
-            CreateDate = DateTime.UtcNow
+            LastUpdateDate = DateTime.UtcNow
         });
         _artemisDbContext.SaveChanges();
 

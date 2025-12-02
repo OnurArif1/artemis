@@ -89,6 +89,11 @@ public class RoomService : IRoomService
             CreateDate = r.CreateDate,
             PartyId = r.PartyId,
             PartyName = r.Parties.FirstOrDefault(i => i.Id == r.PartyId)?.PartyName,
+            Parties = r.Parties.Select(p => new PartyInfo
+            {
+                Id = p.Id,
+                PartyName = p.PartyName
+            }).ToList(),
             CategoryTitle = r.Category?.Title
         }).ToList();
 

@@ -117,26 +117,26 @@ watch(
             form.value = { ...initial };
             getPartyLookup();
             getCategoryLookup();
-            
+
             // Yeni room oluşturulurken SignalR ConnectionId'yi al ve ekle
             try {
                 // SignalR bağlantısı yoksa başlat
                 if (!signalRService.isConnected()) {
                     await signalRService.startConnection();
                 }
-                
+
                 // ConnectionId'yi al
                 const connectionId = signalRService.getConnectionId();
                 if (connectionId) {
                     form.value.channelId = connectionId;
-                    console.log('📡 ChannelId form\'a eklendi:', connectionId);
+                    console.log("📡 ChannelId form'a eklendi:", connectionId);
                 } else {
                     // ConnectionId henüz hazır değilse, biraz bekle ve tekrar dene
                     setTimeout(async () => {
                         const retryConnectionId = signalRService.getConnectionId();
                         if (retryConnectionId) {
                             form.value.channelId = retryConnectionId;
-                            console.log('📡 ChannelId form\'a eklendi (retry):', retryConnectionId);
+                            console.log("📡 ChannelId form'a eklendi (retry):", retryConnectionId);
                         }
                     }, 500);
                 }
