@@ -25,6 +25,7 @@ public class ArtemisDbContext : DbContext
     public DbSet<Subscribe> Subscribes { get; set; }
     public DbSet<Topic> Topics { get; set; }
     public DbSet<TopicHashtagMap> TopicHashtagMaps { get; set; }
+    public DbSet<ForbiddenWord> ForbiddenWords { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,6 +46,7 @@ public class ArtemisDbContext : DbContext
         modelBuilder.ApplyConfiguration(new SubscribeEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TopicEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TopicHashtagMapEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new ForbiddenWordEntityTypeConfiguration());
     }
 
     public override int SaveChanges()

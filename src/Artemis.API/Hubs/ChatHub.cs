@@ -32,7 +32,6 @@ public class ChatHub : Hub
             var viewModel = new CreateOrUpdateMessageViewModel
             {
                 PartyId = partyId,
-                PartyName = partyName,
                 RoomId = roomId,
                 Content = message,
                 Upvote = 0,
