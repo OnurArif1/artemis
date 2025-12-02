@@ -11,7 +11,7 @@ namespace Artemis.API.Services
     public class HashtagResultViewModel
     {
         public int Id { get; set; }
-        public string HashtagName { get; set; }
+        public string HashtagName { get; set; } = string.Empty;
         public DateTime CreateDate { get; set; }
     }
 }

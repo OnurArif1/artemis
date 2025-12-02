@@ -6,7 +6,7 @@ public class Topic : BaseEntity, IChangingDate
 {
     public int? PartyId { get; set; }
     public Party? Party { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     public RoomType Type { get; set; }
     public double? LocationX { get; set; }
     public double? LocationY { get; set; }

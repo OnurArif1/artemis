@@ -5,7 +5,7 @@ namespace Artemis.API.Services;
 public class CreateOrUpdatePartyViewModel
 {
     public int? Id { get; set; } = null;
-    public string PartyName { get; set; }
+    public string PartyName { get; set; } = string.Empty;
     public PartyType PartyType { get; set; }
     public bool IsBanned { get; set; }
     public int DeviceId { get; set; }

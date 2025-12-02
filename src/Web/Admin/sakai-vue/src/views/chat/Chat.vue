@@ -194,16 +194,14 @@ onMounted(async () => {
             if (receivedRoomId === roomId.value) {
                 // Mesajı direkt ekle (anlık haberleşme)
                 const partyNameToUse = partyMap.value.get(partyId) || partyName || `Kullanıcı ${partyId}`;
-                
+
                 // Eğer mesaj zaten listede yoksa ekle (duplicate kontrolü)
                 // Son 5 saniye içinde aynı partyId ve aynı içerikli mesaj var mı kontrol et
                 const now = new Date();
                 const messageExists = messages.value.some(
-                    m => m.partyId === partyId && 
-                         m.content === message && 
-                         Math.abs(now - new Date(m.timestamp)) < 5000 // 5 saniye içinde aynı mesaj
+                    (m) => m.partyId === partyId && m.content === message && Math.abs(now - new Date(m.timestamp)) < 5000 // 5 saniye içinde aynı mesaj
                 );
-                
+
                 if (!messageExists) {
                     messages.value.push({
                         id: Date.now(),
@@ -244,7 +242,7 @@ onUnmounted(() => {
     if (connectionIdInterval) {
         clearInterval(connectionIdInterval);
     }
-    
+
     // Room'dan ayrıl
     if (roomId.value) {
         signalRService.leaveRoom(roomId.value);
@@ -274,7 +272,8 @@ function sendMessage() {
     const message = messageText.value.trim();
     // Mention'ları parse et
     const mentionedPartyIds = parseMentions(message);
-    
+    console.log('Mention edilen partyIdler:', mentionedPartyIds);
+
     // Mesajı gönder (backend'den ReceiveMessage ile geri gelecek)
     signalRService.sendMessage(currentPartyId.value, roomId.value, message, mentionedPartyIds.length > 0 ? mentionedPartyIds : null);
 
@@ -406,12 +405,12 @@ function selectMention(party) {
 function deleteMention(event) {
     const text = messageText.value;
     const cursorPosition = event.target.selectionStart || 0;
-    
+
     if (cursorPosition === 0) return; // Başta ise silme
-    
+
     const textBeforeCursor = text.substring(0, cursorPosition);
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
-    
+
     // Eğer @ işareti varsa
     if (lastAtIndex !== -1) {
         // @ işaretinden sonraki metni al
@@ -420,7 +419,7 @@ function deleteMention(event) {
         const spaceIndex = textAfterAt.indexOf(' ');
         const newlineIndex = textAfterAt.indexOf('\n');
         let mentionEnd;
-        
+
         if (spaceIndex !== -1 && newlineIndex !== -1) {
             mentionEnd = lastAtIndex + 1 + Math.min(spaceIndex, newlineIndex) + 1; // +1 for space
         } else if (spaceIndex !== -1) {
@@ -430,14 +429,14 @@ function deleteMention(event) {
         } else {
             mentionEnd = text.length;
         }
-        
+
         // Eğer cursor mention'ın içindeyse veya hemen sonrasındaysa (boşluk dahil), mention'ı sil
         if (cursorPosition > lastAtIndex && cursorPosition <= mentionEnd) {
             event.preventDefault();
             const beforeMention = text.substring(0, lastAtIndex);
             const afterMention = text.substring(mentionEnd);
             messageText.value = beforeMention + afterMention;
-            
+
             // Cursor'ı mention'ın başına koy
             nextTick(() => {
                 const input = document.getElementById('messageInput');
@@ -462,11 +461,11 @@ function handleMentionKeydown(event) {
         deleteMention(event);
         return;
     }
-    
+
     if (!showMentionList.value) {
         return;
     }
-    
+
     if (event.key === 'ArrowDown') {
         event.preventDefault();
         selectedMentionIndex.value = Math.min(selectedMentionIndex.value + 1, mentionList.value.length - 1);
@@ -507,11 +506,11 @@ watch(
             if (oldRoomId) {
                 signalRService.leaveRoom(oldRoomId);
             }
-            
+
             roomId.value = newRoomId;
             await loadRoomInfo();
             await loadMessages();
-            
+
             // Yeni room'a bağlan
             if (isConnected.value) {
                 signalRService.joinRoom(newRoomId);
@@ -528,10 +527,10 @@ watch(
             if (oldRoomId) {
                 signalRService.leaveRoom(parseInt(oldRoomId));
             }
-            
+
             roomId.value = parseInt(newRoomId);
             await loadMessages();
-            
+
             // Yeni room'a bağlan
             if (isConnected.value) {
                 signalRService.joinRoom(parseInt(newRoomId));

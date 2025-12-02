@@ -28,18 +28,29 @@ public class MessageService : IMessageService
         await _artemisDbContext.Messages.AddAsync(message);
         await _artemisDbContext.SaveChangesAsync();
 
-        // Mention ve MentionPartyMap kayıtlarını oluştur
-        if (viewModel.MentionedPartyIds != null && viewModel.MentionedPartyIds.Any())
+        if (viewModel.MentionedPartyIds != null)
         {
+            int? topicId = null;
+            if (viewModel.RoomId > 0)
+            {
+                var room = await _artemisDbContext.Rooms
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(r => r.Id == viewModel.RoomId);
+                if (room != null)
+                {
+                    topicId = room.TopicId;
+                }
+            }
+
             var mention = new Mention()
             {
                 RoomId = viewModel.RoomId,
-                MessageId = message.Id
+                MessageId = message.Id,
+                TopicId = topicId
             };
             await _artemisDbContext.Mentions.AddAsync(mention);
             await _artemisDbContext.SaveChangesAsync();
 
-            // Her mention edilen party için MentionPartyMap oluştur
             foreach (var mentionedPartyId in viewModel.MentionedPartyIds)
             {
                 if (mentionedPartyId > 0)

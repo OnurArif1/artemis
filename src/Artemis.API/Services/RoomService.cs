@@ -69,8 +69,11 @@ public class RoomService : IRoomService
         if (room is not null)
         {
             var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId);  
-            ((List<Party>)room.Parties).Add(party);
-            await  _artemisDbContext.SaveChangesAsync();
+            if (party is not null)
+            {
+                ((List<Party>)room.Parties).Add(party);
+                await  _artemisDbContext.SaveChangesAsync();
+            }
         }
     }
 

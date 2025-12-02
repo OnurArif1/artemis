@@ -13,7 +13,7 @@ public class RoomResultViewModel
     public int Id { get; set; }
     public int? TopicId { get; set; }
     public string? TopicTitle { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     public double LocationX { get; set; }
     public double LocationY { get; set; }
     public RoomType RoomType { get; set; }
