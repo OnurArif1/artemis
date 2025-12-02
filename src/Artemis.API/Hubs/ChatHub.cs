@@ -24,6 +24,18 @@ public class ChatHub : Hub
         await base.OnConnectedAsync();
     }
 
+    // Room'a bağlanmak için method
+    public async Task JoinRoom(int roomId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"Room_{roomId}");
+    }
+
+    // Room'dan ayrılmak için method
+    public async Task LeaveRoom(int roomId)
+    {
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Room_{roomId}");
+    }
+
     public async Task SendMessage(int partyId, int roomId, string message, List<int>? mentionedPartyIds = null)
     {
         try
@@ -60,7 +72,8 @@ public class ChatHub : Hub
                 // Hata durumunda varsayılan ismi kullan
             }
 
-            await Clients.All.SendAsync("ReceiveMessage", partyId, partyName, message);
+            // Sadece bu room'daki kullanıcılara mesaj gönder (roomId ile birlikte)
+            await Clients.Group($"Room_{roomId}").SendAsync("ReceiveMessage", partyId, partyName, message, roomId);
         }
         catch (Exception ex)
         {

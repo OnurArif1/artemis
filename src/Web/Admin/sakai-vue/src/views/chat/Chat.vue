@@ -183,11 +183,50 @@ onMounted(async () => {
             }
         }, 1000);
 
-        // Mesaj dinleyicisini ayarla
-        signalRService.onReceiveMessage(() => {
+        // Room'a bağlan (bağlantı kurulduktan sonra)
+        if (roomId.value && isConnected.value) {
+            signalRService.joinRoom(roomId.value);
+        }
+
+        // Mesaj dinleyicisini ayarla - anlık mesaj ekleme
+        signalRService.onReceiveMessage((partyId, partyName, message, receivedRoomId) => {
             // Sadece bu room'un mesajlarını göster
-            // Mesajı ekle ve veritabanından yeniden yükle
-            loadMessages();
+            if (receivedRoomId === roomId.value) {
+                // Mesajı direkt ekle (anlık haberleşme)
+                const partyNameToUse = partyMap.value.get(partyId) || partyName || `Kullanıcı ${partyId}`;
+                
+                // Eğer mesaj zaten listede yoksa ekle (duplicate kontrolü)
+                // Son 5 saniye içinde aynı partyId ve aynı içerikli mesaj var mı kontrol et
+                const now = new Date();
+                const messageExists = messages.value.some(
+                    m => m.partyId === partyId && 
+                         m.content === message && 
+                         Math.abs(now - new Date(m.timestamp)) < 5000 // 5 saniye içinde aynı mesaj
+                );
+                
+                if (!messageExists) {
+                    messages.value.push({
+                        id: Date.now(),
+                        partyId: partyId,
+                        partyName: partyNameToUse,
+                        content: message,
+                        timestamp: now,
+                        createDate: now.toISOString()
+                    });
+
+                    // Party map'e ekle
+                    if (!partyMap.value.has(partyId)) {
+                        partyMap.value.set(partyId, partyNameToUse);
+                    }
+
+                    // Scroll to bottom
+                    nextTick(() => {
+                        if (messageContainer.value) {
+                            messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+                        }
+                    });
+                }
+            }
         });
 
         // Hata dinleyicisini ayarla
@@ -204,6 +243,11 @@ onUnmounted(() => {
     // Interval'i temizle
     if (connectionIdInterval) {
         clearInterval(connectionIdInterval);
+    }
+    
+    // Room'dan ayrıl
+    if (roomId.value) {
+        signalRService.leaveRoom(roomId.value);
     }
 });
 
@@ -230,9 +274,11 @@ function sendMessage() {
     const message = messageText.value.trim();
     // Mention'ları parse et
     const mentionedPartyIds = parseMentions(message);
+    
+    // Mesajı gönder (backend'den ReceiveMessage ile geri gelecek)
     signalRService.sendMessage(currentPartyId.value, roomId.value, message, mentionedPartyIds.length > 0 ? mentionedPartyIds : null);
 
-    // Mesajı hemen ekle (optimistic update)
+    // Mesajı hemen ekle (optimistic update - kullanıcı kendi mesajını hemen görsün)
     const partyName = partyMap.value.get(currentPartyId.value) || `Kullanıcı ${currentPartyId.value}`;
     messages.value.push({
         id: Date.now(),
@@ -251,11 +297,6 @@ function sendMessage() {
             messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
         }
     });
-
-    // Veritabanından yeniden yükle (güncel veri için)
-    setTimeout(() => {
-        loadMessages();
-    }, 500);
 }
 
 // Mention'ları mesajdan parse et (@PartyName formatından)
@@ -460,21 +501,41 @@ function onEnterKey(event) {
 
 watch(
     () => props.roomIdProp,
-    (newRoomId) => {
+    async (newRoomId, oldRoomId) => {
         if (newRoomId) {
+            // Eski room'dan ayrıl
+            if (oldRoomId) {
+                signalRService.leaveRoom(oldRoomId);
+            }
+            
             roomId.value = newRoomId;
-            loadRoomInfo();
-            loadMessages();
+            await loadRoomInfo();
+            await loadMessages();
+            
+            // Yeni room'a bağlan
+            if (isConnected.value) {
+                signalRService.joinRoom(newRoomId);
+            }
         }
     }
 );
 
 watch(
     () => route.query.roomId,
-    (newRoomId) => {
+    async (newRoomId, oldRoomId) => {
         if (newRoomId && !props.roomIdProp) {
+            // Eski room'dan ayrıl
+            if (oldRoomId) {
+                signalRService.leaveRoom(parseInt(oldRoomId));
+            }
+            
             roomId.value = parseInt(newRoomId);
-            loadMessages();
+            await loadMessages();
+            
+            // Yeni room'a bağlan
+            if (isConnected.value) {
+                signalRService.joinRoom(parseInt(newRoomId));
+            }
         }
     }
 );

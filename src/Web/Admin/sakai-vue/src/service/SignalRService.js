@@ -81,14 +81,46 @@ class SignalRService {
         this.connection.invoke('SendMessage', partyId, roomId, message, mentionedPartyIds).catch((err) => console.error('Send error:', err));
     }
 
+    joinRoom(roomId) {
+        if (!this.connection) {
+            console.error('SignalR connection is not initialized. Call startConnection() first.');
+            return;
+        }
+
+        if (this.connection.state !== 'Connected') {
+            console.warn('SignalR is not connected. Current state:', this.connection.state);
+            return;
+        }
+
+        this.connection.invoke('JoinRoom', roomId).catch((err) => {
+            console.error('JoinRoom error:', err);
+        });
+    }
+
+    leaveRoom(roomId) {
+        if (!this.connection) {
+            console.error('SignalR connection is not initialized. Call startConnection() first.');
+            return;
+        }
+
+        if (this.connection.state !== 'Connected') {
+            console.warn('SignalR is not connected. Current state:', this.connection.state);
+            return;
+        }
+
+        this.connection.invoke('LeaveRoom', roomId).catch((err) => {
+            console.error('LeaveRoom error:', err);
+        });
+    }
+
     onReceiveMessage(callback) {
         if (!this.connection) {
             console.error('SignalR connection is not initialized. Call startConnection() first.');
             return;
         }
 
-        this.connection.on('ReceiveMessage', (partyId, partyName, message) => {
-            callback(partyId, partyName, message);
+        this.connection.on('ReceiveMessage', (partyId, partyName, message, roomId) => {
+            callback(partyId, partyName, message, roomId);
         });
     }
 
