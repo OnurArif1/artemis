@@ -88,7 +88,8 @@ public class RoomService : IRoomService
 
         var count = await baseQuery.CountAsync();
 
-        var query = baseQuery.Include(r => r.Parties).Include(r => r.Category).Include(r => r.Topic);
+        var query = baseQuery.Include(r => r.Parties).Include(r => r.Category).Include(r => r.Topic)
+            .Include(r => r.RoomHashtagMaps).ThenInclude(rhm => rhm.Hashtag);
 
         var rooms = await query
             .OrderByDescending(r => r.CreateDate)
@@ -113,12 +114,19 @@ public class RoomService : IRoomService
             CreateDate = r.CreateDate,
             PartyId = r.PartyId,
             PartyName = r.Parties.FirstOrDefault(i => i.Id == r.PartyId)?.PartyName,
-            Parties = r.Parties.Select(p => new PartyInfo
+            Parties = [.. r.Parties.Select(p => new PartyInfo
             {
                 Id = p.Id,
                 PartyName = p.PartyName
-            }).ToList(),
-            CategoryTitle = r.Category?.Title
+            })],
+            CategoryTitle = r.Category?.Title,
+            Hashtags = [.. r.RoomHashtagMaps
+                .Where(rhm => rhm.Hashtag != null)
+                .Select(rhm => new HashtagInfo
+                {
+                    Id = rhm.Hashtag?.Id,
+                    HashtagName = rhm.Hashtag?.HashtagName
+                })]
         }).ToList();
 
         return new RoomListViewModel

@@ -26,10 +26,17 @@ public class RoomResultViewModel
     public string? PartyName { get; set; }
     public List<PartyInfo> Parties { get; set; } = new List<PartyInfo>();
     public string? CategoryTitle { get; set; }
+    public List<HashtagInfo> Hashtags { get; set; } = new List<HashtagInfo>();
 }
 
 public class PartyInfo
 {
     public int Id { get; set; }
     public string PartyName { get; set; } = string.Empty;
+}
+
+public class HashtagInfo
+{
+    public int? Id { get; set; }
+    public string? HashtagName { get; set; }
 }

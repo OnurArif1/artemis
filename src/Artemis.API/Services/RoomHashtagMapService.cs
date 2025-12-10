@@ -30,6 +30,13 @@ public class RoomHashtagMapService : IRoomHashtagMapService
             throw new InvalidOperationException($"Hashtag with Id {viewModel.HashtagId} does not exist.");
         }
 
+        var existingMap = await _artemisDbContext.RoomHashtags
+            .AnyAsync(m => m.RoomId == viewModel.RoomId && m.HashtagId == viewModel.HashtagId);
+        if (existingMap)
+        {
+            throw new InvalidOperationException($"Room with Id {viewModel.RoomId} already has hashtag with Id {viewModel.HashtagId}.");
+        }
+
         var map = new RoomHashtagMap()
         {
             RoomId = viewModel.RoomId,
@@ -42,12 +49,13 @@ public class RoomHashtagMapService : IRoomHashtagMapService
     public async ValueTask<RoomHashtagMapListViewModel> GetList(RoomHashtagMapFilterViewModel filterViewModel)
     {
         var query = _artemisDbContext.RoomHashtags.AsQueryable();
-        var count = await query.CountAsync();
 
         if (filterViewModel.RoomId.HasValue)
         {
             query = query.Where(x => x.RoomId == filterViewModel.RoomId.Value);
         }
+
+        var count = await query.CountAsync();
 
         var maps = await query.OrderByDescending(i => i.CreateDate)
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
@@ -86,6 +94,13 @@ public class RoomHashtagMapService : IRoomHashtagMapService
             if (!hashtagExists)
             {
                 throw new InvalidOperationException($"Hashtag with Id {viewModel.HashtagId} does not exist.");
+            }
+
+            var existingMap = await _artemisDbContext.RoomHashtags
+                .AnyAsync(m => m.RoomId == viewModel.RoomId && m.HashtagId == viewModel.HashtagId && m.Id != viewModel.Id);
+            if (existingMap)
+            {
+                throw new InvalidOperationException($"Room with Id {viewModel.RoomId} already has hashtag with Id {viewModel.HashtagId}.");
             }
 
             map.RoomId = viewModel.RoomId;

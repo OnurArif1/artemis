@@ -5,6 +5,8 @@ import RoomService from '@/service/RoomService';
 import CreateRoom from './components/CreateRoom.vue';
 import { useToast } from 'primevue/usetoast';
 import AddPartyToRoom from './components/AddPartyToRoom.vue';
+import AddHashtagToRoom from './components/AddHashtagToRoom.vue';
+import RoomHashtagMapService from '@/service/RoomHashtagMapService';
 import Chat from '@/views/chat/Chat.vue';
 import { useI18n } from '@/composables/useI18n';
 
@@ -12,6 +14,7 @@ const { t, locale } = useI18n();
 const toast = useToast();
 const rooms = ref([]);
 const roomService = new RoomService(request);
+const roomHashtagMapService = new RoomHashtagMapService(request);
 const pageIndex = ref(1);
 const pageSize = ref(10);
 const totalRecords = ref(0);
@@ -22,6 +25,7 @@ const filters = ref({
 
 const showFormDialog = ref(false);
 const showAddPartyDialog = ref(false);
+const showAddHashtagDialog = ref(false);
 const showDeleteDialog = ref(false);
 const showChatDialog = ref(false);
 const selectedRoom = ref(null);
@@ -68,6 +72,11 @@ function openUpdate(room) {
 function openAddPartyToRoom(room) {
     selectedRoom.value = { ...room };
     showAddPartyDialog.value = true;
+}
+
+function openAddHashtagToRoom(room) {
+    selectedRoom.value = { ...room };
+    showAddHashtagDialog.value = true;
 }
 
 function openDelete(room) {
@@ -121,6 +130,24 @@ function onAddPartyToRoom(payload) {
     })();
 }
 
+function onAddHashtagToRoom(payload) {
+    (async () => {
+        try {
+            const data = {
+                roomId: payload.roomId,
+                hashtagId: payload.hashtagId
+            };
+
+            await roomHashtagMapService.create(data);
+            showAddHashtagDialog.value = false;
+            toast.add({ severity: 'success', summary: t('common.success'), detail: 'Hashtag room\'a eklendi', life: 3000 });
+            await load();
+        } catch (err) {
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err.response?.data?.message || err.message, life: 3000 });
+        }
+    })();
+}
+
 function onUpdated(payload) {
     (async () => {
         try {
@@ -163,6 +190,7 @@ async function confirmDelete() {
 
 function onCancel() {
     showFormDialog.value = false;
+    showAddHashtagDialog.value = false;
 }
 
 function openChat(room) {
@@ -238,6 +266,7 @@ const getSeverity = (status) => {
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" :v-tooltip.bottom="t('common.update')" />
                     <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" :v-tooltip.bottom="t('common.delete')" />
                     <Button icon="pi pi-plus" class="p-button-text p-button-sm" @click="openAddPartyToRoom(data)" :v-tooltip.bottom="t('room.addPartyToRoom')" />
+                    <Button icon="pi pi-tag" class="p-button-text p-button-sm" @click="openAddHashtagToRoom(data)" :v-tooltip.bottom="'Hashtag Ekle'" />
                     <Button v-if="data.channelId" icon="pi pi-comments" class="p-button-text p-button-sm" @click="openChat(data)" :v-tooltip.bottom="t('common.openChat')" />
                 </template>
             </Column>
@@ -254,6 +283,10 @@ const getSeverity = (status) => {
             <AddPartyToRoom :room="selectedRoom" @addPartyToRoom="onAddPartyToRoom" @cancel="onCancel" />
         </Dialog>
 
+        <Dialog v-model:visible="showAddHashtagDialog" modal :closable="false" header="Hashtag Ekle" style="width: 500px">
+            <AddHashtagToRoom :room="selectedRoom" @addHashtagToRoom="onAddHashtagToRoom" @cancel="onCancel" />
+        </Dialog>
+
         <Dialog v-model:visible="showDeleteDialog" modal :closable="false" :header="t('room.deleteRoom')" style="width: 400px">
             <div class="p-4 text-center">
                 <p>
@@ -266,7 +299,7 @@ const getSeverity = (status) => {
             </div>
         </Dialog>
 
-        <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${t('room.chatHeader')} - ${selectedRoom?.title || t('room.title')}`" :style="{ width: '800px', height: '600px' }" :maximizable="true">
+        <Dialog v-model:visible="showChatDialog" modal :closable="true" :style="{ width: '800px', height: '600px' }" :maximizable="true">
             <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
         </Dialog>
     </div>

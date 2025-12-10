@@ -26,6 +26,7 @@ const messageText = ref('');
 const roomId = ref(null);
 const currentPartyId = ref(null);
 const roomTitle = ref('');
+const roomHashtags = ref([]);
 const isConnected = ref(false);
 const connectionError = ref(false);
 const connectionStatus = computed(() => {
@@ -128,7 +129,15 @@ const loadRoomInfo = async () => {
         if (result && result.resultViewModels) {
             const room = result.resultViewModels.find((r) => r.id === roomId.value);
             if (room) {
-                roomTitle.value = room.title || `Room ${roomId.value}`;
+                roomTitle.value = room.title;
+                if (room.hashtags && room.hashtags.length > 0) {
+                    roomHashtags.value = room.hashtags.map((h) => ({
+                        id: h.id,
+                        name: h.hashtagName
+                    }));
+                } else {
+                    roomHashtags.value = [];
+                }
                 if (room.partyId && !currentPartyId.value) {
                     currentPartyId.value = room.partyId;
                 }
@@ -143,13 +152,16 @@ const loadRoomInfo = async () => {
                 }
             } else {
                 roomTitle.value = `Room ${roomId.value}`;
+                roomHashtags.value = [];
             }
         } else {
             roomTitle.value = `Room ${roomId.value}`;
+            roomHashtags.value = [];
         }
     } catch (error) {
         console.error(t('chat.errorLoadingRoom') + ':', error);
         roomTitle.value = `Room ${roomId.value}`;
+        roomHashtags.value = [];
     }
 };
 
@@ -504,6 +516,11 @@ watch(
                 <div class="flex align-items-center gap-2">
                     <i class="pi pi-comments text-2xl"></i>
                     <h2 class="m-0">{{ roomTitle }}</h2>
+                    <div v-if="roomHashtags.length > 0" class="flex align-items-center gap-1 ml-2">
+                        <span v-for="hashtag in roomHashtags" :key="hashtag.id" class="hashtag-badge">
+                            #{{ hashtag.name }}
+                        </span>
+                    </div>
                 </div>
                 <div class="flex align-items-center gap-2">
                     <div class="connection-status" :class="{ connected: isConnected }">
@@ -746,5 +763,16 @@ watch(
 .mention-item:last-child {
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
+}
+
+.hashtag-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
 }
 </style>
