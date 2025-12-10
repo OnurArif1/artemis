@@ -1,6 +1,7 @@
 using Artemis.API.Entities;
 using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
+using Artemis.API.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace Artemis.API.Services;

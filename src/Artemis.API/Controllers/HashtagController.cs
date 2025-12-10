@@ -1,4 +1,5 @@
 using Artemis.API.Services.Interfaces;
+using Artemis.API.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Artemis.API.Services;
@@ -36,9 +37,9 @@ public class HashtagController : ControllerBase
     }
 
     [HttpGet("lookup")]
-    public async Task<IActionResult> GetLookupAsync([FromQuery] GetLookupHashtagViewModel viewmodel)
+    public async Task<IActionResult> GetLookupAsync([FromQuery] GetLookupHashtagViewModel viewModel)
     {
-        var parties = await _hashtagService.GetHashtagLookup(viewmodel);
+        var parties = await _hashtagService.GetHashtagLookup(viewModel);
         return Ok(parties);
     }
     [HttpDelete("delete/{id}")]
