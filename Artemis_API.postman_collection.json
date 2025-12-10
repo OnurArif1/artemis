@@ -1,0 +1,1554 @@
+{
+	"info": {
+		"_postman_id": "artemis-api-collection",
+		"name": "Artemis API",
+		"description": "Artemis API Collection - Tüm endpoint'ler",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Category",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/category/list?PageSize=10&PageIndex=1&Title=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "category", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								},
+								{
+									"key": "Title",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Lookup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/category/lookup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "category", "lookup"]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"string\",\n  \"createDate\": \"2024-01-01T00:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/category/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "category", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"title\": \"string\",\n  \"createDate\": \"2024-01-01T00:00:00Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/category/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "category", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/category/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "category", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Party",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/party/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "party", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Lookup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/party/lookup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "party", "lookup"]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"string\",\n  \"partyType\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/party/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "party", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"title\": \"string\",\n  \"partyType\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/party/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "party", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/party/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "party", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Room",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/room/list?PageSize=10&PageIndex=1&Title=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "room", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								},
+								{
+									"key": "Title",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"string\",\n  \"roomType\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/room/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "room", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"title\": \"string\",\n  \"roomType\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/room/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "room", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/room/delete",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "room", "delete"]
+						}
+					}
+				},
+				{
+					"name": "Add Party",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"roomId\": 0,\n  \"partyId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/room/addParty",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "room", "addParty"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Topic",
+			"item": [
+				{
+					"name": "Get By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/topic/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topic", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/topic/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topic", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Lookup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/topic/lookup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topic", "lookup"]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"string\",\n  \"content\": \"string\",\n  \"categoryId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/topic/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topic", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"title\": \"string\",\n  \"content\": \"string\",\n  \"categoryId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/topic/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topic", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/topic/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topic", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Hashtag",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hashtag/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "hashtag", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Lookup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hashtag/lookup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "hashtag", "lookup"]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"string\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/hashtag/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "hashtag", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"title\": \"string\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/hashtag/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "hashtag", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/hashtag/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "hashtag", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Comment",
+			"item": [
+				{
+					"name": "Get By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/comment/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "comment", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/comment/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "comment", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"string\",\n  \"topicId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/comment/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "comment", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"content\": \"string\",\n  \"topicId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/comment/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "comment", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/comment/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "comment", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Mention",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/mention/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mention", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Lookup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/mention/lookup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mention", "lookup"]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"string\",\n  \"messageId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/mention/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mention", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"content\": \"string\",\n  \"messageId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/mention/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mention", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/mention/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mention", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "MentionPartyMap",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/mentionpartymap/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mentionpartymap", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/mentionpartymap/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mentionpartymap", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mentionId\": 0,\n  \"partyId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/mentionpartymap/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mentionpartymap", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"mentionId\": 0,\n  \"partyId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/mentionpartymap/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mentionpartymap", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/mentionpartymap/delete",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "mentionpartymap", "delete"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Message",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/message/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "message", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"content\": \"string\",\n  \"roomId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/message/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "message", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"content\": \"string\",\n  \"roomId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/message/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "message", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/message/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "message", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Organization",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/organization/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "organization", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/organization/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "organization", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"string\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/organization/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "organization", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"title\": \"string\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/organization/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "organization", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/organization/delete",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "organization", "delete"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Person",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/person/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "person", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/person/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "person", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"string\",\n  \"lastName\": \"string\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/person/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "person", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"firstName\": \"string\",\n  \"lastName\": \"string\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/person/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "person", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/person/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "person", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Subscribe",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/subscribe/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "subscribe", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topicId\": 0,\n  \"partyId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/subscribe/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "subscribe", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"topicId\": 0,\n  \"partyId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/subscribe/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "subscribe", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/subscribe/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "subscribe", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "CategoryHashtagMap",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categoryhashtagmap/list?PageSize=10&PageIndex=1&CategoryId=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categoryhashtagmap", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								},
+								{
+									"key": "CategoryId",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Lookup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categoryhashtagmap/lookup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categoryhashtagmap", "lookup"]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"categoryId\": 0,\n  \"hashtagId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categoryhashtagmap/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categoryhashtagmap", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"categoryId\": 0,\n  \"hashtagId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/categoryhashtagmap/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categoryhashtagmap", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/categoryhashtagmap/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "categoryhashtagmap", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "RoomHashtagMap",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/roomhashtagmap/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roomhashtagmap", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Lookup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/roomhashtagmap/lookup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roomhashtagmap", "lookup"]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"roomId\": 0,\n  \"hashtagId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/roomhashtagmap/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roomhashtagmap", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"roomId\": 0,\n  \"hashtagId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/roomhashtagmap/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roomhashtagmap", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/roomhashtagmap/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "roomhashtagmap", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "TopicHashtagMap",
+			"item": [
+				{
+					"name": "Get List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/topichashtagmap/list?PageSize=10&PageIndex=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topichashtagmap", "list"],
+							"query": [
+								{
+									"key": "PageSize",
+									"value": "10"
+								},
+								{
+									"key": "PageIndex",
+									"value": "1"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Lookup",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/topichashtagmap/lookup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topichashtagmap", "lookup"]
+						}
+					}
+				},
+				{
+					"name": "Create",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"topicId\": 0,\n  \"hashtagId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/topichashtagmap/create",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topichashtagmap", "create"]
+						}
+					}
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 0,\n  \"topicId\": 0,\n  \"hashtagId\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/topichashtagmap/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topichashtagmap", "update"]
+						}
+					}
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/topichashtagmap/delete/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "topichashtagmap", "delete", ":id"],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5094",
+			"type": "string"
+		}
+	]
+}
+
