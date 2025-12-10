@@ -18,6 +18,12 @@ public class CategoryController : ControllerBase
     [HttpGet("list")]
     public async Task<IActionResult> GetListAsync([FromQuery] CategoryFilterViewModel viewModel)
     {
+        // Default değerleri kontrol et
+        if (viewModel.PageSize <= 0)
+            viewModel.PageSize = 10;
+        if (viewModel.PageIndex <= 0)
+            viewModel.PageIndex = 1;
+            
         var viewModels = await _categoryService.GetList(viewModel);
         return Ok(viewModels);
     }
