@@ -1,3 +1,5 @@
+using Artemis.API.ViewModels;
+
 namespace Artemis.API.Services.Interfaces;
 
 public interface IHashtagService
