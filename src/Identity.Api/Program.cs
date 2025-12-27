@@ -1,21 +1,40 @@
 using Duende.IdentityServer;
 using Duende.IdentityServer.EntityFramework.DbContexts;
 using Duende.IdentityServer.EntityFramework.Mappers;
+using Duende.IdentityServer.Services;
 using Identity.Api.Config;
 using Identity.Api.Data;
 using Identity.Api.Models;
+using Identity.Api.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Artemis.API.Infrastructure;
+using Artemis.API.Entities;
+using Artemis.API.Entities.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ConnectionString'i configuration'dan oku
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var artemisConnectionString = builder.Configuration.GetConnectionString("ArtemisConnection") 
+    ?? "Host=65.21.157.56;Port=5432;Database=artemisdb;Username=postgres;Password=xct41troamber65";
 
 // Identity DbContext
 builder.Services.AddDbContext<IdentityDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
+    
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableDetailedErrors();
+        options.EnableSensitiveDataLogging();
+    }
+});
+
+// Artemis DbContext (Party oluşturmak için)
+builder.Services.AddDbContext<ArtemisDbContext>(options =>
+{
+    options.UseNpgsql(artemisConnectionString);
     
     if (builder.Environment.IsDevelopment())
     {
@@ -56,6 +75,9 @@ builder.Services.AddIdentityServer(options =>
 })
 .AddAspNetIdentity<ApplicationUser>();
 
+// Profile Service (custom claims için)
+builder.Services.AddTransient<IProfileService, ProfileService>();
+
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -68,6 +90,9 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 });
+
+// Controllers
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
@@ -97,8 +122,14 @@ app.UseHttpsRedirection();
 // CORS
 app.UseCors("DevCors");
 
+// Routing
+app.UseRouting();
+
 // Identity Server
 app.UseIdentityServer();
+
+// Controllers
+app.MapControllers();
 
 app.Run();
 
@@ -170,13 +201,23 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
             Email = "admin@artemis.com",
             FirstName = "Admin",
             LastName = "User",
-            EmailConfirmed = true
+            EmailConfirmed = true,
+            IsAdminPanelUser = true // Admin panelden kayıt olan kullanıcı
         };
         
         var result = await userManager.CreateAsync(adminUser, "Admin123!");
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(adminUser, "Admin");
+        }
+    }
+    else
+    {
+        // Mevcut admin kullanıcısını güncelle
+        if (!adminUser.IsAdminPanelUser)
+        {
+            adminUser.IsAdminPanelUser = true;
+            await userManager.UpdateAsync(adminUser);
         }
     }
 }

@@ -12,7 +12,8 @@ public static class IdentityConfiguration
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
             new IdentityResources.Email(),
-            new IdentityResource("roles", "User roles", new[] { "role" })
+            new IdentityResource("roles", "User roles", new[] { "role" }),
+            new IdentityResource("custom", "Custom claims", new[] { "first_name", "last_name" })
         };
 
     public static IEnumerable<ApiScope> ApiScopes =>
@@ -50,7 +51,7 @@ public static class IdentityConfiguration
             new ApiResource("artemis.api", "Artemis API")
             {
                 Scopes = { "artemis.api" },
-                UserClaims = { "role", "email", "name" }
+                UserClaims = { "role", "email", "name", "first_name", "last_name", "given_name", "family_name" }
             },
             new ApiResource("artemis.gateway", "Artemis Gateway")
             {
