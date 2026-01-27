@@ -39,9 +39,7 @@ const model = ref([
     },
     {
         label: t('common.account'),
-        items: [
-            { label: t('common.logout'), icon: 'pi pi-fw pi-sign-out', command: onLogout }
-        ]
+        items: [{ label: t('common.logout'), icon: 'pi pi-fw pi-sign-out', command: onLogout }]
     }
 ]);
 </script>

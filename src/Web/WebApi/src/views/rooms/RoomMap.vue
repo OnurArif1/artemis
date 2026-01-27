@@ -18,7 +18,7 @@ onMounted(async () => {
     if (!mapContainer.value) return;
 
     const L = window.L;
-    
+
     if (!L || typeof L.map !== 'function') {
         error.value = t('common.error') + ': Leaflet yüklenemedi. Lütfen sayfayı yenileyin.';
         loading.value = false;
@@ -58,7 +58,7 @@ onMounted(async () => {
             validCoords.push([lat, lng]);
 
             const title = r.title ?? r.Title ?? `Oda #${r.id ?? r.Id}`;
-            
+
             // Marker - title label içinde görünür (inline style ile garantili görünürlük)
             const icon = L.divIcon({
                 className: 'room-marker',
@@ -71,7 +71,7 @@ onMounted(async () => {
                 iconSize: [180, 60],
                 iconAnchor: [90, 60]
             });
-            const marker = L.marker([lat, lng], { icon }).addTo(markersLayer);
+            L.marker([lat, lng], { icon }).addTo(markersLayer);
         }
 
         // Room'ların olduğu bölgeyi otomatik zoomla
@@ -111,10 +111,7 @@ function escapeHtml(s) {
 
 <template>
     <div class="room-map-wrapper">
-        <div
-            ref="mapContainer"
-            class="room-map"
-        />
+        <div ref="mapContainer" class="room-map" />
         <div v-if="loading" class="loading-overlay">
             <ProgressSpinner style="width: 32px; height: 32px" />
             <span class="ml-2">{{ t('common.loading') }}</span>

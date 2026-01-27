@@ -47,9 +47,7 @@ export function useLayout() {
         }
     };
 
-    const isSidebarActive = computed(
-        () => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive
-    );
+    const isSidebarActive = computed(() => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive);
     const isDarkTheme = computed(() => layoutConfig.darkTheme);
     const getPrimary = computed(() => layoutConfig.primary);
     const getSurface = computed(() => layoutConfig.surface);

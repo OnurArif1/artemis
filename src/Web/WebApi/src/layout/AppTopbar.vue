@@ -34,11 +34,7 @@ function changeLanguage(event) {
 
 <template>
     <div class="layout-topbar">
-        <button
-            type="button"
-            class="layout-menu-button layout-topbar-action"
-            @click="toggleMenu"
-        >
+        <button type="button" class="layout-menu-button layout-topbar-action" @click="toggleMenu">
             <i class="pi pi-bars"></i>
         </button>
         <div class="layout-topbar-logo-container">
@@ -62,9 +58,7 @@ function changeLanguage(event) {
             >
                 <template #value="slotProps">
                     <span v-if="slotProps.value" class="language-dropdown-value">
-                        <span class="language-flag">{{
-                            languages.find((l) => l.value === slotProps.value)?.flag
-                        }}</span>
+                        <span class="language-flag">{{ languages.find((l) => l.value === slotProps.value)?.flag }}</span>
                     </span>
                     <span v-else>
                         <span class="language-flag">🇹🇷</span>
