@@ -13,15 +13,10 @@ let map = null;
 let markersLayer = null;
 
 const TURKEY_CENTER = [39, 35.5];
-const TURKEY_BOUNDS = [
-    [35.8, 25.9],
-    [42.2, 44.9]
-];
 
 onMounted(async () => {
     if (!mapContainer.value) return;
 
-    // Leaflet index.html'de CDN'den yüklendi, window.L olarak erişilebilir
     const L = window.L;
     
     if (!L || typeof L.map !== 'function') {
@@ -30,39 +25,66 @@ onMounted(async () => {
         return;
     }
 
+    // Haritayı başlat (başlangıç merkezi Türkiye) - Açık, minimalist stil
     map = L.map(mapContainer.value).setView(TURKEY_CENTER, 6);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
     }).addTo(map);
-
-    map.fitBounds(TURKEY_BOUNDS, { padding: [24, 24], maxZoom: 7 });
 
     loading.value = true;
     error.value = '';
     try {
         const res = await roomService.getList({ pageIndex: 1, pageSize: 500 });
         const rooms = res?.resultViewModels ?? res?.ResultViewModels ?? [];
-        if (!Array.isArray(rooms)) return;
+        if (!Array.isArray(rooms)) {
+            loading.value = false;
+            return;
+        }
 
         if (markersLayer) {
             map.removeLayer(markersLayer);
         }
         markersLayer = L.layerGroup().addTo(map);
 
+        const validCoords = [];
+
         for (const r of rooms) {
             const lat = Number(r.locationY ?? r.LocationY);
             const lng = Number(r.locationX ?? r.LocationX);
             if (Number.isNaN(lat) || Number.isNaN(lng)) continue;
 
+            validCoords.push([lat, lng]);
+
             const title = r.title ?? r.Title ?? `Oda #${r.id ?? r.Id}`;
+            
+            // Marker - title label içinde görünür (inline style ile garantili görünürlük)
             const icon = L.divIcon({
                 className: 'room-marker',
-                html: `<span class="room-marker-dot" title="${escapeHtml(title)}"></span>`,
-                iconSize: [14, 14],
-                iconAnchor: [7, 7]
+                html: `
+                    <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%; height: 100%;">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: #ef4444; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); margin-bottom: 4px; flex-shrink: 0;"></div>
+                        <div style="background: white; color: #1f2937; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.15); max-width: 180px; overflow: hidden; text-overflow: ellipsis; display: block; visibility: visible; opacity: 1;">${escapeHtml(title)}</div>
+                    </div>
+                `,
+                iconSize: [180, 60],
+                iconAnchor: [90, 60]
             });
             const marker = L.marker([lat, lng], { icon }).addTo(markersLayer);
-            marker.bindPopup(`<strong>${escapeHtml(title)}</strong>`);
+        }
+
+        // Room'ların olduğu bölgeyi otomatik zoomla
+        if (validCoords.length > 0) {
+            const bounds = L.latLngBounds(validCoords);
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+        } else {
+            // Eğer geçerli koordinat yoksa Türkiye'yi göster
+            const TURKEY_BOUNDS = [
+                [35.8, 25.9],
+                [42.2, 44.9]
+            ];
+            map.fitBounds(TURKEY_BOUNDS, { padding: [50, 50], maxZoom: 7 });
         }
     } catch (e) {
         error.value = t('common.error') + ': ' + (e?.message || String(e));
@@ -88,36 +110,58 @@ function escapeHtml(s) {
 </script>
 
 <template>
-    <div class="grid">
-        <div class="col-12">
-            <div class="card">
-                <h5>{{ t('common.rooms') }}</h5>
-                <p class="text-color-secondary mb-4">
-                    Türkiye haritası üzerinde odaların konumları (LocationX, LocationY).
-                </p>
-                <div v-if="loading" class="flex align-items-center gap-2 mb-3">
-                    <ProgressSpinner style="width: 24px; height: 24px" />
-                    <span>{{ t('common.loading') }}</span>
-                </div>
-                <div v-else-if="error" class="p-3 surface-100 border-round mb-3 text-red-600">
-                    {{ error }}
-                </div>
-                <div
-                    ref="mapContainer"
-                    class="room-map"
-                />
+    <div class="room-map-wrapper">
+        <div
+            ref="mapContainer"
+            class="room-map"
+        />
+        <div v-if="loading" class="loading-overlay">
+            <ProgressSpinner style="width: 32px; height: 32px" />
+            <span class="ml-2">{{ t('common.loading') }}</span>
+        </div>
+        <div v-if="error" class="error-overlay">
+            <div class="p-3 surface-100 border-round text-red-600">
+                {{ error }}
             </div>
         </div>
     </div>
 </template>
 
 <style scoped>
+.room-map-wrapper {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 120px);
+    min-height: 600px;
+}
+
 .room-map {
     width: 100%;
-    height: 520px;
-    border-radius: 8px;
-    overflow: hidden;
+    height: 100%;
     background: var(--surface-100);
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 12px 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.error-overlay {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    max-width: 90%;
 }
 
 :deep(.room-marker) {
@@ -125,18 +169,59 @@ function escapeHtml(s) {
     border: none;
 }
 
-:deep(.room-marker-dot) {
-    display: block;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    border: 2px solid white;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
-    cursor: pointer;
+:deep(.room-marker-container) {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    transition: transform 0.2s ease !important;
+    width: 100% !important;
+    height: 100% !important;
 }
 
-:deep(.room-marker-dot:hover) {
-    transform: scale(1.2);
+:deep(.room-marker-container:hover) {
+    transform: scale(1.1);
+}
+
+:deep(.room-marker-label) {
+    background: rgba(255, 255, 255, 0.98) !important;
+    color: #1f2937 !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+    max-width: 180px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    position: relative !important;
+    z-index: 1 !important;
+    margin-top: 4px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+:deep(.room-marker-dot) {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    position: relative;
+    z-index: 2;
+}
+
+:deep(.room-marker-container:hover .room-marker-dot) {
+    transform: scale(1.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+}
+
+:deep(.room-marker-container:hover .room-marker-label) {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
 }
 </style>
