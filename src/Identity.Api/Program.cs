@@ -202,22 +202,28 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
             FirstName = "Admin",
             LastName = "User",
             EmailConfirmed = true,
-            IsAdminPanelUser = true // Admin panelden kayıt olan kullanıcı
+            IsAdminPanelUser = true,
+            LockoutEnabled = false
         };
-        
+
         var result = await userManager.CreateAsync(adminUser, "Admin123!");
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(adminUser, "Admin");
+            adminUser.LockoutEnabled = false;
+            adminUser.LockoutEnd = null;
+            await userManager.UpdateAsync(adminUser);
         }
     }
     else
     {
-        // Mevcut admin kullanıcısını güncelle
         if (!adminUser.IsAdminPanelUser)
         {
             adminUser.IsAdminPanelUser = true;
             await userManager.UpdateAsync(adminUser);
         }
+        adminUser.LockoutEnabled = false;
+        adminUser.LockoutEnd = null;
+        await userManager.UpdateAsync(adminUser);
     }
 }

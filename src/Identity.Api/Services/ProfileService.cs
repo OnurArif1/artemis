@@ -53,7 +53,10 @@ public class ProfileService : IProfileService
 
         if (user != null)
         {
-            context.IsActive = user.IsActive && !user.LockoutEnabled;
+            var lockedOut = user.LockoutEnabled
+                && user.LockoutEnd.HasValue
+                && user.LockoutEnd.Value > DateTimeOffset.UtcNow;
+            context.IsActive = user.IsActive && !lockedOut;
         }
         else
         {
