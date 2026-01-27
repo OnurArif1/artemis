@@ -17,8 +17,15 @@ const showRegisterDialog = ref(false);
 const registerEmail = ref('');
 const registerPassword = ref('');
 const registerPasswordAgain = ref('');
+const registerPartyType = ref(1); // 0=None, 1=Person, 2=Organization
 const registerError = ref('');
 const registerLoading = ref(false);
+
+const partyTypeOptions = [
+    { label: 'Yok', value: 0 },
+    { label: 'Kişi', value: 1 },
+    { label: 'Organizasyon', value: 2 }
+];
 
 function getLoginError(err) {
     const d = err?.response?.data;
@@ -78,6 +85,7 @@ function openRegister() {
     registerEmail.value = '';
     registerPassword.value = '';
     registerPasswordAgain.value = '';
+    registerPartyType.value = 1;
     registerError.value = '';
 }
 
@@ -109,9 +117,11 @@ async function onRegister() {
     }
     registerLoading.value = true;
     try {
-        await axios.post('/identity/account/register', { email: e, password: p }, {
-            headers: { 'Content-Type': 'application/json' }
-        });
+        await axios.post(
+            '/identity/account/register',
+            { email: e, password: p, partyType: registerPartyType.value },
+            { headers: { 'Content-Type': 'application/json' } }
+        );
         toast.add({
             severity: 'success',
             summary: 'Hesap oluşturuldu',
@@ -244,6 +254,17 @@ async function onRegister() {
                         :toggle-mask="true"
                         fluid
                         :feedback="false"
+                    />
+                </div>
+                <div>
+                    <label for="reg-party-type" class="block font-medium mb-2">Tip</label>
+                    <SelectButton
+                        id="reg-party-type"
+                        v-model="registerPartyType"
+                        :options="partyTypeOptions"
+                        option-label="label"
+                        option-value="value"
+                        aria-labelledby="reg-party-type"
                     />
                 </div>
                 <div v-if="registerError" class="text-red-500 text-sm">

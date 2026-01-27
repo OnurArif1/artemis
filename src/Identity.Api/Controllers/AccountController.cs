@@ -5,6 +5,7 @@ using Identity.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Api.Controllers;
 
@@ -28,14 +29,20 @@ public class AccountController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             return BadRequest(new { error = "E-posta ve şifre gerekli." });
 
-        var existing = await _userManager.FindByEmailAsync(request.Email);
-        if (existing != null)
+        var email = request.Email.Trim();
+        var existingUser = await _userManager.FindByEmailAsync(email);
+        if (existingUser != null)
             return BadRequest(new { error = "Bu e-posta adresi zaten kullanılıyor." });
+
+        var partyWithSameEmail = await _artemisDb.Parties
+            .AnyAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower(), ct);
+        if (partyWithSameEmail)
+            return BadRequest(new { error = "Bu e-posta adresi ile kayıtlı bir kişi zaten var." });
 
         var user = new ApplicationUser
         {
-            UserName = request.Email.Trim(),
-            Email = request.Email.Trim(),
+            UserName = email,
+            Email = email,
             EmailConfirmed = true,
             LockoutEnabled = false,
             IsAdminPanelUser = false
@@ -51,12 +58,14 @@ public class AccountController : ControllerBase
 
         await _userManager.AddToRoleAsync(user, "User");
 
+        var partyName = string.IsNullOrWhiteSpace(request.PartyName) ? email : request.PartyName.Trim();
         var party = new Party
         {
-            PartyName = request.Email.Trim(),
-            PartyType = PartyType.Person,
-            IsBanned = false,
-            DeviceId = 0,
+            PartyName = partyName,
+            Email = email,
+            PartyType = request.PartyType,
+            IsBanned = request.IsBanned ?? false,
+            DeviceId = request.DeviceId ?? 0,
             CreateDate = DateTime.UtcNow
         };
         await _artemisDb.Parties.AddAsync(party, ct);

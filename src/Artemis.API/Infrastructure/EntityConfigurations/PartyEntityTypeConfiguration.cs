@@ -13,6 +13,8 @@ namespace Artemis.API.Infrastructure.EntityConfigurations
             builder.HasKey(p => p.Id);
             builder.Property(p => p.Id).UseHiLo("Party_hilo").IsRequired();
             builder.Property(p => p.PartyName);
+            builder.Property(p => p.Email);
+            builder.HasIndex(p => p.Email).IsUnique();
             builder.Property(p => p.PartyType);
             builder.Property(p => p.IsBanned);
             builder.Property(p => p.DeviceId);
