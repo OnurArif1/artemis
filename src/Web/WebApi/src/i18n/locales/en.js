@@ -2,6 +2,7 @@ export default {
     common: {
         home: 'Home',
         dashboard: 'Dashboard',
+        rooms: 'Rooms',
         account: 'Account',
         logout: 'Logout',
         login: 'Login',

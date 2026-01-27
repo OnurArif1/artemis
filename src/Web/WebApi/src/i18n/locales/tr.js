@@ -2,6 +2,7 @@ export default {
     common: {
         home: 'Ana Sayfa',
         dashboard: 'Gösterge Paneli',
+        rooms: 'Odalar',
         account: 'Hesap',
         logout: 'Çıkış Yap',
         login: 'Giriş Yap',

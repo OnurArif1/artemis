@@ -33,7 +33,8 @@ const model = ref([
     {
         label: t('common.home'),
         items: [
-            { label: t('common.dashboard'), icon: 'pi pi-fw pi-home', to: '/' }
+            { label: t('common.dashboard'), icon: 'pi pi-fw pi-home', to: '/' },
+            { label: t('common.rooms'), icon: 'pi pi-fw pi-map-marker', to: '/odalar' }
         ]
     },
     {

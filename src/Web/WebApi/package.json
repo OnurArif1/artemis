@@ -8,11 +8,12 @@
         "lint": "eslint --fix . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
     },
     "dependencies": {
-        "pinia": "^2.1.7",
-        "axios": "^1.6.0",
         "@microsoft/signalr": "^9.0.6",
         "@primeuix/themes": "^1.0.0",
+        "axios": "^1.6.0",
         "chart.js": "3.3.2",
+        "leaflet": "^1.9.4",
+        "pinia": "^2.1.7",
         "primeicons": "^7.0.0",
         "primevue": "^4.3.1",
         "tailwindcss-primeui": "^0.5.0",

@@ -7,7 +7,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
     optimizeDeps: {
-        noDiscovery: true
+        noDiscovery: true,
+        include: ['leaflet']
     },
     server: {
         port: 5175,
