@@ -27,17 +27,17 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-            return BadRequest(new { error = "E-posta ve şifre gerekli." });
+            return BadRequest(new { error = "E-Mail is necessary." });
 
         var email = request.Email.Trim();
         var existingUser = await _userManager.FindByEmailAsync(email);
         if (existingUser != null)
-            return BadRequest(new { error = "Bu e-posta adresi zaten kullanılıyor." });
+            return BadRequest(new { error = "This email is already exists" });
 
         var partyWithSameEmail = await _artemisDb.Parties
             .AnyAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower(), ct);
         if (partyWithSameEmail)
-            return BadRequest(new { error = "Bu e-posta adresi ile kayıtlı bir kişi zaten var." });
+            return BadRequest(new { error = "There is already someone registered with this email address." });
 
         var user = new ApplicationUser
         {
@@ -52,7 +52,7 @@ public class AccountController : ControllerBase
         if (!createResult.Succeeded)
         {
             var first = createResult.Errors.FirstOrDefault();
-            var msg = first != null ? first.Description : "Kayıt oluşturulamadı.";
+            var msg = first != null ? first.Description : "Could not create record.";
             return BadRequest(new { error = msg });
         }
 
@@ -71,6 +71,6 @@ public class AccountController : ControllerBase
         await _artemisDb.Parties.AddAsync(party, ct);
         await _artemisDb.SaveChangesAsync(ct);
 
-        return Ok(new { message = "Hesap oluşturuldu. Giriş yapabilirsiniz." });
+        return Ok(new { message = "Your account has been created. You can log in." });
     }
 }
