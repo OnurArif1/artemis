@@ -92,6 +92,11 @@ public class PartyService : IPartyService
                     query = query.Where(x => x.Id == partyId);
                 }
             }
+
+            if (viewModel.PartyLookupSearchType == PartyLookupSearchType.Email)
+            {
+                query = query.Where(x => x.Email != null && x.Email.ToLower() == viewModel.SearchText.ToLower());
+            }
         }
 
         if (viewModel.PartyId.HasValue)

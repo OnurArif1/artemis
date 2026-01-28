@@ -2,9 +2,12 @@
 import { ref, watch, onMounted } from 'vue';
 import { useLayout } from '@/layout/composables/layout';
 import { useI18n } from '@/composables/useI18n';
+import { useAuthStore } from '@/stores/auth';
+import { getEmailFromToken } from '@/utils/jwt';
 
 const { toggleDarkMode, isDarkTheme, toggleMenu } = useLayout();
 const { locale, setLocale } = useI18n();
+const authStore = useAuthStore();
 
 const languages = [
     { label: 'Türkçe', value: 'tr', flag: '🇹🇷' },
@@ -12,12 +15,21 @@ const languages = [
 ];
 
 const selectedLanguage = ref('tr');
+const userEmail = ref('');
 
 onMounted(() => {
     const savedLocale = localStorage.getItem('locale') || 'tr';
     selectedLanguage.value = savedLocale;
     if (locale.value !== savedLocale) {
         setLocale(savedLocale);
+    }
+
+    const token = authStore.token || localStorage.getItem('auth.token');
+    if (token) {
+        const email = getEmailFromToken(token);
+        if (email) {
+            userEmail.value = email;
+        }
     }
 });
 
@@ -44,6 +56,10 @@ function changeLanguage(event) {
             <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
                 <i :class="['pi', isDarkTheme ? 'pi-moon' : 'pi-sun']"></i>
             </button>
+            <div v-if="userEmail" class="user-email">
+                <i class="pi pi-user"></i>
+                <span>{{ userEmail }}</span>
+            </div>
             <Dropdown
                 v-model="selectedLanguage"
                 :options="languages"
@@ -76,6 +92,27 @@ function changeLanguage(event) {
 </template>
 
 <style lang="scss" scoped>
+.layout-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-email {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--surface-100);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    color: var(--text-color);
+
+    i {
+        color: var(--primary-color);
+    }
+}
+
 .language-dropdown-root {
     min-width: 2.5rem;
 }

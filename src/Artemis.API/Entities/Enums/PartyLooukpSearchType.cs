@@ -9,5 +9,7 @@ public enum PartyLookupSearchType
     [Display(Name = "PartyName")]
     PartyName = 1,
     [Display(Name = "PartyId")]
-    PartyId = 2
+    PartyId = 2,
+    [Display(Name = "Email")]
+    Email = 3
 }

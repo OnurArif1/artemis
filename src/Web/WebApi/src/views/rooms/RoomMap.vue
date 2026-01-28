@@ -3,12 +3,15 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useI18n } from '@/composables/useI18n';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
+import Chat from '@/views/chat/Chat.vue';
 
 const roomService = new RoomService(request);
 const { t } = useI18n();
 const mapContainer = ref(null);
 const loading = ref(true);
 const error = ref('');
+const showChatDialog = ref(false);
+const selectedRoom = ref(null);
 let map = null;
 let markersLayer = null;
 
@@ -25,7 +28,6 @@ onMounted(async () => {
         return;
     }
 
-    // Haritayı başlat (başlangıç merkezi Türkiye) - Açık, minimalist stil
     map = L.map(mapContainer.value).setView(TURKEY_CENTER, 6);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -58,8 +60,8 @@ onMounted(async () => {
             validCoords.push([lat, lng]);
 
             const title = r.title ?? r.Title ?? `Oda #${r.id ?? r.Id}`;
+            const roomId = r.id ?? r.Id;
 
-            // Marker - title label içinde görünür (inline style ile garantili görünürlük)
             const icon = L.divIcon({
                 className: 'room-marker',
                 html: `
@@ -71,15 +73,22 @@ onMounted(async () => {
                 iconSize: [180, 60],
                 iconAnchor: [90, 60]
             });
-            L.marker([lat, lng], { icon }).addTo(markersLayer);
+
+            const marker = L.marker([lat, lng], { icon }).addTo(markersLayer);
+
+            marker.on('click', () => {
+                selectedRoom.value = {
+                    id: roomId,
+                    title: title
+                };
+                showChatDialog.value = true;
+            });
         }
 
-        // Room'ların olduğu bölgeyi otomatik zoomla
         if (validCoords.length > 0) {
             const bounds = L.latLngBounds(validCoords);
             map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
         } else {
-            // Eğer geçerli koordinat yoksa Türkiye'yi göster
             const TURKEY_BOUNDS = [
                 [35.8, 25.9],
                 [42.2, 44.9]
@@ -121,6 +130,16 @@ function escapeHtml(s) {
                 {{ error }}
             </div>
         </div>
+        <Dialog 
+            v-model:visible="showChatDialog" 
+            modal 
+            :closable="true" 
+            :header="`${selectedRoom?.title || t('common.rooms')}`" 
+            :style="{ width: '1200px', height: '800px' }" 
+            :maximizable="true"
+        >
+            <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
+        </Dialog>
     </div>
 </template>
 

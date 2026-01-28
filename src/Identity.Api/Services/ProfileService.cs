@@ -23,7 +23,11 @@ public class ProfileService : IProfileService
         {
             var claims = context.Subject.Claims.ToList();
 
-            // Custom claims ekle
+            if (!string.IsNullOrEmpty(user.Email))
+            {
+                claims.Add(new Claim("email", user.Email));
+            }
+
             if (!string.IsNullOrEmpty(user.FirstName))
             {
                 claims.Add(new Claim("first_name", user.FirstName));
@@ -36,7 +40,6 @@ public class ProfileService : IProfileService
                 claims.Add(new Claim("family_name", user.LastName));
             }
 
-            // Kullanıcı rollerini ekle
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
