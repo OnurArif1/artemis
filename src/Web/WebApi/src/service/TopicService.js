@@ -19,4 +19,22 @@ export default class TopicService {
         });
         return response?.data ?? response;
     }
+
+    async create(payload) {
+        const response = await this.request({
+            method: 'post',
+            url: '/topic/create',
+            data: payload
+        });
+        return response?.data ?? response;
+    }
+
+    async update(payload) {
+        const response = await this.request({
+            method: 'post',
+            url: '/topic/update',
+            data: payload
+        });
+        return response?.data ?? response;
+    }
 }

@@ -36,10 +36,30 @@ export default {
         error: 'Hata',
         required: 'Zorunlu',
         warning: 'Uyarı',
-        info: 'Bilgi'
+        info: 'Bilgi',
+        actions: 'İşlemler'
     },
     topic: {
         list: 'Konu Listesi',
+        create: 'Konu Ekleme',
+        createTitle: 'Yeni Konu Oluştur',
+        addRoom: 'Konuya Oda Ekle',
+        addRoomMessage: 'Bu konuya bir oda eklemek ister misiniz?',
+        createRoom: 'Oda Oluştur',
+        title: 'Başlık',
+        titlePlaceholder: 'Konu başlığını girin',
+        titleRequired: 'Konu başlığı zorunludur',
+        category: 'Kategori',
+        selectCategory: 'Kategori seçin',
+        locationX: 'X Koordinatı',
+        locationY: 'Y Koordinatı',
+        type: 'Tip',
+        public: 'Herkese Açık',
+        private: 'Özel',
+        createSuccess: 'Konu başarıyla oluşturuldu',
+        createError: 'Konu oluşturulurken hata oluştu',
+        roomCreated: 'Oda başarıyla oluşturuldu',
+        roomCreateError: 'Oda oluşturulurken hata oluştu',
         searchPlaceholder: 'Konu başlığına göre ara...',
         noResults: 'Arama sonucu bulunamadı',
         noTopics: 'Henüz topic bulunmuyor',
@@ -64,7 +84,28 @@ export default {
     },
     room: {
         prefix: 'Oda #',
-        leafletLoadError: 'Leaflet yüklenemedi. Lütfen sayfayı yenileyin.'
+        leafletLoadError: 'Leaflet yüklenemedi. Lütfen sayfayı yenileyin.',
+        create: 'Oda Ekleme',
+        createTitle: 'Yeni Oda Oluştur',
+        title: 'Başlık',
+        titlePlaceholder: 'Oda başlığını girin',
+        topic: 'Konu',
+        selectTopic: 'Konu seçin',
+        locationX: 'X Koordinatı',
+        locationY: 'Y Koordinatı',
+        roomType: 'Oda Tipi',
+        public: 'Herkese Açık',
+        private: 'Özel',
+        createSuccess: 'Oda başarıyla oluşturuldu',
+        createError: 'Oda oluşturulurken hata oluştu',
+        inviteParty: 'Bu odaya kişi davet et?',
+        invitePartyTitle: 'Kişi Davet Et',
+        selectParty: 'Seçili Kişi',
+        searchParty: 'Kişi ara...',
+        addParty: 'Ekle',
+        partyAdded: 'Kişi başarıyla eklendi',
+        partyAddError: 'Kişi eklenirken hata oluştu',
+        noPartySelected: 'Lütfen bir kişi seçin'
     },
     dashboard: {
         description: 'Artemis WebApi – Gösterge paneli. Buraya sonraki özellikler eklenecek.'
@@ -99,5 +140,26 @@ export default {
     language: {
         turkish: 'Türkçe',
         english: 'English'
+    },
+    category: {
+        list: 'Kategori Listesi',
+        create: 'Kategori Ekle',
+        edit: 'Kategori Düzenle',
+        title: 'Başlık',
+        titlePlaceholder: 'Kategori başlığını girin',
+        titleRequired: 'Kategori başlığı zorunludur',
+        id: 'ID',
+        createDate: 'Oluşturulma Tarihi',
+        searchPlaceholder: 'Kategori başlığına göre ara...',
+        noCategories: 'Henüz kategori bulunmuyor',
+        created: 'Kategori başarıyla oluşturuldu',
+        updated: 'Kategori başarıyla güncellendi',
+        deleted: 'Kategori başarıyla silindi',
+        createError: 'Kategori oluşturulurken hata oluştu',
+        updateError: 'Kategori güncellenirken hata oluştu',
+        deleteError: 'Kategori silinirken hata oluştu',
+        listLoadError: 'Kategori listesi yüklenemedi',
+        deleteConfirm: 'Kategoriyi Sil',
+        deleteMessage: 'Bu kategoriyi silmek istediğinizden emin misiniz?'
     }
 };

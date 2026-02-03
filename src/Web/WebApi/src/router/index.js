@@ -21,9 +21,24 @@ const router = createRouter({
                     component: () => import('@/views/rooms/RoomMap.vue')
                 },
                 {
+                    path: '/rooms/create',
+                    name: 'createRoom',
+                    component: () => import('@/views/rooms/CreateRoom.vue')
+                },
+                {
                     path: '/topics',
                     name: 'topic',
                     component: () => import('@/views/topics/TopicList.vue')
+                },
+                {
+                    path: '/topics/create',
+                    name: 'createTopic',
+                    component: () => import('@/views/topics/CreateTopic.vue')
+                },
+                {
+                    path: '/categories',
+                    name: 'category',
+                    component: () => import('@/views/categories/CategoryList.vue')
                 }
             ]
         },

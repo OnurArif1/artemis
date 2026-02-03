@@ -11,7 +11,10 @@ const model = ref([
         items: [
             // { label: t('common.dashboard'), icon: 'pi pi-fw pi-home', to: '/' },
             { label: t('common.rooms'), icon: 'pi pi-fw pi-map-marker', to: '/rooms' },
-            { label: t('common.topics'), icon: 'pi pi-fw pi-book', to: '/topics' }
+            { label: t('room.create'), icon: 'pi pi-fw pi-plus-circle', to: '/rooms/create' },
+            { label: t('common.topics'), icon: 'pi pi-fw pi-book', to: '/topics' },
+            { label: t('topic.create'), icon: 'pi pi-fw pi-plus-circle', to: '/topics/create' },
+            { label: t('category.list'), icon: 'pi pi-fw pi-tags', to: '/categories' }
         ]
     }
 ]);
