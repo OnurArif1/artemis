@@ -38,7 +38,7 @@ public class RoomController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("delete")]
+    [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {
         await _roomService.Delete(id);

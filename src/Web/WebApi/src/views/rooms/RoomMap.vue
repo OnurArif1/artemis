@@ -6,6 +6,7 @@ import { useLayout } from '@/layout/composables/layout';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import Chat from '@/views/chat/Chat.vue';
+import TopicCommentChat from '@/views/chat/TopicCommentChat.vue';
 
 const route = useRoute();
 const roomService = new RoomService(request);
@@ -16,6 +17,8 @@ const loading = ref(true);
 const error = ref('');
 const showChatDialog = ref(false);
 const selectedRoom = ref(null);
+const showTopicChatDialog = ref(false);
+const selectedTopic = ref(null);
 let map = null;
 let markersLayer = null;
 let tileLayer = null;
@@ -30,9 +33,7 @@ function updateTileLayer() {
     }
 
     const L = window.L;
-    const tileUrl = isDarkTheme.value
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    const tileUrl = isDarkTheme.value ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
     tileLayer = L.tileLayer(tileUrl, {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -81,27 +82,54 @@ onMounted(async () => {
 
             const title = r.title ?? r.Title ?? `${t('room.prefix')}${r.id ?? r.Id}`;
             const roomId = r.id ?? r.Id;
+            const topicId = r.topicId ?? r.TopicId;
+            const topicTitle = r.topicTitle ?? r.TopicTitle;
+
+            let markerHtml = `
+                <div style="display: flex; flex-direction: row; align-items: flex-start; gap: 8px; cursor: pointer;">
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div style="width: 24px; height: 24px; border-radius: 50%; background: #ef4444; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); flex-shrink: 0;"></div>
+                        <div style="background: white; color: #1f2937; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.15); max-width: 180px; overflow: hidden; text-overflow: ellipsis; margin-top: 4px;">${escapeHtml(title)}</div>
+                    </div>
+            `;
+
+            if (topicId && topicTitle) {
+                markerHtml += `
+                    <div style="display: flex; flex-direction: column; align-items: center;" class="topic-marker-wrapper">
+                        <div style="width: 20px; height: 20px; border-radius: 50%; background: #22c55e; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); flex-shrink: 0;"></div>
+                        <div style="background: #22c55e; color: white; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.3); max-width: 160px; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; cursor: pointer;">${escapeHtml(topicTitle)}</div>
+                    </div>
+                </div>
+            `;
+            } else {
+                markerHtml += `</div>`;
+            }
 
             const icon = L.divIcon({
                 className: 'room-marker',
-                html: `
-                    <div style="display: flex; flex-direction: column; align-items: center; cursor: pointer; width: 100%; height: 100%;">
-                        <div style="width: 24px; height: 24px; border-radius: 50%; background: #ef4444; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); margin-bottom: 4px; flex-shrink: 0;"></div>
-                        <div style="background: white; color: #1f2937; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.15); max-width: 180px; overflow: hidden; text-overflow: ellipsis; display: block; visibility: visible; opacity: 1;">${escapeHtml(title)}</div>
-                    </div>
-                `,
-                iconSize: [180, 60],
-                iconAnchor: [90, 60]
+                html: markerHtml,
+                iconSize: topicId && topicTitle ? [360, 60] : [180, 60],
+                iconAnchor: topicId && topicTitle ? [180, 60] : [90, 60]
             });
 
             const marker = L.marker([lat, lng], { icon }).addTo(markersLayer);
 
-            marker.on('click', () => {
-                selectedRoom.value = {
-                    id: roomId,
-                    title: title
-                };
-                showChatDialog.value = true;
+            marker.on('click', (e) => {
+                const target = e.originalEvent.target;
+                if (target.closest('.topic-marker-wrapper')) {
+                    e.originalEvent.stopPropagation();
+                    selectedTopic.value = {
+                        id: topicId,
+                        title: topicTitle
+                    };
+                    showTopicChatDialog.value = true;
+                } else {
+                    selectedRoom.value = {
+                        id: roomId,
+                        title: title
+                    };
+                    showChatDialog.value = true;
+                }
             });
         }
 
@@ -178,6 +206,9 @@ function escapeHtml(s) {
         </div>
         <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${selectedRoom?.title || t('common.rooms')}`" :style="{ width: '1200px', height: '800px' }" :maximizable="true">
             <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
+        </Dialog>
+        <Dialog v-model:visible="showTopicChatDialog" modal :closable="true" :header="`${selectedTopic?.title || t('common.topics')}`" :style="{ width: '1200px', height: '800px' }" :maximizable="true">
+            <TopicCommentChat v-if="selectedTopic" :topicIdProp="selectedTopic.id" />
         </Dialog>
     </div>
 </template>

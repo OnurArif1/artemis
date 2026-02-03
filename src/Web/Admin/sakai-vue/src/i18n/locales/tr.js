@@ -163,7 +163,8 @@ export default {
         locationY: 'Konum Y',
         mentionId: 'Mention No',
         upvote: 'Beğeni',
-        downvote: 'Beğenmeme'
+        downvote: 'Beğenmeme',
+        addRoomToTopic: 'Bu topic\'e room ekle'
     },
     message: {
         title: 'Mesajlar',

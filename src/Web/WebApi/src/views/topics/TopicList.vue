@@ -56,6 +56,12 @@ async function loadRooms() {
             }
         });
     } catch (err) {
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: err?.response?.data?.message || err?.message || t('topic.roomsLoadError'),
+            life: 5000
+        });
     }
 }
 
@@ -76,6 +82,12 @@ async function loadCommentsForTopics(topicIds) {
 
                 return { topicId, comments, count: actualCount };
             } catch (err) {
+                toast.add({
+                    severity: 'warn',
+                    summary: t('common.warning'),
+                    detail: err?.response?.data?.message || err?.message || t('topic.commentsLoadError'),
+                    life: 3000
+                });
                 return { topicId, comments: [], count: 0 };
             }
         });
@@ -90,6 +102,12 @@ async function loadCommentsForTopics(topicIds) {
             }
         });
     } catch (err) {
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: err?.response?.data?.message || err?.message || t('topic.commentsLoadError'),
+            life: 5000
+        });
     }
 }
 
@@ -320,7 +338,7 @@ async function goToRoom(topic) {
             const targetRoom = topic.room;
             setActiveMenuItem('1-1');
             await router.push({
-                name: 'rooms',
+                name: 'room',
                 query: { roomId: targetRoom.id }
             });
             return;
@@ -350,7 +368,7 @@ async function goToRoom(topic) {
         setActiveMenuItem('1-1');
 
         await router.push({
-            name: 'rooms',
+            name: 'room',
             query: { roomId: targetRoom.id }
         });
     } catch (err) {

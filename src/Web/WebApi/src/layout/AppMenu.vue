@@ -1,46 +1,18 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/stores/auth';
 import { useI18n } from '@/composables/useI18n';
 import AppMenuItem from './AppMenuItem.vue';
 
-const router = useRouter();
-const auth = useAuthStore();
 const { t } = useI18n();
-
-function onLogout() {
-    auth.clearToken();
-    (async () => {
-        try {
-            await router.push({ name: 'login' });
-        } catch (e) {
-            const fallbackPaths = ['/login', '/auth/login', '/'];
-            for (const p of fallbackPaths) {
-                try {
-                    await router.push(p);
-                    return;
-                } catch {
-                    /* ignore */
-                }
-            }
-            window.location.href = '/';
-        }
-    })();
-}
 
 const model = ref([
     {
         label: t('common.home'),
         items: [
-            { label: t('common.dashboard'), icon: 'pi pi-fw pi-home', to: '/' },
-            { label: t('common.rooms'), icon: 'pi pi-fw pi-map-marker', to: '/odalar' },
-            { label: t('common.topics'), icon: 'pi pi-fw pi-book', to: '/topicler' }
+            // { label: t('common.dashboard'), icon: 'pi pi-fw pi-home', to: '/' },
+            { label: t('common.rooms'), icon: 'pi pi-fw pi-map-marker', to: '/rooms' },
+            { label: t('common.topics'), icon: 'pi pi-fw pi-book', to: '/topics' }
         ]
-    },
-    {
-        label: t('common.account'),
-        items: [{ label: t('common.logout'), icon: 'pi pi-fw pi-sign-out', command: onLogout }]
     }
 ]);
 </script>

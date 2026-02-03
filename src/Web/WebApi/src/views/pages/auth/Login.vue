@@ -80,7 +80,7 @@ async function onLogin() {
         axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
 
         auth.setToken?.(accessToken, expiresIn ? Number(expiresIn) : undefined);
-        router.push({ name: 'dashboard' });
+        router.push({ name: 'room' });
     } catch (err) {
         errorMsg.value = getLoginError(err);
     } finally {

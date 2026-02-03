@@ -7,6 +7,7 @@ import MessageService from '@/service/MessageService';
 import RoomService from '@/service/RoomService';
 import request from '@/service/request';
 import { useI18n } from '@/composables/useI18n';
+import { useToast } from 'primevue/usetoast';
 import { useAuthStore } from '@/stores/auth';
 import { getEmailFromToken } from '@/utils/jwt';
 
@@ -19,6 +20,7 @@ const props = defineProps({
 
 const route = useRoute();
 const { t, locale } = useI18n();
+const toast = useToast();
 const authStore = useAuthStore();
 const partyService = new PartyService(request);
 const messageService = new MessageService(request);
@@ -113,6 +115,12 @@ const loadMessages = async () => {
             });
         }
     } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: error?.response?.data?.message || error?.message || t('chat.errorLoadingMessages'),
+            life: 5000
+        });
     }
 };
 

@@ -20,7 +20,7 @@ export default {
         home: 'Ana Sayfa',
         dashboard: 'Gösterge Paneli',
         rooms: 'Odalar',
-        topics: 'Topicler',
+        topics: 'Konular',
         account: 'Hesap',
         logout: 'Çıkış Yap',
         login: 'Giriş Yap',
@@ -39,8 +39,8 @@ export default {
         info: 'Bilgi'
     },
     topic: {
-        list: 'Topic Listesi',
-        searchPlaceholder: 'Topic başlığına göre ara...',
+        list: 'Konu Listesi',
+        searchPlaceholder: 'Konu başlığına göre ara...',
         noResults: 'Arama sonucu bulunamadı',
         noTopics: 'Henüz topic bulunmuyor',
         comments: 'Yorum',
@@ -54,11 +54,13 @@ export default {
         commentError: 'Yorum eklenirken bir hata oluştu',
         noRoomForTopic: 'Bu topic için henüz bir oda oluşturulmamış',
         roomNotFound: 'Oda bulunamadı',
-        listLoadError: 'Topic listesi yüklenemedi',
+        listLoadError: 'Konu listesi yüklenemedi',
         noCommentText: '(Yorum metni yok)',
         commentsLoading: 'Yorum yükleniyor...',
         userInfoNotFound: 'Kullanıcı bilgisi bulunamadı',
-        partyPrefix: 'Party #'
+        partyPrefix: 'Party #',
+        roomsLoadError: 'Odalar yüklenirken bir hata oluştu',
+        commentsLoadError: 'Yorumlar yüklenirken bir hata oluştu'
     },
     room: {
         prefix: 'Oda #',

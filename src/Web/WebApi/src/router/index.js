@@ -16,13 +16,13 @@ const router = createRouter({
                     component: () => import('@/views/Dashboard.vue')
                 },
                 {
-                    path: '/odalar',
-                    name: 'rooms',
+                    path: '/rooms',
+                    name: 'room',
                     component: () => import('@/views/rooms/RoomMap.vue')
                 },
                 {
-                    path: '/topicler',
-                    name: 'topics',
+                    path: '/topics',
+                    name: 'topic',
                     component: () => import('@/views/topics/TopicList.vue')
                 }
             ]
@@ -44,7 +44,7 @@ router.beforeEach((to, _from, next) => {
         return;
     }
     if (to.name === 'login' && auth.isAuthenticated()) {
-        next({ name: 'dashboard' });
+        next({ name: 'room' });
         return;
     }
     next();

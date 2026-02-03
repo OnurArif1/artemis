@@ -58,7 +58,9 @@ export default {
         noCommentText: '(No comment text)',
         commentsLoading: 'Loading comments...',
         userInfoNotFound: 'User information not found',
-        partyPrefix: 'Party #'
+        partyPrefix: 'Party #',
+        roomsLoadError: 'An error occurred while loading rooms',
+        commentsLoadError: 'An error occurred while loading comments'
     },
     room: {
         prefix: 'Room #',

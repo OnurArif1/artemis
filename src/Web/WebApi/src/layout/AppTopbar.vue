@@ -1,29 +1,21 @@
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useLayout } from '@/layout/composables/layout';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import { getEmailFromToken } from '@/utils/jwt';
 
+const router = useRouter();
 const { toggleDarkMode, isDarkTheme, toggleMenu } = useLayout();
-const { locale, setLocale, t } = useI18n();
+const { t } = useI18n();
 const authStore = useAuthStore();
 
-const languages = computed(() => [
-    { label: t('language.turkish'), value: 'tr', flag: '🇹🇷' },
-    { label: t('language.english'), value: 'en', flag: '🇬🇧' }
-]);
-
-const selectedLanguage = ref('tr');
 const userEmail = ref('');
+const profileMenuRef = ref(null);
+const profileMenu = ref(null);
 
 onMounted(() => {
-    const savedLocale = localStorage.getItem('locale') || 'tr';
-    selectedLanguage.value = savedLocale;
-    if (locale.value !== savedLocale) {
-        setLocale(savedLocale);
-    }
-
     const token = authStore.token || localStorage.getItem('auth.token');
     if (token) {
         const email = getEmailFromToken(token);
@@ -33,15 +25,42 @@ onMounted(() => {
     }
 });
 
-watch(locale, (newLocale) => {
-    selectedLanguage.value = newLocale;
-});
-
-function changeLanguage(event) {
-    const newLang = event.value;
-    setLocale(newLang);
-    selectedLanguage.value = newLang;
+function toggleProfileMenu(event) {
+    profileMenu.value.toggle(event);
 }
+
+function onLogout() {
+    authStore.clearToken();
+    (async () => {
+        try {
+            await router.push({ name: 'login' });
+        } catch (e) {
+            const fallbackPaths = ['/login', '/auth/login', '/'];
+            for (const p of fallbackPaths) {
+                try {
+                    await router.push(p);
+                    return;
+                } catch {
+                    /* ignore */
+                }
+            }
+            window.location.href = '/';
+        }
+    })();
+}
+
+const profileMenuItems = computed(() => [
+    {
+        label: userEmail.value || t('common.account'),
+        items: [
+            {
+                label: t('common.logout'),
+                icon: 'pi pi-sign-out',
+                command: onLogout
+            }
+        ]
+    }
+]);
 </script>
 
 <template>
@@ -50,43 +69,20 @@ function changeLanguage(event) {
             <i class="pi pi-bars"></i>
         </button>
         <div class="layout-topbar-logo-container">
-            <span class="layout-topbar-logo">Artemis WebApi</span>
+            <span class="layout-topbar-logo">Ghossip</span>
         </div>
         <div class="layout-topbar-actions">
             <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
                 <i :class="['pi', isDarkTheme ? 'pi-moon' : 'pi-sun']"></i>
             </button>
-            <div v-if="userEmail" class="user-email">
-                <i class="pi pi-user"></i>
-                <span>{{ userEmail }}</span>
+            <div v-if="userEmail" class="profile-menu-container">
+                <button type="button" class="profile-button" @click="toggleProfileMenu" ref="profileMenuRef">
+                    <i class="pi pi-user"></i>
+                    <span class="profile-email">{{ userEmail }}</span>
+                    <i class="pi pi-chevron-down profile-chevron"></i>
+                </button>
+                <Menu ref="profileMenu" :model="profileMenuItems" :popup="true" />
             </div>
-            <Dropdown
-                v-model="selectedLanguage"
-                :options="languages"
-                option-label="label"
-                option-value="value"
-                @change="changeLanguage"
-                class="language-dropdown"
-                :pt="{
-                    root: { class: 'language-dropdown-root' },
-                    input: { class: 'language-dropdown-input' }
-                }"
-            >
-                <template #value="slotProps">
-                    <span v-if="slotProps.value" class="language-dropdown-value">
-                        <span class="language-flag">{{ languages.find((l) => l.value === slotProps.value)?.flag }}</span>
-                    </span>
-                    <span v-else>
-                        <span class="language-flag">🇹🇷</span>
-                    </span>
-                </template>
-                <template #option="slotProps">
-                    <div class="language-option">
-                        <span class="language-flag">{{ slotProps.option.flag }}</span>
-                        <span>{{ slotProps.option.label }}</span>
-                    </div>
-                </template>
-            </Dropdown>
         </div>
     </div>
 </template>
@@ -98,34 +94,50 @@ function changeLanguage(event) {
     gap: 1rem;
 }
 
-.user-email {
+.profile-menu-container {
+    position: relative;
+}
+
+.profile-button {
     display: flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     background-color: var(--surface-100);
-    border-radius: 4px;
+    border: 1px solid var(--surface-200);
+    border-radius: 6px;
     font-size: 0.875rem;
     color: var(--text-color);
-
-    i {
-        color: var(--primary-color);
-    }
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.language-dropdown-root {
-    min-width: 2.5rem;
+.profile-button:hover {
+    background-color: var(--surface-200);
+    border-color: var(--surface-300);
 }
-.language-dropdown-input {
-    padding: 0.25rem 0.5rem;
+
+.profile-button i:first-child {
+    color: var(--primary-color);
+    font-size: 1rem;
 }
-.language-dropdown-value,
-.language-option {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+
+.profile-email {
+    font-weight: 500;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
-.language-flag {
-    font-size: 1.25rem;
+
+.profile-chevron {
+    font-size: 0.75rem;
+    color: var(--text-color-secondary);
+    transition: transform 0.2s;
 }
+
+.profile-button:hover .profile-chevron {
+    transform: translateY(1px);
+}
+
 </style>

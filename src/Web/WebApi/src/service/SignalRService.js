@@ -14,11 +14,9 @@ class SignalRService {
 
         this.connection = new HubConnectionBuilder().withUrl(this.hubUrl).withAutomaticReconnect().build();
 
-        this.connection.onclose((error) => {
-        });
+        this.connection.onclose((error) => {});
 
-        this.connection.onreconnecting((error) => {
-        });
+        this.connection.onreconnecting((error) => {});
 
         this.connection.onreconnected((connectionId) => {
             this.connectionId = connectionId;
@@ -101,6 +99,57 @@ class SignalRService {
 
         this.connection.on('ReceiveError', (errorMessage) => {
             callback(errorMessage);
+        });
+    }
+
+    joinTopic(topicId) {
+        if (!this.connection) {
+            return;
+        }
+
+        if (this.connection.state !== 'Connected') {
+            return;
+        }
+
+        this.connection.invoke('JoinTopic', topicId).catch(() => {});
+    }
+
+    leaveTopic(topicId) {
+        if (!this.connection) {
+            return;
+        }
+
+        if (this.connection.state !== 'Connected') {
+            return;
+        }
+
+        this.connection.invoke('LeaveTopic', topicId).catch(() => {});
+    }
+
+    sendComment(partyId, topicId, message) {
+        if (!this.connection) {
+            return;
+        }
+
+        if (this.connection.state !== 'Connected') {
+            this.startConnection()
+                .then(() => {
+                    this.connection.invoke('SendComment', partyId, topicId, message).catch(() => {});
+                })
+                .catch(() => {});
+            return;
+        }
+
+        this.connection.invoke('SendComment', partyId, topicId, message).catch(() => {});
+    }
+
+    onReceiveComment(callback) {
+        if (!this.connection) {
+            return;
+        }
+
+        this.connection.on('ReceiveComment', (partyId, partyName, message, topicId) => {
+            callback(partyId, partyName, message, topicId);
         });
     }
 

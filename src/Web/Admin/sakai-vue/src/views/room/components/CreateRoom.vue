@@ -16,6 +16,10 @@ const props = defineProps({
     room: {
         type: Object,
         default: null
+    },
+    topic: {
+        type: Object,
+        default: null
     }
 });
 
@@ -146,6 +150,13 @@ watch(
             form.value = { ...newRoom };
         } else {
             form.value = { ...initial };
+            
+            if (props.topic) {
+                form.value.topicId = props.topic.id || props.topic.Id;
+                form.value.locationX = props.topic.locationX || props.topic.LocationX || 0;
+                form.value.locationY = props.topic.locationY || props.topic.LocationY || 0;
+            }
+            
             getPartyLookup();
             getCategoryLookup();
             getTopicLookup();
@@ -158,19 +169,29 @@ watch(
                 const connectionId = signalRService.getConnectionId();
                 if (connectionId) {
                     form.value.channelId = connectionId;
-                    console.log("📡 ChannelId form'a eklendi:", connectionId);
                 } else {
                     setTimeout(async () => {
                         const retryConnectionId = signalRService.getConnectionId();
                         if (retryConnectionId) {
                             form.value.channelId = retryConnectionId;
-                            console.log("📡 ChannelId form'a eklendi (retry):", retryConnectionId);
                         }
                     }, 500);
                 }
             } catch (error) {
-                console.error('SignalR ConnectionId alma hatası:', error);
             }
+        }
+    },
+    { immediate: true }
+);
+
+watch(
+    () => props.topic,
+    async (newTopic) => {
+        if (newTopic && !props.room) {
+            await getTopicLookup();
+            form.value.topicId = newTopic.id || newTopic.Id;
+            form.value.locationX = newTopic.locationX || newTopic.LocationX || 0;
+            form.value.locationY = newTopic.locationY || newTopic.LocationY || 0;
         }
     },
     { immediate: true }
@@ -221,7 +242,7 @@ function cancel() {
 
             <div class="flex flex-col gap-2 mb-3">
                 <label for="topicId">{{ t('room.topic') }} <span class="text-red-500">*</span></label>
-                <Dropdown id="topicId" v-model="form.topicId" :options="topicOptions" option-label="label" option-value="value" :placeholder="t('room.selectTopic')" :loading="topicLoading" />
+                <Dropdown id="topicId" v-model="form.topicId" :options="topicOptions" option-label="label" option-value="value" :placeholder="t('room.selectTopic')" :loading="topicLoading" :disabled="!!props.topic" />
                 <Message v-if="!form.topicId" size="small" severity="error" variant="simple">{{ t('room.topicRequired') }}</Message>
             </div>
 

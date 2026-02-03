@@ -2,7 +2,9 @@
 import { ref, onMounted } from 'vue';
 import request from '@/service/request';
 import TopicService from '@/service/TopicService';
+import RoomService from '@/service/RoomService';
 import CreateTopic from './components/CreateTopic.vue';
+import CreateRoom from '@/views/room/components/CreateRoom.vue';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from '@/composables/useI18n';
 
@@ -10,6 +12,7 @@ const { t, locale } = useI18n();
 const toast = useToast();
 const topics = ref([]);
 const topicService = new TopicService(request);
+const roomService = new RoomService(request);
 const pageIndex = ref(1);
 const pageSize = ref(10);
 const totalRecords = ref(0);
@@ -20,7 +23,9 @@ const filters = ref({
 
 const showFormDialog = ref(false);
 const showDeleteDialog = ref(false);
+const showRoomDialog = ref(false);
 const selectedTopic = ref(null);
+const selectedTopicForRoom = ref(null);
 
 async function load() {
     try {
@@ -151,6 +156,44 @@ function onCancel() {
     showFormDialog.value = false;
 }
 
+function openAddRoomToTopic(topic) {
+    selectedTopicForRoom.value = topic;
+    showRoomDialog.value = true;
+}
+
+function onRoomCreated(payload) {
+    (async () => {
+        try {
+            const data = {
+                topicId: payload.topicId,
+                partyId: payload.partyId || null,
+                categoryId: payload.categoryId || null,
+                title: payload.title,
+                locationX: payload.locationX || 0,
+                locationY: payload.locationY || 0,
+                roomType: payload.roomType || 1,
+                lifeCycle: payload.lifeCycle || 0,
+                channelId: payload.channelId || '',
+                referenceId: payload.referenceId || '',
+                upvote: payload.upvote || 0,
+                downvote: payload.downvote || 0
+            };
+            await roomService.create(data);
+            showRoomDialog.value = false;
+            selectedTopicForRoom.value = null;
+            toast.add({ severity: 'success', summary: t('common.success'), detail: t('room.created'), life: 3000 });
+        } catch (err) {
+            console.error('Room create error:', err);
+            toast.add({ severity: 'error', summary: t('common.error'), detail: err?.response?.data?.message || err?.message || t('room.creationFailed'), life: 5000 });
+        }
+    })();
+}
+
+function onRoomCancel() {
+    showRoomDialog.value = false;
+    selectedTopicForRoom.value = null;
+}
+
 function formatDate(dateString) {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString(locale.value === 'tr' ? 'tr-TR' : 'en-US', {
@@ -234,6 +277,7 @@ const getTypeLabel = (type) => {
             <Column :header="t('common.operations')">
                 <template #body="{ data }">
                     <Button icon="pi pi-pencil" class="p-button-text p-button-sm" @click="openUpdate(data)" :v-tooltip.bottom="t('common.update')" />
+                    <Button icon="pi pi-home" class="p-button-text p-button-sm" @click="openAddRoomToTopic(data)" :v-tooltip.bottom="t('topic.addRoomToTopic')" />
                     <Button icon="pi pi-trash" class="p-button-text p-button-sm" @click="openDelete(data)" :v-tooltip.bottom="t('common.delete')" />
                 </template>
             </Column>
@@ -256,6 +300,10 @@ const getTypeLabel = (type) => {
                     <Button :label="t('common.delete')" severity="danger" @click="confirmDelete" />
                 </div>
             </div>
+        </Dialog>
+
+        <Dialog v-model:visible="showRoomDialog" modal :closable="false" :header="t('room.createRoom')" style="width: 500px">
+            <CreateRoom :room="null" :topic="selectedTopicForRoom" @created="onRoomCreated" @cancel="onRoomCancel" />
         </Dialog>
     </div>
 </template>

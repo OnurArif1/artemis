@@ -156,7 +156,8 @@ export default {
         locationY: 'Location Y',
         mentionId: 'Mention Id',
         upvote: 'Upvote',
-        downvote: 'Downvote'
+        downvote: 'Downvote',
+        addRoomToTopic: 'Add room to this topic'
     },
     message: {
         title: 'Messages',
