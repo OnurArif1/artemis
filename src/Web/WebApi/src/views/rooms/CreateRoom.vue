@@ -43,24 +43,38 @@ async function loadTopics() {
         });
         topics.value = Array.isArray(data.resultViewModels) ? data.resultViewModels : (data?.resultViewModels ?? []);
     } catch (err) {
-        console.error('Topic yükleme hatası:', err);
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: err?.response?.data?.message || err?.message || t('topic.listLoadError'),
+            life: 5000
+        });
     }
 }
 
 function getCurrentLocation() {
     if (!navigator.geolocation) {
-        console.warn('Geolocation desteklenmiyor');
+        toast.add({
+            severity: 'warn',
+            summary: t('common.warning'),
+            detail: t('topic.geolocationNotSupported'),
+            life: 3000
+        });
         return;
     }
 
     navigator.geolocation.getCurrentPosition(
         (position) => {
-            // longitude -> locationX, latitude -> locationY
             formData.value.locationX = parseFloat(position.coords.longitude.toFixed(6));
             formData.value.locationY = parseFloat(position.coords.latitude.toFixed(6));
         },
-        (error) => {
-            console.warn('Konum alınamadı:', error.message);
+        () => {
+            toast.add({
+                severity: 'warn',
+                summary: t('common.warning'),
+                detail: t('topic.locationNotAvailable'),
+                life: 3000
+            });
         },
         {
             enableHighAccuracy: true,
@@ -103,27 +117,25 @@ async function searchParties(searchText) {
     }
 
     loadingParties.value = true;
-    console.log('API çağrısı yapılıyor:', { SearchText: searchText, PartyLookupSearchType: 1 });
     
     try {
         const data = await partyService.getLookup({
             SearchText: searchText,
-            PartyLookupSearchType: 1 // PartyName = 1
+            PartyLookupSearchType: 1
         });
-        console.log('Arama sonuçları:', data);
         
-        // API'den ViewModels (büyük V) veya viewModels (küçük v) dönebilir
         const viewModels = data?.ViewModels || data?.viewModels || [];
         parties.value = Array.isArray(viewModels) ? viewModels.map(vm => ({
             id: vm.PartyId ?? vm.partyId ?? vm.id ?? vm.Id,
             partyName: vm.PartyName ?? vm.partyName ?? ''
         })).filter(p => p.id && p.partyName) : [];
-        
-        console.log('Parse edilmiş parties:', parties.value);
     } catch (err) {
-        console.error('Party arama hatası:', err);
-        console.error('Hata detayı:', err?.response?.data);
-        console.error('Hata response:', err?.response);
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: err?.response?.data?.message || err?.message || t('room.partySearchError'),
+            life: 5000
+        });
         parties.value = [];
     } finally {
         loadingParties.value = false;
@@ -423,44 +435,194 @@ onMounted(() => {
 <style scoped lang="scss">
 .create-room-container {
     padding: 2rem;
-    max-width: 900px;
+    max-width: 1000px;
     margin: 0 auto;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
 }
 
 .create-room-card {
-    background: var(--surface-card);
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    position: relative;
+    width: 100%;
+    background: linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--surface-card) 98%, var(--primary-color)) 0%,
+        var(--surface-card) 50%,
+        color-mix(in srgb, var(--surface-card) 95%, var(--primary-color)) 100%
+    );
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.12),
+        0 8px 24px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+    border: 1.5px solid color-mix(in srgb, var(--primary-color) 12%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    animation: cardSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    overflow: hidden;
+}
+
+.create-room-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--primary-color) 20%,
+        color-mix(in srgb, var(--primary-color) 90%, #ff6b9d) 50%,
+        var(--primary-color) 80%,
+        transparent 100%
+    );
+    background-size: 300% 100%;
+    animation: shimmer 4s ease-in-out infinite;
+    opacity: 0.9;
+    border-radius: 24px 24px 0 0;
+}
+
+.create-room-card::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: -100%;
+    width: 300%;
+    height: 300%;
+    background: radial-gradient(
+        circle at center,
+        color-mix(in srgb, var(--primary-color) 10%, transparent) 0%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+}
+
+.create-room-card:hover::after {
+    opacity: 0.3;
+}
+
+@keyframes cardSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
 }
 
 .create-room-title {
-    font-size: 1.75rem;
-    font-weight: 600;
-    margin-bottom: 2rem;
+    position: relative;
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 2.5rem;
     color: var(--text-color);
+    background: linear-gradient(
+        135deg,
+        var(--text-color) 0%,
+        color-mix(in srgb, var(--primary-color) 30%, var(--text-color)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+    z-index: 1;
 }
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .form-field {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
 
     label {
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text-color);
         font-size: 0.95rem;
+        letter-spacing: 0.01em;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
 
         .required {
             color: var(--red-500);
+            font-weight: 700;
+            filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--red-500) 40%, transparent));
         }
+    }
+
+    :deep(.p-inputtext),
+    :deep(.p-inputnumber-input),
+    :deep(.p-dropdown),
+    :deep(.p-selectbutton) {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 12px;
+        border: 1.5px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--surface-0) 98%, var(--primary-color)) 0%,
+            var(--surface-0) 100%
+        );
+        box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+
+    :deep(.p-inputtext:focus),
+    :deep(.p-inputnumber-input:focus),
+    :deep(.p-dropdown:not(.p-disabled).p-focus),
+    :deep(.p-selectbutton .p-button.p-highlight) {
+        border-color: var(--primary-color);
+        box-shadow:
+            0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent),
+            0 4px 16px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.1)),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        transform: translateY(-1px);
+    }
+
+    :deep(.p-selectbutton .p-button) {
+        border-radius: 10px;
+        border: 1.5px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        font-weight: 500;
+    }
+
+    :deep(.p-selectbutton .p-button.p-highlight) {
+        background: linear-gradient(
+            135deg,
+            var(--primary-color) 0%,
+            color-mix(in srgb, var(--primary-color) 90%, #ff6b9d) 100%
+        );
+        box-shadow:
+            0 4px 12px color-mix(in srgb, var(--primary-color) 35%, rgba(0, 0, 0, 0.2)),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
     }
 }
 
@@ -468,44 +630,295 @@ onMounted(() => {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    margin-top: 2rem;
+    margin-top: 2.5rem;
+    position: relative;
+    z-index: 1;
 }
 
 .create-button {
-    min-width: 150px;
+    min-width: 180px;
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--primary-color) 30%, rgba(0, 0, 0, 0.2)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.create-button::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.4) 0%,
+        transparent 70%
+    );
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    opacity: 0;
+}
+
+.create-button:hover::before {
+    width: 400px;
+    height: 400px;
+    opacity: 1;
+}
+
+.create-button:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+        0 8px 32px color-mix(in srgb, var(--primary-color) 40%, rgba(0, 0, 0, 0.3)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.create-button :deep(.p-button-icon) {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.create-button:hover :deep(.p-button-icon) {
+    transform: scale(1.15) rotate(-5deg);
 }
 
 .invite-section {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    padding: 1rem 0;
+    gap: 2rem;
+    padding: 1.5rem 0;
+    animation: sectionFadeIn 0.5s ease-out;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes sectionFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .invite-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    background: var(--surface-100);
-    border-radius: 8px;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 12%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 8%, var(--surface-0)) 100%
+    );
+    border-radius: 16px;
     color: var(--text-color);
-    font-weight: 500;
+    font-weight: 600;
+    border: 1.5px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--primary-color) 20%, rgba(0, 0, 0, 0.1)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
 
     i {
         color: var(--primary-color);
-        font-size: 1.2rem;
+        font-size: 1.5rem;
+        filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--primary-color) 40%, transparent));
+        animation: iconPulse 2s ease-in-out infinite;
+    }
+}
+
+@keyframes iconPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
     }
 }
 
 .party-select-section {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem;
 
     label {
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text-color);
+        font-size: 0.95rem;
+        letter-spacing: 0.01em;
+    }
+}
+
+.party-search-wrapper {
+    position: relative;
+}
+
+.party-search-wrapper :deep(.p-inputtext) {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 12px;
+    border: 1.5px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--surface-0) 98%, var(--primary-color)) 0%,
+        var(--surface-0) 100%
+    );
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+}
+
+.party-search-wrapper :deep(.p-inputtext:focus) {
+    border-color: var(--primary-color);
+    box-shadow:
+        0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent),
+        0 4px 16px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.1)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-1px);
+}
+
+.party-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--surface-card) 98%, var(--primary-color)) 0%,
+        var(--surface-card) 100%
+    );
+    border: 1.5px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+    border-radius: 12px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    max-height: 250px;
+    overflow-y: auto;
+    z-index: 1000;
+    backdrop-filter: blur(20px);
+    animation: dropdownSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.party-option {
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-bottom: 1px solid color-mix(in srgb, var(--primary-color) 10%, transparent);
+    color: var(--text-color);
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 0;
+        background: linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--primary-color) 20%, transparent) 0%,
+            transparent 100%
+        );
+        transition: width 0.3s;
+    }
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    &:hover {
+        background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--primary-color) 15%, var(--surface-0)) 0%,
+            color-mix(in srgb, var(--primary-color) 8%, var(--surface-0)) 100%
+        );
+        transform: translateX(4px);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--primary-color) 15%, rgba(0, 0, 0, 0.1));
+    }
+
+    &:hover::before {
+        width: 4px;
+    }
+}
+
+.party-loading {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 10;
+}
+
+.selected-party {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 12%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 8%, var(--surface-0)) 100%
+    );
+    border-radius: 12px;
+    margin-top: 0.5rem;
+    border: 1.5px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
+    box-shadow:
+        0 2px 8px color-mix(in srgb, var(--primary-color) 15%, rgba(0, 0, 0, 0.08)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    animation: selectedPartySlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    span {
+        color: var(--text-color);
+        font-weight: 500;
+
+        strong {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+    }
+
+    :deep(.p-button) {
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    :deep(.p-button:hover) {
+        transform: scale(1.1) rotate(90deg);
+    }
+}
+
+@keyframes selectedPartySlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
     }
 }
 
@@ -516,58 +929,67 @@ onMounted(() => {
 }
 
 .add-party-button {
-    min-width: 150px;
-}
-
-.party-search-wrapper {
+    min-width: 180px;
+    padding: 0.875rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 12px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
+    overflow: hidden;
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--primary-color) 30%, rgba(0, 0, 0, 0.2)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.party-dropdown {
+.add-party-button::before {
+    content: '';
     position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: var(--surface-card);
-    border: 1px solid var(--surface-border);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 1000;
-    margin-top: 4px;
-}
-
-.party-option {
-    padding: 0.75rem 1rem;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    border-bottom: 1px solid var(--surface-border);
-
-    &:last-child {
-        border-bottom: none;
-    }
-
-    &:hover {
-        background-color: var(--surface-hover);
-    }
-}
-
-.party-loading {
-    position: absolute;
-    right: 0.75rem;
     top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.4) 0%,
+        transparent 70%
+    );
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    opacity: 0;
 }
 
-.selected-party {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem;
-    background: var(--surface-100);
-    border-radius: 6px;
-    margin-top: 0.5rem;
+.add-party-button:hover::before {
+    width: 400px;
+    height: 400px;
+    opacity: 1;
+}
+
+.add-party-button:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+        0 8px 32px color-mix(in srgb, var(--primary-color) 40%, rgba(0, 0, 0, 0.3)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.add-party-button :deep(.p-button-icon) {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.add-party-button:hover:not(:disabled) :deep(.p-button-icon) {
+    transform: scale(1.15) rotate(-5deg);
+}
+
+.invite-actions :deep(.p-button-outlined) {
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 0.875rem 2rem;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.invite-actions :deep(.p-button-outlined:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 </style>

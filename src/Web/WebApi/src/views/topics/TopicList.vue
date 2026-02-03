@@ -409,7 +409,12 @@ onMounted(async () => {
             </div>
 
             <div v-else class="topic-items">
-                <div v-for="(topic, index) in filteredTopics" :key="`topic-${topic.id}-${index}`" class="topic-item">
+                <div
+                    v-for="(topic, index) in filteredTopics"
+                    :key="`topic-${topic.id}-${index}`"
+                    class="topic-item"
+                    :style="{ '--delay': `${index * 0.05}s` }"
+                >
                     <div class="topic-content">
                         <h3 class="topic-title">{{ topic.title }}</h3>
                         <div class="topic-meta">
@@ -480,7 +485,7 @@ onMounted(async () => {
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .topic-list-container {
     padding: 2rem;
     max-width: 1200px;
@@ -568,22 +573,121 @@ onMounted(async () => {
 }
 
 .topic-item {
+    position: relative;
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
-    background: var(--surface-0);
-    border: 2px solid var(--primary-color);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 2rem;
+    background: linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--surface-0) 98%, var(--primary-color)) 0%,
+        var(--surface-0) 50%,
+        color-mix(in srgb, var(--surface-0) 95%, var(--primary-color)) 100%
+    );
+    border: 1.5px solid color-mix(in srgb, var(--primary-color) 12%, transparent);
+    border-radius: 24px;
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.08),
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.02);
     transition:
-        box-shadow 0.2s,
-        transform 0.2s;
+        all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
     height: 100%;
+    overflow: hidden;
+    backdrop-filter: blur(20px) saturate(180%);
+    animation: cardFadeIn 0.6s ease-out var(--delay, 0s) both;
+    will-change: transform;
+}
+
+.topic-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--primary-color) 20%,
+        color-mix(in srgb, var(--primary-color) 90%, #ff6b9d) 50%,
+        var(--primary-color) 80%,
+        transparent 100%
+    );
+    background-size: 300% 100%;
+    animation: shimmer 4s ease-in-out infinite;
+    opacity: 0.9;
+    border-radius: 24px 24px 0 0;
+    filter: blur(1px);
+}
+
+.topic-item::after {
+    content: '';
+    position: absolute;
+    top: -100%;
+    left: -100%;
+    width: 300%;
+    height: 300%;
+    background: radial-gradient(
+        circle at center,
+        color-mix(in srgb, var(--primary-color) 18%, transparent) 0%,
+        color-mix(in srgb, var(--primary-color) 8%, transparent) 40%,
+        transparent 70%
+    );
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    border-radius: 50%;
 }
 
 .topic-item:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    transform: translateY(-2px);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow:
+        0 20px 60px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.25)),
+        0 8px 24px color-mix(in srgb, var(--primary-color) 15%, rgba(0, 0, 0, 0.15)),
+        0 0 0 1.5px var(--primary-color),
+        0 0 40px color-mix(in srgb, var(--primary-color) 35%, transparent),
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+    border-color: color-mix(in srgb, var(--primary-color) 60%, transparent);
+}
+
+.topic-item:hover::after {
+    opacity: 0.6;
+    animation: pulseGlow 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.4;
+    }
 }
 
 .topic-content {
@@ -594,58 +698,230 @@ onMounted(async () => {
 }
 
 .topic-title {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.25rem;
-    font-weight: 600;
+    position: relative;
+    margin: 0 0 1rem 0;
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
     color: var(--text-color);
+    background: linear-gradient(
+        135deg,
+        var(--text-color) 0%,
+        color-mix(in srgb, var(--primary-color) 25%, var(--text-color)) 50%,
+        var(--text-color) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.topic-item:hover .topic-title {
+    background: linear-gradient(
+        135deg,
+        var(--primary-color) 0%,
+        color-mix(in srgb, var(--primary-color) 90%, #ff6b9d) 50%,
+        var(--primary-color) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--primary-color) 40%, transparent));
+    transform: translateX(2px);
 }
 
 .topic-meta {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     flex-wrap: wrap;
     font-size: 0.875rem;
     color: var(--surface-500);
+    z-index: 1;
+    margin-bottom: 0.5rem;
 }
 
 .topic-meta span {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 8%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 12%, var(--surface-0)) 100%
+    );
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--primary-color) 18%, transparent);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    backdrop-filter: blur(12px) saturate(180%);
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+.topic-meta span::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    transition: left 0.5s;
+}
+
+.topic-meta span i {
+    color: var(--primary-color);
+    font-size: 0.8rem;
+    filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--primary-color) 50%, transparent));
+    transition: transform 0.3s;
+}
+
+.topic-item:hover .topic-meta span {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 18%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 25%, var(--surface-0)) 100%
+    );
+    border-color: color-mix(in srgb, var(--primary-color) 45%, transparent);
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.1)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px) scale(1.05);
+}
+
+.topic-item:hover .topic-meta span::before {
+    left: 100%;
+}
+
+.topic-item:hover .topic-meta span i {
+    transform: scale(1.2) rotate(5deg);
 }
 
 .topic-comments {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--surface-200);
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1.5px solid color-mix(in srgb, var(--primary-color) 10%, var(--surface-200));
+    position: relative;
+    z-index: 1;
+}
+
+.topic-comments::before {
+    content: '';
+    position: absolute;
+    top: -1.5px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--primary-color) 20%,
+        color-mix(in srgb, var(--primary-color) 80%, #ff6b9d) 50%,
+        var(--primary-color) 80%,
+        transparent 100%
+    );
+    opacity: 0.5;
+    border-radius: 2px;
 }
 
 .comment-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
     font-weight: 600;
     color: var(--text-color);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     cursor: pointer;
     user-select: none;
-    padding: 0.5rem;
-    border-radius: 4px;
-    transition: background-color 0.2s;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 10%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 6%, var(--surface-0)) 100%
+    );
+    border: 1.5px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.comment-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in srgb, var(--primary-color) 25%, rgba(255, 255, 255, 0.3)),
+        transparent
+    );
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .comment-header:hover {
-    background-color: var(--surface-100);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 18%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 12%, var(--surface-0)) 100%
+    );
+    border-color: color-mix(in srgb, var(--primary-color) 40%, transparent);
+    box-shadow:
+        0 4px 16px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.1)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: translateX(4px) scale(1.02);
+}
+
+.comment-header:hover::before {
+    left: 100%;
 }
 
 .comment-toggle-icon {
     margin-left: auto;
-    transition: transform 0.2s;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    color: var(--primary-color);
+    filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--primary-color) 40%, transparent));
+}
+
+.comment-header:hover .comment-toggle-icon {
+    transform: scale(1.15) rotate(180deg);
 }
 
 .comment-count {
     color: var(--primary-color);
+    font-weight: 700;
+    text-shadow: 0 2px 4px color-mix(in srgb, var(--primary-color) 30%, transparent);
+    letter-spacing: 0.02em;
+}
+
+.comment-header i:first-child {
+    color: var(--primary-color);
+    filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--primary-color) 50%, transparent));
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    font-size: 1rem;
+}
+
+.comment-header:hover i:first-child {
+    transform: scale(1.2) rotate(-5deg);
 }
 
 .comment-list {
@@ -655,10 +931,70 @@ onMounted(async () => {
 }
 
 .comment-item {
-    background: var(--surface-50);
-    padding: 0.75rem;
-    border-radius: 6px;
-    border-left: 3px solid var(--primary-color);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 6%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 3%, var(--surface-50)) 50%,
+        var(--surface-50) 100%
+    );
+    padding: 1rem 1rem 1rem 1.25rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    box-shadow:
+        0 3px 12px color-mix(in srgb, var(--primary-color) 12%, rgba(0, 0, 0, 0.06)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+}
+
+.comment-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(
+        180deg,
+        var(--primary-color) 0%,
+        color-mix(in srgb, var(--primary-color) 80%, #ff6b9d) 50%,
+        var(--primary-color) 100%
+    );
+    box-shadow:
+        0 0 12px color-mix(in srgb, var(--primary-color) 60%, transparent),
+        inset -1px 0 4px rgba(255, 255, 255, 0.3);
+    border-radius: 0 2px 2px 0;
+}
+
+.comment-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        transparent 0%,
+        color-mix(in srgb, var(--primary-color) 5%, transparent) 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.comment-item:hover {
+    transform: translateX(6px) translateY(-2px);
+    box-shadow:
+        0 6px 20px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.12)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    border-left-width: 5px;
+}
+
+.comment-item:hover::after {
+    opacity: 1;
 }
 
 .comment-content {
@@ -676,16 +1012,46 @@ onMounted(async () => {
 }
 
 .comment-author {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.5rem;
     font-weight: 600;
     font-size: 0.875rem;
     color: var(--primary-color);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 12%, transparent) 0%,
+        color-mix(in srgb, var(--primary-color) 8%, transparent) 100%
+    );
+    padding: 0.375rem 0.75rem;
+    border-radius: 10px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    backdrop-filter: blur(8px);
 }
 
 .comment-author i {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+    filter: drop-shadow(0 1px 3px color-mix(in srgb, var(--primary-color) 50%, transparent));
+    transition: transform 0.3s;
+}
+
+.comment-item:hover .comment-author {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 18%, transparent) 0%,
+        color-mix(in srgb, var(--primary-color) 12%, transparent) 100%
+    );
+    border-color: color-mix(in srgb, var(--primary-color) 35%, transparent);
+    box-shadow:
+        0 3px 8px color-mix(in srgb, var(--primary-color) 20%, rgba(0, 0, 0, 0.08)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+.comment-item:hover .comment-author i {
+    transform: scale(1.15) rotate(5deg);
 }
 
 .comment-text {
@@ -737,11 +1103,109 @@ onMounted(async () => {
 .topic-actions {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
     flex-shrink: 0;
     margin-top: auto;
-    padding-top: 1rem;
-    border-top: 1px solid var(--surface-200);
+    padding-top: 1.5rem;
+    border-top: 1.5px solid color-mix(in srgb, var(--primary-color) 10%, var(--surface-200));
+    position: relative;
+    z-index: 1;
+}
+
+.topic-actions::before {
+    content: '';
+    position: absolute;
+    top: -1.5px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        var(--primary-color) 20%,
+        color-mix(in srgb, var(--primary-color) 80%, #ff6b9d) 50%,
+        var(--primary-color) 80%,
+        transparent 100%
+    );
+    opacity: 0.5;
+    border-radius: 2px;
+}
+
+.topic-actions :deep(.p-button) {
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: 12px;
+    font-weight: 600;
+    position: relative;
+    overflow: hidden;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.01em;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.topic-actions :deep(.p-button::before) {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--primary-color) 40%, rgba(255, 255, 255, 0.3)) 0%,
+        transparent 70%
+    );
+    transform: translate(-50%, -50%);
+    transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1), height 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+}
+
+.topic-actions :deep(.p-button:hover::before) {
+    width: 400px;
+    height: 400px;
+    opacity: 0.8;
+}
+
+.topic-actions :deep(.p-button:hover) {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow:
+        0 8px 24px color-mix(in srgb, var(--primary-color) 35%, rgba(0, 0, 0, 0.25)),
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.topic-actions :deep(.p-button-outlined) {
+    border-width: 2px;
+    border-color: var(--primary-color);
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 5%, var(--surface-0)) 0%,
+        var(--surface-0) 100%
+    );
+}
+
+.topic-actions :deep(.p-button-outlined:hover) {
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 15%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 8%, var(--surface-0)) 100%
+    );
+    border-color: color-mix(in srgb, var(--primary-color) 80%, transparent);
+    box-shadow:
+        0 0 30px color-mix(in srgb, var(--primary-color) 45%, transparent),
+        0 8px 24px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.2)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.topic-actions :deep(.p-button i) {
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.topic-actions :deep(.p-button:hover i) {
+    transform: scale(1.15) rotate(-5deg);
 }
 
 .comment-dialog-content {

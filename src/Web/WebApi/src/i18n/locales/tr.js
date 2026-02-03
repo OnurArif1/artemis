@@ -60,6 +60,8 @@ export default {
         createError: 'Konu oluşturulurken hata oluştu',
         roomCreated: 'Oda başarıyla oluşturuldu',
         roomCreateError: 'Oda oluşturulurken hata oluştu',
+        geolocationNotSupported: 'Konum servisi desteklenmiyor',
+        locationNotAvailable: 'Konum bilgisi alınamadı',
         searchPlaceholder: 'Konu başlığına göre ara...',
         noResults: 'Arama sonucu bulunamadı',
         noTopics: 'Henüz topic bulunmuyor',
@@ -105,6 +107,7 @@ export default {
         addParty: 'Ekle',
         partyAdded: 'Kişi başarıyla eklendi',
         partyAddError: 'Kişi eklenirken hata oluştu',
+        partySearchError: 'Kişi aranırken hata oluştu',
         noPartySelected: 'Lütfen bir kişi seçin'
     },
     dashboard: {

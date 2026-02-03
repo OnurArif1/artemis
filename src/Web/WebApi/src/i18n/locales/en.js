@@ -59,6 +59,8 @@ export default {
         createError: 'Error occurred while creating topic',
         roomCreated: 'Room created successfully',
         roomCreateError: 'Error occurred while creating room',
+        geolocationNotSupported: 'Geolocation is not supported',
+        locationNotAvailable: 'Location information could not be retrieved',
         searchPlaceholder: 'Search by topic title...',
         noResults: 'No search results found',
         noTopics: 'No topics yet',
@@ -104,6 +106,7 @@ export default {
         addParty: 'Add',
         partyAdded: 'Person added successfully',
         partyAddError: 'Error occurred while adding person',
+        partySearchError: 'Error occurred while searching for person',
         noPartySelected: 'Please select a person'
     },
     dashboard: {
