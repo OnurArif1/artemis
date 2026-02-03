@@ -171,13 +171,39 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
     }
 
     // Seed Clients
-    if (!configContext.Clients.Any())
+    var existingClient = await configContext.Clients.FirstOrDefaultAsync(c => c.ClientId == "artemis.client");
+    if (existingClient == null)
     {
         foreach (var client in IdentityConfiguration.Clients)
         {
             configContext.Clients.Add(client.ToEntity());
         }
         await configContext.SaveChangesAsync();
+    }
+    else
+    {
+        // Mevcut client'ın CORS origin'lerini güncelle
+        var configClient = IdentityConfiguration.Clients.FirstOrDefault(c => c.ClientId == "artemis.client");
+        if (configClient != null && configClient.AllowedCorsOrigins != null)
+        {
+            // Mevcut CORS origin'lerini temizle
+            var existingCorsOrigins = configContext.Set<Duende.IdentityServer.EntityFramework.Entities.ClientCorsOrigin>()
+                .Where(c => c.ClientId == existingClient.Id)
+                .ToList();
+            configContext.Set<Duende.IdentityServer.EntityFramework.Entities.ClientCorsOrigin>().RemoveRange(existingCorsOrigins);
+            
+            // Yeni CORS origin'lerini ekle
+            foreach (var origin in configClient.AllowedCorsOrigins)
+            {
+                configContext.Set<Duende.IdentityServer.EntityFramework.Entities.ClientCorsOrigin>().Add(
+                    new Duende.IdentityServer.EntityFramework.Entities.ClientCorsOrigin
+                    {
+                        ClientId = existingClient.Id,
+                        Origin = origin
+                    });
+            }
+            await configContext.SaveChangesAsync();
+        }
     }
 
     // Seed Roles

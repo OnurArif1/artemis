@@ -20,6 +20,7 @@ export default {
         home: 'Ana Sayfa',
         dashboard: 'Gösterge Paneli',
         rooms: 'Odalar',
+        topics: 'Topicler',
         account: 'Hesap',
         logout: 'Çıkış Yap',
         login: 'Giriş Yap',

@@ -39,7 +39,18 @@ export default {
         public: 'Public',
         private: 'Private',
         operations: 'Operations',
-        openChat: 'Open Chat'
+        openChat: 'Open Chat',
+        dashboard: 'Dashboard',
+        rooms: 'Rooms',
+        topics: 'Topics',
+        parties: 'Parties',
+        categories: 'Categories',
+        messages: 'Messages',
+        mentions: 'Mentions',
+        hashtags: 'Hashtags',
+        home: 'Home',
+        account: 'Account',
+        logout: 'Logout'
     },
     room: {
         title: 'Rooms',

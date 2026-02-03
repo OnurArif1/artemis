@@ -19,6 +19,11 @@ const router = createRouter({
                     path: '/odalar',
                     name: 'rooms',
                     component: () => import('@/views/rooms/RoomMap.vue')
+                },
+                {
+                    path: '/topicler',
+                    name: 'topics',
+                    component: () => import('@/views/topics/TopicList.vue')
                 }
             ]
         },

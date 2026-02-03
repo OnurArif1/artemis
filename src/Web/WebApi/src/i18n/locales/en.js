@@ -20,6 +20,7 @@ export default {
         home: 'Home',
         dashboard: 'Dashboard',
         rooms: 'Rooms',
+        topics: 'Topics',
         account: 'Account',
         logout: 'Logout',
         login: 'Login',

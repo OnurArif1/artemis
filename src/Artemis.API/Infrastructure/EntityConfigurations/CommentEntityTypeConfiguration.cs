@@ -14,6 +14,7 @@ public class CommentEntityTypeConfiguration : IEntityTypeConfiguration<Comment>
         builder.Property(c => c.Id).UseHiLo("Comment_hilo").IsRequired();
         builder.Property(c => c.TopicId);
         builder.Property(c => c.PartyId);
+        builder.Property(c => c.Content);
         builder.Property(c => c.Upvote);
         builder.Property(c => c.Downvote);
 

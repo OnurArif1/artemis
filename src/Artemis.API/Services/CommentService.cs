@@ -18,9 +18,16 @@ public class CommentService : ICommentService
 
     public async ValueTask<CommentListViewModel> GetList(CommentFilterViewModel filterViewModel)
     {
-        var count = await query.CountAsync();
+        var baseQuery = query;
 
-        var comments = await query.OrderByDescending(i => i.CreateDate)
+        if (filterViewModel.TopicId.HasValue && filterViewModel.TopicId.Value > 0)
+        {
+            baseQuery = baseQuery.Where(c => c.TopicId == filterViewModel.TopicId.Value);
+        }
+
+        var count = await baseQuery.CountAsync();
+
+        var comments = await baseQuery.OrderByDescending(i => i.CreateDate)
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
             .Take(filterViewModel.PageSize)
             .Select(r => new CommentResultViewModel
@@ -28,6 +35,7 @@ public class CommentService : ICommentService
                 Id = r.Id,
                 TopicId = r.TopicId,
                 PartyId = r.PartyId,
+                Content = r.Content,
                 Upvote = r.Upvote,
                 Downvote = r.Downvote,
                 LastUpdateDate = r.LastUpdateDate,
@@ -85,15 +93,18 @@ public class CommentService : ICommentService
             return resultViewModel;
         }
 
+        var now = DateTime.UtcNow;
         await _artemisDbContext.Comments.AddAsync(new Comment()
         {
             TopicId = viewModel.TopicId,
             PartyId = viewModel.PartyId,
+            Content = viewModel.Content,
             Upvote = viewModel.Upvote,
             Downvote = viewModel.Downvote,
-            LastUpdateDate = DateTime.UtcNow
+            LastUpdateDate = now,
+            CreateDate = now
         });
-        _artemisDbContext.SaveChanges();
+        await _artemisDbContext.SaveChangesAsync();
 
         resultViewModel.IsSuccess = true;
         return resultViewModel;
@@ -121,6 +132,9 @@ public class CommentService : ICommentService
 
             if (comment.PartyId != viewModel.PartyId)
                 comment.PartyId = viewModel.PartyId;
+
+            if (comment.Content != viewModel.Content)
+                comment.Content = viewModel.Content;
 
             if (comment.Upvote != viewModel.Upvote)
                 comment.Upvote = viewModel.Upvote;

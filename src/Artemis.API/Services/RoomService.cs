@@ -86,6 +86,11 @@ public class RoomService : IRoomService
             baseQuery = baseQuery.Where(x => x.Title.Contains(filterViewModel.Title));
         }
 
+        if (filterViewModel.TopicId.HasValue && filterViewModel.TopicId.Value > 0)
+        {
+            baseQuery = baseQuery.Where(x => x.TopicId == filterViewModel.TopicId.Value);
+        }
+
         var count = await baseQuery.CountAsync();
 
         var query = baseQuery.Include(r => r.Parties).Include(r => r.Category).Include(r => r.Topic);

@@ -11,6 +11,7 @@ public class CommentResultViewModel
     public int Id { get; set; }
     public int TopicId { get; set; }
     public int PartyId { get; set; }
+    public string? Content { get; set; }
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime LastUpdateDate { get; set; }

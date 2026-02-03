@@ -19,6 +19,7 @@ builder.Services.AddScoped<ICategoryHashtagMapService, CategoryHashtagMapService
 builder.Services.AddScoped<ITopicHashtagMapService, TopicHashtagMapService>();
 builder.Services.AddScoped<IMentionService, MentionService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 

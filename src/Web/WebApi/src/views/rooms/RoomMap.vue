@@ -1,10 +1,12 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useI18n } from '@/composables/useI18n';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import Chat from '@/views/chat/Chat.vue';
 
+const route = useRoute();
 const roomService = new RoomService(request);
 const { t } = useI18n();
 const mapContainer = ref(null);
@@ -83,6 +85,29 @@ onMounted(async () => {
                 };
                 showChatDialog.value = true;
             });
+        }
+
+        // Query parametresinden roomId varsa ilgili room'u aç
+        const roomIdFromQuery = route.query.roomId;
+        if (roomIdFromQuery) {
+            const roomIdNum = parseInt(roomIdFromQuery);
+            if (!isNaN(roomIdNum)) {
+                const targetRoom = rooms.find(r => (r.id ?? r.Id) === roomIdNum);
+                if (targetRoom) {
+                    selectedRoom.value = {
+                        id: roomIdNum,
+                        title: targetRoom.title ?? targetRoom.Title ?? `Oda #${roomIdNum}`
+                    };
+                    showChatDialog.value = true;
+                    
+                    // Map'i room'un konumuna odakla
+                    const roomLat = Number(targetRoom.locationY ?? targetRoom.LocationY);
+                    const roomLng = Number(targetRoom.locationX ?? targetRoom.LocationX);
+                    if (!Number.isNaN(roomLat) && !Number.isNaN(roomLng)) {
+                        map.setView([roomLat, roomLng], 15);
+                    }
+                }
+            }
         }
 
         if (validCoords.length > 0) {
