@@ -1,10 +1,12 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
+import { useI18n } from '@/composables/useI18n';
 import axios from 'axios';
 
+const { t } = useI18n();
 const email = ref('');
 const password = ref('');
 const loading = ref(false);
@@ -21,15 +23,15 @@ const registerPartyType = ref(1); // 0=None, 1=Person, 2=Organization
 const registerError = ref('');
 const registerLoading = ref(false);
 
-const partyTypeOptions = [
-    { label: 'Yok', value: 0 },
-    { label: 'Kişi', value: 1 },
-    { label: 'Organizasyon', value: 2 }
-];
+const partyTypeOptions = computed(() => [
+    { label: t('auth.partyTypeNone'), value: 0 },
+    { label: t('auth.partyTypePerson'), value: 1 },
+    { label: t('auth.partyTypeOrganization'), value: 2 }
+]);
 
 function getLoginError(err) {
     const d = err?.response?.data;
-    if (!d) return 'Email ya da şifre hatalı.';
+    if (!d) return t('auth.emailPasswordError');
     const o =
         typeof d === 'string'
             ? (() => {
@@ -40,8 +42,8 @@ function getLoginError(err) {
                   }
               })()
             : d;
-    if (o.error === 'invalid_grant') return 'Email ya da şifre hatalı.';
-    return o.error_description || o.error || 'Email ya da şifre hatalı.';
+    if (o.error === 'invalid_grant') return t('auth.emailPasswordError');
+    return o.error_description || o.error || t('auth.emailPasswordError');
 }
 
 async function onLogin() {
@@ -49,7 +51,7 @@ async function onLogin() {
     const e = (email.value || '').trim();
     const p = password.value || '';
     if (!e || !p) {
-        errorMsg.value = 'E-posta ve şifre gerekli.';
+        errorMsg.value = t('auth.emailPasswordRequired');
         return;
     }
     loading.value = true;
@@ -106,19 +108,19 @@ async function onRegister() {
     const p = registerPassword.value || '';
     const p2 = registerPasswordAgain.value || '';
     if (!e) {
-        registerError.value = 'E-posta gerekli.';
+        registerError.value = t('auth.emailRequired');
         return;
     }
     if (!p) {
-        registerError.value = 'Şifre gerekli.';
+        registerError.value = t('auth.passwordRequired');
         return;
     }
     if (p !== p2) {
-        registerError.value = 'Şifreler eşleşmiyor.';
+        registerError.value = t('auth.passwordsNotMatch');
         return;
     }
     if (p.length < 6) {
-        registerError.value = 'Şifre en az 6 karakter olmalı.';
+        registerError.value = t('auth.passwordMinLength');
         return;
     }
     registerLoading.value = true;
@@ -126,8 +128,8 @@ async function onRegister() {
         await axios.post('/identity/account/register', { email: e, password: p, partyType: registerPartyType.value }, { headers: { 'Content-Type': 'application/json' } });
         toast.add({
             severity: 'success',
-            summary: 'Hesap oluşturuldu',
-            detail: 'Giriş yapabilirsiniz.',
+            summary: t('auth.accountCreated'),
+            detail: t('auth.accountCreatedDetail'),
             life: 4000
         });
         closeRegister();
@@ -139,7 +141,7 @@ async function onRegister() {
             msg = Array.isArray(first) ? first[0] : first;
         }
         if (!msg && typeof d === 'string') msg = d;
-        registerError.value = msg || 'Kayıt yapılamadı.';
+        registerError.value = msg || t('auth.registerFailed');
     } finally {
         registerLoading.value = false;
     }
@@ -155,38 +157,47 @@ async function onRegister() {
                         <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Artemis WebApi</div>
                     </div>
                     <div>
-                        <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2"> E-posta </label>
-                        <InputText id="email1" type="text" placeholder="E-posta adresi" class="w-full md:w-[30rem] mb-8" v-model="email" />
-                        <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2"> Şifre </label>
-                        <Password id="password1" v-model="password" placeholder="Şifre" :toggle-mask="true" class="mb-4" fluid :feedback="false" />
+                        <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2"> {{ t('auth.email') }} </label>
+                        <InputText id="email1" type="text" :placeholder="t('auth.emailPlaceholder')" class="w-full md:w-[30rem] mb-8" v-model="email" />
+                        <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2"> {{ t('auth.password') }} </label>
+                        <Password id="password1" v-model="password" :placeholder="t('auth.passwordPlaceholder')" :toggle-mask="true" class="mb-4" fluid :feedback="false" />
                         <div v-if="errorMsg" class="mb-4">
                             <small class="text-red-500">{{ errorMsg }}</small>
                         </div>
                         <div class="mt-4 flex flex-col gap-3">
-                            <Button label="Giriş Yap" class="w-full" :loading="loading" @click="onLogin" />
-                            <Button label="Yeni kişi oluştur" severity="secondary" class="w-full" outlined @click="openRegister" />
+                            <Button :label="t('auth.login')" class="w-full" :loading="loading" @click="onLogin" />
+                            <Button :label="t('auth.createAccount')" severity="secondary" class="w-full" outlined @click="openRegister" />
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <Dialog :visible="showRegisterDialog" header="Yeni kişi oluştur" @update:visible="(v) => (showRegisterDialog = v)" modal :style="{ width: '28rem' }" :closable="!registerLoading" :close-on-escape="!registerLoading" @hide="closeRegister">
+        <Dialog
+            :visible="showRegisterDialog"
+            :header="t('auth.createAccountTitle')"
+            @update:visible="(v) => (showRegisterDialog = v)"
+            modal
+            :style="{ width: '28rem' }"
+            :closable="!registerLoading"
+            :close-on-escape="!registerLoading"
+            @hide="closeRegister"
+        >
             <div class="flex flex-col gap-4">
                 <div>
-                    <label for="reg-email" class="block font-medium mb-2">E-posta</label>
-                    <InputText id="reg-email" v-model="registerEmail" type="email" placeholder="E-posta adresi" class="w-full" />
+                    <label for="reg-email" class="block font-medium mb-2">{{ t('auth.email') }}</label>
+                    <InputText id="reg-email" v-model="registerEmail" type="email" :placeholder="t('auth.emailPlaceholder')" class="w-full" />
                 </div>
                 <div>
-                    <label for="reg-pw" class="block font-medium mb-2">Şifre</label>
-                    <Password id="reg-pw" v-model="registerPassword" placeholder="En az 6 karakter; büyük, küçük harf ve rakam" :toggle-mask="true" fluid :feedback="true" />
+                    <label for="reg-pw" class="block font-medium mb-2">{{ t('auth.password') }}</label>
+                    <Password id="reg-pw" v-model="registerPassword" :placeholder="t('auth.passwordHint')" :toggle-mask="true" fluid :feedback="true" />
                 </div>
                 <div>
-                    <label for="reg-pw2" class="block font-medium mb-2">Şifre (tekrar)</label>
-                    <Password id="reg-pw2" v-model="registerPasswordAgain" placeholder="Şifreyi tekrar girin" :toggle-mask="true" fluid :feedback="false" />
+                    <label for="reg-pw2" class="block font-medium mb-2">{{ t('auth.password') }} ({{ t('auth.passwordRepeat') }})</label>
+                    <Password id="reg-pw2" v-model="registerPasswordAgain" :placeholder="t('auth.passwordRepeatPlaceholder')" :toggle-mask="true" fluid :feedback="false" />
                 </div>
                 <div>
-                    <label for="reg-party-type" class="block font-medium mb-2">Tip</label>
+                    <label for="reg-party-type" class="block font-medium mb-2">{{ t('auth.type') }}</label>
                     <SelectButton id="reg-party-type" v-model="registerPartyType" :options="partyTypeOptions" option-label="label" option-value="value" aria-labelledby="reg-party-type" />
                 </div>
                 <div v-if="registerError" class="text-red-500 text-sm">
@@ -194,8 +205,8 @@ async function onRegister() {
                 </div>
             </div>
             <template #footer>
-                <Button label="İptal" severity="secondary" outlined @click="closeRegister" :disabled="registerLoading" />
-                <Button label="Oluştur" :loading="registerLoading" @click="onRegister" />
+                <Button :label="t('auth.cancel')" severity="secondary" outlined @click="closeRegister" :disabled="registerLoading" />
+                <Button :label="t('auth.create')" :loading="registerLoading" @click="onRegister" />
             </template>
         </Dialog>
 

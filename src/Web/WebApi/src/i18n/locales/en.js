@@ -34,6 +34,68 @@ export default {
         noDataFound: 'No data found',
         success: 'Success',
         error: 'Error',
-        required: 'Required'
+        required: 'Required',
+        warning: 'Warning',
+        info: 'Info'
+    },
+    topic: {
+        list: 'Topic List',
+        searchPlaceholder: 'Search by topic title...',
+        noResults: 'No search results found',
+        noTopics: 'No topics yet',
+        comments: 'Comments',
+        makeComment: 'Make Comment',
+        goToRoom: 'Go to Room',
+        commentDialogTitle: 'Make Comment',
+        commentLabel: 'Comment:',
+        commentPlaceholder: 'Write your comment here...',
+        commentTextRequired: 'Please enter comment text',
+        commentAdded: 'Comment added successfully',
+        commentError: 'An error occurred while adding comment',
+        noRoomForTopic: 'No room has been created for this topic yet',
+        roomNotFound: 'Room not found',
+        listLoadError: 'Failed to load topic list',
+        noCommentText: '(No comment text)',
+        commentsLoading: 'Loading comments...',
+        userInfoNotFound: 'User information not found',
+        partyPrefix: 'Party #'
+    },
+    room: {
+        prefix: 'Room #',
+        leafletLoadError: 'Leaflet could not be loaded. Please refresh the page.'
+    },
+    dashboard: {
+        description: 'Artemis WebApi – Dashboard. Future features will be added here.'
+    },
+    auth: {
+        email: 'Email',
+        password: 'Password',
+        emailPlaceholder: 'Email address',
+        passwordPlaceholder: 'Password',
+        login: 'Login',
+        emailPasswordRequired: 'Email and password are required.',
+        emailPasswordError: 'Email or password is incorrect.',
+        createAccount: 'Create new account',
+        createAccountTitle: 'Create new account',
+        emailRequired: 'Email is required.',
+        passwordRequired: 'Password is required.',
+        passwordsNotMatch: 'Passwords do not match.',
+        passwordMinLength: 'Password must be at least 6 characters.',
+        passwordRepeatPlaceholder: 'Re-enter password',
+        passwordRepeat: 'repeat',
+        passwordHint: 'At least 6 characters; uppercase, lowercase and numbers',
+        type: 'Type',
+        partyTypeNone: 'None',
+        partyTypePerson: 'Person',
+        partyTypeOrganization: 'Organization',
+        accountCreated: 'Account created',
+        accountCreatedDetail: 'You can now login.',
+        registerFailed: 'Registration failed.',
+        cancel: 'Cancel',
+        create: 'Create'
+    },
+    language: {
+        turkish: 'Türkçe',
+        english: 'English'
     }
 };

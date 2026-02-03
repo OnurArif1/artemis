@@ -9,7 +9,7 @@ const { t } = useI18n();
         <div class="col-12">
             <div class="card">
                 <h5>{{ t('common.dashboard') }}</h5>
-                <p>Artemis WebApi – Gösterge paneli. Buraya sonraki özellikler eklenecek.</p>
+                <p>{{ t('dashboard.description') }}</p>
             </div>
         </div>
     </div>

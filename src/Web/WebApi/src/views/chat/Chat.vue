@@ -113,7 +113,6 @@ const loadMessages = async () => {
             });
         }
     } catch (error) {
-        console.error(t('chat.errorLoadingMessages') + ':', error);
     }
 };
 
@@ -121,7 +120,6 @@ const getCurrentUserPartyId = async () => {
     try {
         const token = authStore.token || localStorage.getItem('auth.token');
         if (!token) {
-            console.error('No token found');
             return null;
         }
 
@@ -189,7 +187,6 @@ const ensureUserInRoom = async () => {
                         });
                         return true;
                     } catch (error) {
-                        console.error('Error adding party to room:', error);
                         throw error;
                     }
                 }
@@ -241,7 +238,6 @@ const loadRoomInfo = async () => {
             roomTitle.value = `Room ${roomId.value}`;
         }
     } catch (error) {
-        console.error(t('chat.errorLoadingRoom') + ':', error);
         roomTitle.value = `Room ${roomId.value}`;
     }
 };
@@ -313,7 +309,6 @@ onMounted(async () => {
             alert(errorMessage);
         });
     } catch (error) {
-        console.error(t('chat.connectionErrorTitle') + ':', error);
         connectionError.value = true;
     }
 });

@@ -13,7 +13,7 @@ import PartyService from '@/service/PartyService';
 import { useLayout } from '@/layout/composables/layout';
 
 const router = useRouter();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const toast = useToast();
 const authStore = useAuthStore();
 const { setActiveMenuItem } = useLayout();
@@ -30,9 +30,9 @@ const pageIndex = ref(1);
 const pageSize = ref(20);
 const totalRecords = ref(0);
 const loading = ref(false);
-const roomsMap = ref(new Map()); // topicId -> room mapping
-const commentsMap = ref(new Map()); // topicId -> comments array mapping
-const expandedComments = ref(new Set()); // topicId -> expanded state
+const roomsMap = ref(new Map());
+const commentsMap = ref(new Map());
+const expandedStates = ref({});
 
 const showCommentDialog = ref(false);
 const selectedTopic = ref(null);
@@ -41,18 +41,13 @@ const currentPartyId = ref(null);
 
 async function loadRooms() {
     try {
-        // Tüm room'ları yükle (topicId ile filtreleme için)
         const roomData = await roomService.getList({
             pageIndex: 1,
-            pageSize: 1000 // Tüm room'ları almak için büyük bir sayı
+            pageSize: 1000
         });
-        const rooms = Array.isArray(roomData.resultViewModels) 
-            ? roomData.resultViewModels 
-            : (roomData?.resultViewModels ?? []);
-        
-        // TopicId'ye göre room'ları map'le
+        const rooms = Array.isArray(roomData.resultViewModels) ? roomData.resultViewModels : (roomData?.resultViewModels ?? []);
         roomsMap.value.clear();
-        rooms.forEach(room => {
+        rooms.forEach((room) => {
             if (room.topicId) {
                 if (!roomsMap.value.has(room.topicId)) {
                     roomsMap.value.set(room.topicId, []);
@@ -61,42 +56,33 @@ async function loadRooms() {
             }
         });
     } catch (err) {
-        console.error('Room list load error:', err);
     }
 }
 
 async function loadCommentsForTopics(topicIds) {
     try {
         if (!topicIds || topicIds.length === 0) return;
-        
-        // Her topic için comment'leri yükle
+
         const commentPromises = topicIds.map(async (topicId) => {
             try {
                 const commentData = await commentService.getList({
                     pageIndex: 1,
-                    pageSize: 100, // Tüm yorumları almak için büyük sayı
+                    pageSize: 100,
                     topicId: topicId
                 });
-                const comments = Array.isArray(commentData.resultViewModels) 
-                    ? commentData.resultViewModels 
-                    : (commentData?.resultViewModels ?? []);
-                
-                // Count'u doğru al - sadece bu topic için olan comment sayısı
+                const comments = Array.isArray(commentData.resultViewModels) ? commentData.resultViewModels : (commentData?.resultViewModels ?? []);
+
                 const actualCount = commentData?.count || comments.length;
-                
-                console.log(`Topic ${topicId} - Comments loaded:`, comments.length, 'Count:', actualCount);
-                
+
                 return { topicId, comments, count: actualCount };
             } catch (err) {
-                console.error(`Error loading comments for topic ${topicId}:`, err);
                 return { topicId, comments: [], count: 0 };
             }
         });
-        
+
         const results = await Promise.all(commentPromises);
         commentsMap.value.clear();
         results.forEach(({ topicId, comments, count }) => {
-            // Sadece gerçekten yorum varsa map'e ekle
             if (count > 0 || comments.length > 0) {
                 commentsMap.value.set(topicId, { comments, count: count || comments.length });
             } else {
@@ -104,40 +90,33 @@ async function loadCommentsForTopics(topicIds) {
             }
         });
     } catch (err) {
-        console.error('Comments load error:', err);
     }
 }
 
 async function loadTopics() {
     loading.value = true;
     try {
-        // Önce room'ları yükle
         await loadRooms();
-        
+
         const filter = {
             pageIndex: pageIndex.value,
             pageSize: pageSize.value
         };
         const data = await topicService.getList(filter);
         const loadedTopics = Array.isArray(data.resultViewModels) ? data.resultViewModels : (data?.resultViewModels ?? []);
-        
-        // Topic ID'lerini al ve comment'leri yükle
-        const topicIds = loadedTopics.map(t => t.id);
+
+        const topicIds = loadedTopics.map((t) => t.id);
         await loadCommentsForTopics(topicIds);
-        
-        // Her topic için room ve comment bilgisini ekle
-        topics.value = loadedTopics.map(topic => {
+
+        topics.value = loadedTopics.map((topic) => {
             const commentData = commentsMap.value.get(topic.id);
             const commentCount = commentData?.count || 0;
             const comments = commentData?.comments || [];
-            
-            // Debug log
-            console.log(`Topic ${topic.id} (${topic.title}):`, {
-                commentCount,
-                commentsLength: comments.length,
-                hasComments: commentCount > 0 || comments.length > 0
-            });
-            
+
+            if (!(topic.id in expandedStates.value)) {
+                expandedStates.value[topic.id] = false;
+            }
+
             return {
                 ...topic,
                 hasRoom: roomsMap.value.has(topic.id) && roomsMap.value.get(topic.id).length > 0,
@@ -146,16 +125,15 @@ async function loadTopics() {
                 commentCount: commentCount
             };
         });
-        
+
         totalRecords.value = data?.count ?? 0;
         filterTopics();
     } catch (err) {
-        console.error('Topic list load error:', err);
-        toast.add({ 
-            severity: 'error', 
-            summary: t('common.error'), 
-            detail: err?.response?.data?.message || err?.message || 'Topic listesi yüklenemedi', 
-            life: 5000 
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: err?.response?.data?.message || err?.message || t('topic.listLoadError'),
+            life: 5000
         });
     } finally {
         loading.value = false;
@@ -164,13 +142,11 @@ async function loadTopics() {
 
 function filterTopics() {
     if (!searchText.value || searchText.value.trim() === '') {
-        filteredTopics.value = topics.value;
+        filteredTopics.value = topics.value.map((t) => ({ ...t }));
         return;
     }
     const searchLower = searchText.value.toLowerCase().trim();
-    filteredTopics.value = topics.value.filter(topic => 
-        topic.title?.toLowerCase().includes(searchLower)
-    );
+    filteredTopics.value = topics.value.filter((topic) => topic.title?.toLowerCase().includes(searchLower)).map((t) => ({ ...t }));
 }
 
 function onSearch() {
@@ -178,15 +154,11 @@ function onSearch() {
 }
 
 function toggleComments(topicId) {
-    if (expandedComments.value.has(topicId)) {
-        expandedComments.value.delete(topicId);
-    } else {
-        expandedComments.value.add(topicId);
-    }
+    const currentValue = expandedStates.value[topicId] === true;
+    expandedStates.value[topicId] = !currentValue;
 }
 
 function getCommentCount(topic) {
-    // Önce commentCount'u kontrol et, yoksa comments array'inin uzunluğunu kullan
     if (topic.commentCount && topic.commentCount > 0) {
         return topic.commentCount;
     }
@@ -235,7 +207,6 @@ async function getCurrentUserPartyId() {
 
         return null;
     } catch (error) {
-        console.error('Error getting party ID:', error);
         return null;
     }
 }
@@ -243,21 +214,21 @@ async function getCurrentUserPartyId() {
 async function openCommentDialog(topic) {
     selectedTopic.value = topic;
     commentText.value = '';
-    
+
     if (!currentPartyId.value) {
         currentPartyId.value = await getCurrentUserPartyId();
     }
-    
+
     if (!currentPartyId.value) {
-        toast.add({ 
-            severity: 'error', 
-            summary: t('common.error'), 
-            detail: 'Kullanıcı bilgisi bulunamadı', 
-            life: 5000 
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: t('topic.userInfoNotFound'),
+            life: 5000
         });
         return;
     }
-    
+
     showCommentDialog.value = true;
 }
 
@@ -267,11 +238,11 @@ async function saveComment() {
     }
 
     if (!commentText.value || commentText.value.trim() === '') {
-        toast.add({ 
-            severity: 'warn', 
-            summary: 'Uyarı', 
-            detail: 'Lütfen yorum metni girin', 
-            life: 3000 
+        toast.add({
+            severity: 'warn',
+            summary: t('common.warning'),
+            detail: t('topic.commentTextRequired'),
+            life: 3000
         });
         return;
     }
@@ -287,121 +258,107 @@ async function saveComment() {
         };
 
         const result = await commentService.create(payload);
-        
+
         if (result?.isSuccess) {
-            toast.add({ 
-                severity: 'success', 
-                summary: 'Başarılı', 
-                detail: 'Yorum başarıyla eklendi', 
-                life: 3000 
+            toast.add({
+                severity: 'success',
+                summary: t('common.success'),
+                detail: t('topic.commentAdded'),
+                life: 3000
             });
             showCommentDialog.value = false;
             commentText.value = '';
-            
-            // Yorum eklendikten sonra ilgili topic'in comment'lerini yenile
+
             if (selectedTopic.value) {
                 const topicId = selectedTopic.value.id;
                 await loadCommentsForTopics([topicId]);
-                
-                // Topic listesindeki ilgili topic'i güncelle
-                const topicIndex = topics.value.findIndex(t => t.id === topicId);
+
+                const topicIndex = topics.value.findIndex((t) => t.id === topicId);
                 if (topicIndex !== -1) {
                     const commentData = commentsMap.value.get(topicId);
                     const commentCount = commentData?.count || 0;
                     const comments = commentData?.comments || [];
-                    
+
                     topics.value[topicIndex] = {
                         ...topics.value[topicIndex],
                         comments: comments,
                         commentCount: commentCount
                     };
-                    filterTopics(); // Filtrelenmiş listeyi de güncelle
-                    
-                    // Eğer comment section açıksa, yeni yorumu görmek için yeniden aç
-                    if (expandedComments.value.has(topicId)) {
-                        expandedComments.value.delete(topicId);
-                        expandedComments.value.add(topicId);
+                    filterTopics();
+
+                    if (expandedStates.value[topicId] === true) {
+                        expandedStates.value[topicId] = false;
+                        setTimeout(() => {
+                            expandedStates.value[topicId] = true;
+                        }, 0);
                     }
                 }
             }
-            
+
             selectedTopic.value = null;
         } else {
-            toast.add({ 
-                severity: 'error', 
-                summary: t('common.error'), 
-                detail: result?.exceptionMessage || 'Yorum eklenirken bir hata oluştu', 
-                life: 5000 
+            toast.add({
+                severity: 'error',
+                summary: t('common.error'),
+                detail: result?.exceptionMessage || t('topic.commentError'),
+                life: 5000
             });
         }
     } catch (err) {
-        console.error('Comment create error:', err);
-        toast.add({ 
-            severity: 'error', 
-            summary: t('common.error'), 
-            detail: err?.response?.data?.message || err?.message || 'Yorum eklenirken bir hata oluştu', 
-            life: 5000 
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: err?.response?.data?.message || err?.message || t('topic.commentError'),
+            life: 5000
         });
     }
 }
 
 async function goToRoom(topic) {
     try {
-        // Topic objesinde room bilgisi varsa onu kullan
         if (topic.room) {
             const targetRoom = topic.room;
-            
-            // Sol menüdeki odalar kısmını aç
-            setActiveMenuItem('1-1'); // Odalar menü item'ının index'i
-            
-            // Router ile odalar sayfasına git ve room'u seç
-            await router.push({ 
+            setActiveMenuItem('1-1');
+            await router.push({
                 name: 'rooms',
                 query: { roomId: targetRoom.id }
             });
             return;
         }
 
-        // Eğer topic objesinde room yoksa, tekrar kontrol et
         const roomFilter = {
             pageIndex: 1,
             pageSize: 100,
             topicId: topic.id
         };
-        
+
         const roomData = await roomService.getList(roomFilter);
-        const rooms = Array.isArray(roomData.resultViewModels) 
-            ? roomData.resultViewModels 
-            : (roomData?.resultViewModels ?? []);
-        
+        const rooms = Array.isArray(roomData.resultViewModels) ? roomData.resultViewModels : (roomData?.resultViewModels ?? []);
+
         if (!rooms || rooms.length === 0) {
-            toast.add({ 
-                severity: 'info', 
-                summary: 'Bilgi', 
-                detail: 'Bu topic için henüz bir oda oluşturulmamış', 
-                life: 3000 
+            toast.add({
+                severity: 'info',
+                summary: t('common.info'),
+                detail: t('topic.noRoomForTopic'),
+                life: 3000
             });
             return;
         }
 
-        // İlk room'u kullan
         const targetRoom = rooms[0];
-        
-        // Sol menüdeki odalar kısmını aç
-        setActiveMenuItem('1-1'); // Odalar menü item'ının index'i
-        
-        // Router ile odalar sayfasına git ve room'u seç
-        await router.push({ 
+
+        setActiveMenuItem('1-1');
+
+        await router.push({
             name: 'rooms',
             query: { roomId: targetRoom.id }
         });
     } catch (err) {
-        console.error('Go to room error:', err);
-        toast.add({ 
-            severity: 'error', 
-            summary: t('common.error'), 
-            detail: err?.response?.data?.message || err?.message || 'Oda bulunamadı', 
-            life: 5000 
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: err?.response?.data?.message || err?.message || t('topic.roomNotFound'),
+            life: 5000
         });
     }
 }
@@ -415,14 +372,9 @@ onMounted(async () => {
 <template>
     <div class="topic-list-container">
         <div class="topic-list-header">
-            <h2>Topic Listesi</h2>
+            <h2>{{ t('topic.list') }}</h2>
             <div class="search-container">
-                <InputText 
-                    v-model="searchText" 
-                    placeholder="Topic başlığına göre ara..." 
-                    @input="onSearch"
-                    class="search-input"
-                />
+                <InputText v-model="searchText" :placeholder="t('topic.searchPlaceholder')" @input="onSearch" class="search-input" />
                 <i class="pi pi-search search-icon" />
             </div>
         </div>
@@ -435,119 +387,76 @@ onMounted(async () => {
         <div v-else class="topic-list">
             <div v-if="filteredTopics.length === 0" class="empty-state">
                 <i class="pi pi-inbox" style="font-size: 3rem; color: var(--surface-400)" />
-                <p>{{ searchText ? 'Arama sonucu bulunamadı' : 'Henüz topic bulunmuyor' }}</p>
+                <p>{{ searchText ? t('topic.noResults') : t('topic.noTopics') }}</p>
             </div>
 
             <div v-else class="topic-items">
-                <div 
-                    v-for="topic in filteredTopics" 
-                    :key="topic.id" 
-                    class="topic-item"
-                >
+                <div v-for="(topic, index) in filteredTopics" :key="`topic-${topic.id}-${index}`" class="topic-item">
                     <div class="topic-content">
                         <h3 class="topic-title">{{ topic.title }}</h3>
                         <div class="topic-meta">
-                            <span v-if="topic.categoryName" class="topic-category">
-                                <i class="pi pi-tag" /> {{ topic.categoryName }}
-                            </span>
-                            <span v-if="topic.partyName" class="topic-party">
-                                <i class="pi pi-user" /> {{ topic.partyName }}
-                            </span>
-                            <span class="topic-date">
-                                <i class="pi pi-calendar" /> {{ new Date(topic.createDate).toLocaleDateString('tr-TR') }}
-                            </span>
+                            <span v-if="topic.categoryName" class="topic-category"> <i class="pi pi-tag" /> {{ topic.categoryName }} </span>
+                            <span class="topic-date"> <i class="pi pi-calendar" /> {{ new Date(topic.createDate).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US') }} </span>
                         </div>
                         <div v-if="(topic.commentCount && topic.commentCount > 0) || (topic.comments && topic.comments.length > 0)" class="topic-comments">
-                            <div class="comment-header" @click="toggleComments(topic.id)">
+                            <div class="comment-header" @click.stop.prevent="toggleComments(topic.id)">
                                 <i class="pi pi-comments" />
-                                <span class="comment-count">
-                                    {{ getCommentCount(topic) }} Yorum
-                                </span>
-                                <i 
-                                    :class="expandedComments.has(topic.id) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" 
-                                    class="comment-toggle-icon"
-                                />
+                                <span class="comment-count"> {{ getCommentCount(topic) }} {{ t('topic.comments') }} </span>
+                                <i :class="expandedStates[topic.id] === true ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" class="comment-toggle-icon" />
                             </div>
                             <Transition name="slide-fade">
-                                <div v-if="expandedComments.has(topic.id)" class="comment-list">
-                                    <div 
-                                        v-if="topic.comments && topic.comments.length > 0"
-                                        v-for="comment in topic.comments" 
-                                        :key="comment.id" 
-                                        class="comment-item"
-                                    >
-                                        <div class="comment-content">
-                                            <p class="comment-text">{{ comment.content || '(Yorum metni yok)' }}</p>
-                                            <span class="comment-date">{{ new Date(comment.createDate).toLocaleDateString('tr-TR', { 
-                                                year: 'numeric', 
-                                                month: 'long', 
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            }) }}</span>
+                                <div v-if="expandedStates[topic.id] === true" class="comment-list">
+                                    <template v-if="topic.comments && topic.comments.length > 0">
+                                        <div v-for="comment in topic.comments" :key="comment.id" class="comment-item">
+                                            <div class="comment-content">
+                                                <div class="comment-header-info">
+                                                    <span class="comment-author">
+                                                        <i class="pi pi-user" />
+                                                        {{ comment.partyName || `${t('topic.partyPrefix')}${comment.partyId}` }}
+                                                    </span>
+                                                    <span class="comment-date">{{
+                                                        new Date(comment.createDate).toLocaleDateString(locale === 'tr' ? 'tr-TR' : 'en-US', {
+                                                            year: 'numeric',
+                                                            month: 'long',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })
+                                                    }}</span>
+                                                </div>
+                                                <p class="comment-text">{{ comment.content || t('topic.noCommentText') }}</p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </template>
                                     <div v-else class="no-comments">
-                                        <p>Yorum yükleniyor...</p>
+                                        <p>{{ t('topic.commentsLoading') }}</p>
                                     </div>
                                 </div>
                             </Transition>
                         </div>
                     </div>
                     <div class="topic-actions">
-                        <Button 
-                            icon="pi pi-comment" 
-                            label="Yorum Yap" 
-                            class="p-button-sm p-button-outlined"
-                            @click="openCommentDialog(topic)"
-                        />
-                        <Button 
-                            v-if="topic.hasRoom"
-                            icon="pi pi-sign-in" 
-                            label="Odaya Git" 
-                            class="p-button-sm p-button-outlined"
-                            @click="goToRoom(topic)"
-                        />
+                        <Button icon="pi pi-comment" :label="t('topic.makeComment')" class="p-button-sm p-button-outlined" @click="openCommentDialog(topic)" />
+                        <Button v-if="topic.hasRoom" icon="pi pi-sign-in" :label="t('topic.goToRoom')" class="p-button-sm p-button-outlined" @click="goToRoom(topic)" />
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Comment Dialog -->
-        <Dialog 
-            v-model:visible="showCommentDialog" 
-            modal 
-            :closable="true" 
-            header="Yorum Yap" 
-            :style="{ width: '500px' }"
-        >
+        <Dialog :visible="showCommentDialog" @update:visible="(val) => (showCommentDialog = val)" modal :closable="true" :header="t('topic.commentDialogTitle')" :style="{ width: '500px' }">
             <div class="comment-dialog-content">
                 <div class="mb-3">
-                    <label class="block mb-2 font-semibold">Topic:</label>
+                    <label class="block mb-2 font-semibold">{{ t('common.topics') }}:</label>
                     <p class="text-lg">{{ selectedTopic?.title }}</p>
                 </div>
                 <div class="mb-3">
-                    <label class="block mb-2 font-semibold">Yorum:</label>
-                    <Textarea 
-                        v-model="commentText" 
-                        rows="5" 
-                        placeholder="Yorumunuzu buraya yazın..."
-                        class="w-full"
-                    />
+                    <label class="block mb-2 font-semibold">{{ t('topic.commentLabel') }}</label>
+                    <Textarea v-model="commentText" rows="5" :placeholder="t('topic.commentPlaceholder')" class="w-full" />
                 </div>
             </div>
             <template #footer>
-                <Button 
-                    label="İptal" 
-                    icon="pi pi-times" 
-                    class="p-button-text" 
-                    @click="showCommentDialog = false" 
-                />
-                <Button 
-                    label="Kaydet" 
-                    icon="pi pi-check" 
-                    @click="saveComment" 
-                />
+                <Button :label="t('common.cancel')" icon="pi pi-times" class="p-button-text" @click="showCommentDialog = false" />
+                <Button :label="t('common.save')" icon="pi pi-check" @click="saveComment" />
             </template>
         </Dialog>
     </div>
@@ -617,22 +526,41 @@ onMounted(async () => {
 }
 
 .topic-items {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 1400px) {
+    .topic-items {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 1024px) {
+    .topic-items {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .topic-items {
+        grid-template-columns: 1fr;
+    }
 }
 
 .topic-item {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    flex-direction: column;
     padding: 1.5rem;
     background: var(--surface-0);
     border: 2px solid var(--primary-color);
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    transition: box-shadow 0.2s, transform 0.2s;
-    gap: 1.5rem;
+    transition:
+        box-shadow 0.2s,
+        transform 0.2s;
+    height: 100%;
 }
 
 .topic-item:hover {
@@ -642,7 +570,9 @@ onMounted(async () => {
 
 .topic-content {
     flex: 1;
-    min-width: 0; /* Flexbox overflow için */
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .topic-title {
@@ -716,7 +646,28 @@ onMounted(async () => {
 .comment-content {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+}
+
+.comment-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.comment-author {
+    display: flex;
+    align-items: center;
     gap: 0.25rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--primary-color);
+}
+
+.comment-author i {
+    font-size: 0.75rem;
 }
 
 .comment-text {
@@ -730,6 +681,7 @@ onMounted(async () => {
 .comment-date {
     font-size: 0.75rem;
     color: var(--surface-500);
+    white-space: nowrap;
 }
 
 .comment-more {
@@ -769,9 +721,9 @@ onMounted(async () => {
     flex-direction: column;
     gap: 0.5rem;
     flex-shrink: 0;
-    align-self: flex-start;
-    position: sticky;
-    top: 1.5rem;
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid var(--surface-200);
 }
 
 .comment-dialog-content {
@@ -779,17 +731,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-    .topic-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .topic-actions {
-        width: 100%;
-        justify-content: flex-end;
-    }
-
     .topic-list-header {
         flex-direction: column;
         align-items: flex-start;

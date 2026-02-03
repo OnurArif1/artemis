@@ -10,7 +10,6 @@ export function decodeJWT(token) {
         );
         return JSON.parse(jsonPayload);
     } catch (error) {
-        console.error('JWT decode error:', error);
         return null;
     }
 }

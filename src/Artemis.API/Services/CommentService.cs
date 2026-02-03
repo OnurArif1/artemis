@@ -18,7 +18,7 @@ public class CommentService : ICommentService
 
     public async ValueTask<CommentListViewModel> GetList(CommentFilterViewModel filterViewModel)
     {
-        var baseQuery = query;
+        IQueryable<Comment> baseQuery = query;
 
         if (filterViewModel.TopicId.HasValue && filterViewModel.TopicId.Value > 0)
         {
@@ -27,7 +27,9 @@ public class CommentService : ICommentService
 
         var count = await baseQuery.CountAsync();
 
-        var comments = await baseQuery.OrderByDescending(i => i.CreateDate)
+        var comments = await baseQuery
+            .Include(c => c.Party)
+            .OrderByDescending(i => i.CreateDate)
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
             .Take(filterViewModel.PageSize)
             .Select(r => new CommentResultViewModel
@@ -35,6 +37,7 @@ public class CommentService : ICommentService
                 Id = r.Id,
                 TopicId = r.TopicId,
                 PartyId = r.PartyId,
+                PartyName = r.Party != null ? r.Party.PartyName : null,
                 Content = r.Content,
                 Upvote = r.Upvote,
                 Downvote = r.Downvote,
@@ -52,7 +55,7 @@ public class CommentService : ICommentService
 
     public async ValueTask<CommentGetViewModel?> GetById(int id)
     {
-        var comment = await query.FirstOrDefaultAsync(i => i.Id == id);
+        var comment = await query.Include(c => c.Party).FirstOrDefaultAsync(i => i.Id == id);
 
         if (comment is not null)
         {
@@ -61,6 +64,8 @@ public class CommentService : ICommentService
                 Id = comment.Id,
                 TopicId = comment.TopicId,
                 PartyId = comment.PartyId,
+                PartyName = comment.Party != null ? comment.Party.PartyName : null,
+                Content = comment.Content,
                 Upvote = comment.Upvote,
                 Downvote = comment.Downvote,
                 LastUpdateDate = comment.LastUpdateDate,

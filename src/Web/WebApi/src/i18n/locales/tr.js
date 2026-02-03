@@ -34,6 +34,68 @@ export default {
         noDataFound: 'Veri bulunamadı',
         success: 'Başarılı',
         error: 'Hata',
-        required: 'Zorunlu'
+        required: 'Zorunlu',
+        warning: 'Uyarı',
+        info: 'Bilgi'
+    },
+    topic: {
+        list: 'Topic Listesi',
+        searchPlaceholder: 'Topic başlığına göre ara...',
+        noResults: 'Arama sonucu bulunamadı',
+        noTopics: 'Henüz topic bulunmuyor',
+        comments: 'Yorum',
+        makeComment: 'Yorum Yap',
+        goToRoom: 'Odaya Git',
+        commentDialogTitle: 'Yorum Yap',
+        commentLabel: 'Yorum:',
+        commentPlaceholder: 'Yorumunuzu buraya yazın...',
+        commentTextRequired: 'Lütfen yorum metni girin',
+        commentAdded: 'Yorum başarıyla eklendi',
+        commentError: 'Yorum eklenirken bir hata oluştu',
+        noRoomForTopic: 'Bu topic için henüz bir oda oluşturulmamış',
+        roomNotFound: 'Oda bulunamadı',
+        listLoadError: 'Topic listesi yüklenemedi',
+        noCommentText: '(Yorum metni yok)',
+        commentsLoading: 'Yorum yükleniyor...',
+        userInfoNotFound: 'Kullanıcı bilgisi bulunamadı',
+        partyPrefix: 'Party #'
+    },
+    room: {
+        prefix: 'Oda #',
+        leafletLoadError: 'Leaflet yüklenemedi. Lütfen sayfayı yenileyin.'
+    },
+    dashboard: {
+        description: 'Artemis WebApi – Gösterge paneli. Buraya sonraki özellikler eklenecek.'
+    },
+    auth: {
+        email: 'E-posta',
+        password: 'Şifre',
+        emailPlaceholder: 'E-posta adresi',
+        passwordPlaceholder: 'Şifre',
+        login: 'Giriş Yap',
+        emailPasswordRequired: 'E-posta ve şifre gerekli.',
+        emailPasswordError: 'Email ya da şifre hatalı.',
+        createAccount: 'Yeni kişi oluştur',
+        createAccountTitle: 'Yeni kişi oluştur',
+        emailRequired: 'E-posta gerekli.',
+        passwordRequired: 'Şifre gerekli.',
+        passwordsNotMatch: 'Şifreler eşleşmiyor.',
+        passwordMinLength: 'Şifre en az 6 karakter olmalı.',
+        passwordRepeatPlaceholder: 'Şifreyi tekrar girin',
+        passwordRepeat: 'tekrar',
+        passwordHint: 'En az 6 karakter; büyük, küçük harf ve rakam',
+        type: 'Tip',
+        partyTypeNone: 'Yok',
+        partyTypePerson: 'Kişi',
+        partyTypeOrganization: 'Organizasyon',
+        accountCreated: 'Hesap oluşturuldu',
+        accountCreatedDetail: 'Giriş yapabilirsiniz.',
+        registerFailed: 'Kayıt yapılamadı.',
+        cancel: 'İptal',
+        create: 'Oluştur'
+    },
+    language: {
+        turkish: 'Türkçe',
+        english: 'English'
     }
 };

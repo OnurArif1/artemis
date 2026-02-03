@@ -1,18 +1,18 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useLayout } from '@/layout/composables/layout';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import { getEmailFromToken } from '@/utils/jwt';
 
 const { toggleDarkMode, isDarkTheme, toggleMenu } = useLayout();
-const { locale, setLocale } = useI18n();
+const { locale, setLocale, t } = useI18n();
 const authStore = useAuthStore();
 
-const languages = [
-    { label: 'Türkçe', value: 'tr', flag: '🇹🇷' },
-    { label: 'English', value: 'en', flag: '🇬🇧' }
-];
+const languages = computed(() => [
+    { label: t('language.turkish'), value: 'tr', flag: '🇹🇷' },
+    { label: t('language.english'), value: 'en', flag: '🇬🇧' }
+]);
 
 const selectedLanguage = ref('tr');
 const userEmail = ref('');

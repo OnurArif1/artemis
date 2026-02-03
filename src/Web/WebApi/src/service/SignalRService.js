@@ -9,31 +9,23 @@ class SignalRService {
 
     startConnection() {
         if (this.connection && this.connection.state === 'Connected') {
-            console.log('SignalR already connected');
             return Promise.resolve();
         }
 
-        this.connection = new HubConnectionBuilder()
-            .withUrl(this.hubUrl)
-            .withAutomaticReconnect()
-            .build();
+        this.connection = new HubConnectionBuilder().withUrl(this.hubUrl).withAutomaticReconnect().build();
 
         this.connection.onclose((error) => {
-            console.warn('SignalR connection closed', error);
         });
 
         this.connection.onreconnecting((error) => {
-            console.log('SignalR reconnecting...', error);
         });
 
         this.connection.onreconnected((connectionId) => {
-            console.log('SignalR reconnected:', connectionId);
             this.connectionId = connectionId;
         });
 
         this.connection.on('ReceiveConnectionId', (connectionId) => {
             this.connectionId = connectionId;
-            console.log('📡 ConnectionId alındı:', connectionId);
         });
 
         return this.connection
@@ -59,15 +51,13 @@ class SignalRService {
         if (this.connection.state !== 'Connected') {
             this.startConnection()
                 .then(() => {
-                    this.connection.invoke('SendMessage', partyId, roomId, message, mentionedPartyIds).catch((err) => console.error('Send error:', err));
+                    this.connection.invoke('SendMessage', partyId, roomId, message, mentionedPartyIds).catch(() => {});
                 })
-                .catch((err) => {
-                    console.error('Failed to reconnect:', err);
-                });
+                .catch(() => {});
             return;
         }
 
-        this.connection.invoke('SendMessage', partyId, roomId, message, mentionedPartyIds).catch((err) => console.error('Send error:', err));
+        this.connection.invoke('SendMessage', partyId, roomId, message, mentionedPartyIds).catch(() => {});
     }
 
     joinRoom(roomId) {
@@ -79,9 +69,7 @@ class SignalRService {
             return;
         }
 
-        this.connection.invoke('JoinRoom', roomId).catch((err) => {
-            console.error('JoinRoom error:', err);
-        });
+        this.connection.invoke('JoinRoom', roomId).catch(() => {});
     }
 
     leaveRoom(roomId) {
@@ -93,9 +81,7 @@ class SignalRService {
             return;
         }
 
-        this.connection.invoke('LeaveRoom', roomId).catch((err) => {
-            console.error('LeaveRoom error:', err);
-        });
+        this.connection.invoke('LeaveRoom', roomId).catch(() => {});
     }
 
     onReceiveMessage(callback) {

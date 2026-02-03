@@ -2,6 +2,7 @@
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from '@/composables/useI18n';
+import { useLayout } from '@/layout/composables/layout';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import Chat from '@/views/chat/Chat.vue';
@@ -9,6 +10,7 @@ import Chat from '@/views/chat/Chat.vue';
 const route = useRoute();
 const roomService = new RoomService(request);
 const { t } = useI18n();
+const { isDarkTheme } = useLayout();
 const mapContainer = ref(null);
 const loading = ref(true);
 const error = ref('');
@@ -16,8 +18,28 @@ const showChatDialog = ref(false);
 const selectedRoom = ref(null);
 let map = null;
 let markersLayer = null;
+let tileLayer = null;
 
 const TURKEY_CENTER = [39, 35.5];
+
+function updateTileLayer() {
+    if (!map) return;
+
+    if (tileLayer) {
+        map.removeLayer(tileLayer);
+    }
+
+    const L = window.L;
+    const tileUrl = isDarkTheme.value
+        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+    tileLayer = L.tileLayer(tileUrl, {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(map);
+}
 
 onMounted(async () => {
     if (!mapContainer.value) return;
@@ -25,17 +47,13 @@ onMounted(async () => {
     const L = window.L;
 
     if (!L || typeof L.map !== 'function') {
-        error.value = t('common.error') + ': Leaflet yüklenemedi. Lütfen sayfayı yenileyin.';
+        error.value = t('common.error') + ': ' + t('room.leafletLoadError');
         loading.value = false;
         return;
     }
 
     map = L.map(mapContainer.value).setView(TURKEY_CENTER, 6);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 19
-    }).addTo(map);
+    updateTileLayer();
 
     loading.value = true;
     error.value = '';
@@ -61,7 +79,7 @@ onMounted(async () => {
 
             validCoords.push([lat, lng]);
 
-            const title = r.title ?? r.Title ?? `Oda #${r.id ?? r.Id}`;
+            const title = r.title ?? r.Title ?? `${t('room.prefix')}${r.id ?? r.Id}`;
             const roomId = r.id ?? r.Id;
 
             const icon = L.divIcon({
@@ -87,20 +105,18 @@ onMounted(async () => {
             });
         }
 
-        // Query parametresinden roomId varsa ilgili room'u aç
         const roomIdFromQuery = route.query.roomId;
         if (roomIdFromQuery) {
             const roomIdNum = parseInt(roomIdFromQuery);
             if (!isNaN(roomIdNum)) {
-                const targetRoom = rooms.find(r => (r.id ?? r.Id) === roomIdNum);
+                const targetRoom = rooms.find((r) => (r.id ?? r.Id) === roomIdNum);
                 if (targetRoom) {
                     selectedRoom.value = {
                         id: roomIdNum,
-                        title: targetRoom.title ?? targetRoom.Title ?? `Oda #${roomIdNum}`
+                        title: targetRoom.title ?? targetRoom.Title ?? `${t('room.prefix')}${roomIdNum}`
                     };
                     showChatDialog.value = true;
-                    
-                    // Map'i room'un konumuna odakla
+
                     const roomLat = Number(targetRoom.locationY ?? targetRoom.LocationY);
                     const roomLng = Number(targetRoom.locationX ?? targetRoom.LocationX);
                     if (!Number.isNaN(roomLat) && !Number.isNaN(roomLng)) {
@@ -127,12 +143,17 @@ onMounted(async () => {
     }
 });
 
+watch(isDarkTheme, () => {
+    updateTileLayer();
+});
+
 onBeforeUnmount(() => {
     if (map) {
         map.remove();
         map = null;
     }
     markersLayer = null;
+    tileLayer = null;
 });
 
 function escapeHtml(s) {
@@ -155,14 +176,7 @@ function escapeHtml(s) {
                 {{ error }}
             </div>
         </div>
-        <Dialog 
-            v-model:visible="showChatDialog" 
-            modal 
-            :closable="true" 
-            :header="`${selectedRoom?.title || t('common.rooms')}`" 
-            :style="{ width: '1200px', height: '800px' }" 
-            :maximizable="true"
-        >
+        <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${selectedRoom?.title || t('common.rooms')}`" :style="{ width: '1200px', height: '800px' }" :maximizable="true">
             <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
         </Dialog>
     </div>
