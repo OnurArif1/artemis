@@ -85,19 +85,49 @@ onMounted(async () => {
             const topicId = r.topicId ?? r.TopicId;
             const topicTitle = r.topicTitle ?? r.TopicTitle;
 
+            // Room marker için benzersiz ID
+            const roomMarkerId = `room-marker-${roomId}`;
+            const topicMarkerId = topicId ? `topic-marker-${topicId}` : null;
+
             let markerHtml = `
-                <div style="display: flex; flex-direction: row; align-items: flex-start; gap: 8px; cursor: pointer;">
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <div style="width: 24px; height: 24px; border-radius: 50%; background: #ef4444; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); flex-shrink: 0;"></div>
-                        <div style="background: white; color: #1f2937; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 1px solid rgba(0,0,0,0.15); max-width: 180px; overflow: hidden; text-overflow: ellipsis; margin-top: 4px;">${escapeHtml(title)}</div>
+                <div class="marker-container" data-marker-id="${roomMarkerId}">
+                    <div class="marker-group room-marker-group">
+                        <div class="marker-pulse-ring"></div>
+                        <div class="marker-dot room-dot">
+                            <div class="marker-dot-inner">
+                                <svg width="8" height="8" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M6 1L7.5 4.5L11 6L7.5 7.5L6 11L4.5 7.5L1 6L4.5 4.5L6 1Z" fill="white" opacity="0.9"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="marker-card room-card">
+                            <div class="marker-card-content">
+                                <div class="marker-icon">🏠</div>
+                                <div class="marker-title">${escapeHtml(title)}</div>
+                            </div>
+                            <div class="marker-card-glow"></div>
+                        </div>
                     </div>
             `;
 
             if (topicId && topicTitle) {
                 markerHtml += `
-                    <div style="display: flex; flex-direction: column; align-items: center;" class="topic-marker-wrapper">
-                        <div style="width: 20px; height: 20px; border-radius: 50%; background: #22c55e; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4); flex-shrink: 0;"></div>
-                        <div style="background: #22c55e; color: white; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.3); max-width: 160px; overflow: hidden; text-overflow: ellipsis; margin-top: 4px; cursor: pointer;">${escapeHtml(topicTitle)}</div>
+                    <div class="marker-group topic-marker-group" data-marker-id="${topicMarkerId}">
+                        <div class="marker-pulse-ring topic-pulse"></div>
+                        <div class="marker-dot topic-dot">
+                            <div class="marker-dot-inner">
+                                <svg width="7" height="7" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="5" cy="5" r="4" fill="white" opacity="0.9"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="marker-card topic-card">
+                            <div class="marker-card-content">
+                                <div class="marker-icon">💬</div>
+                                <div class="marker-title">${escapeHtml(topicTitle)}</div>
+                            </div>
+                            <div class="marker-card-glow topic-glow"></div>
+                        </div>
                     </div>
                 </div>
             `;
@@ -105,30 +135,109 @@ onMounted(async () => {
                 markerHtml += `</div>`;
             }
 
+            // Marker boyutlarını hesapla
+            const markerWidth = topicId && topicTitle ? 320 : 180;
+            const markerHeight = 60;
+            
+            // Dinamik anchor hesaplama için harita sınırlarını kontrol et
+            const calculateAnchor = () => {
+                if (!map) return topicId && topicTitle ? [160, 60] : [90, 60];
+                
+                const point = map.latLngToContainerPoint([lat, lng]);
+                const mapSize = map.getSize();
+                const padding = 20; // Kenar boşluğu
+                
+                let anchorX = markerWidth / 2;
+                let anchorY = markerHeight;
+                
+                // Sol kenara yakınsa anchor'u sağa kaydır
+                if (point.x < markerWidth / 2 + padding) {
+                    anchorX = Math.max(20, point.x - padding);
+                }
+                // Sağ kenara yakınsa anchor'u sola kaydır
+                else if (point.x > mapSize.x - markerWidth / 2 - padding) {
+                    anchorX = markerWidth - Math.max(20, mapSize.x - point.x - padding);
+                }
+                
+                // Üst kenara yakınsa anchor'u aşağı kaydır
+                if (point.y < markerHeight + padding) {
+                    anchorY = Math.max(20, point.y - padding);
+                }
+                
+                return [anchorX, anchorY];
+            };
+            
+            const anchor = calculateAnchor();
+            
             const icon = L.divIcon({
-                className: 'room-marker',
+                className: 'custom-map-marker responsive-marker',
                 html: markerHtml,
-                iconSize: topicId && topicTitle ? [360, 60] : [180, 60],
-                iconAnchor: topicId && topicTitle ? [180, 60] : [90, 60]
+                iconSize: [markerWidth, markerHeight],
+                iconAnchor: anchor,
+                popupAnchor: [0, -anchor[1]]
             });
 
             const marker = L.marker([lat, lng], { icon }).addTo(markersLayer);
+            
+            // Harita zoom ve pan değiştiğinde anchor'u yeniden hesapla
+            const updateMarkerPosition = () => {
+                const newAnchor = calculateAnchor();
+                const newIcon = L.divIcon({
+                    className: 'custom-map-marker responsive-marker',
+                    html: markerHtml,
+                    iconSize: [markerWidth, markerHeight],
+                    iconAnchor: newAnchor,
+                    popupAnchor: [0, -newAnchor[1]]
+                });
+                marker.setIcon(newIcon);
+            };
+            
+            map.on('moveend', updateMarkerPosition);
+            map.on('zoomend', updateMarkerPosition);
+            map.on('resize', updateMarkerPosition);
 
             marker.on('click', (e) => {
                 const target = e.originalEvent.target;
-                if (target.closest('.topic-marker-wrapper')) {
+                if (target.closest('.topic-marker-group')) {
                     e.originalEvent.stopPropagation();
                     selectedTopic.value = {
                         id: topicId,
                         title: topicTitle
                     };
                     showTopicChatDialog.value = true;
-                } else {
+                } else if (target.closest('.room-marker-group')) {
                     selectedRoom.value = {
                         id: roomId,
                         title: title
                     };
                     showChatDialog.value = true;
+                }
+            });
+
+            // Hover efektleri için
+            marker.on('mouseover', () => {
+                const markerEl = document.querySelector(`[data-marker-id="${roomMarkerId}"]`);
+                if (markerEl) {
+                    markerEl.classList.add('marker-hover');
+                }
+                if (topicMarkerId) {
+                    const topicEl = document.querySelector(`[data-marker-id="${topicMarkerId}"]`);
+                    if (topicEl) {
+                        topicEl.classList.add('marker-hover');
+                    }
+                }
+            });
+
+            marker.on('mouseout', () => {
+                const markerEl = document.querySelector(`[data-marker-id="${roomMarkerId}"]`);
+                if (markerEl) {
+                    markerEl.classList.remove('marker-hover');
+                }
+                if (topicMarkerId) {
+                    const topicEl = document.querySelector(`[data-marker-id="${topicMarkerId}"]`);
+                    if (topicEl) {
+                        topicEl.classList.remove('marker-hover');
+                    }
                 }
             });
         }
@@ -213,7 +322,7 @@ function escapeHtml(s) {
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .room-map-wrapper {
     position: relative;
     width: 100%;
@@ -225,6 +334,19 @@ function escapeHtml(s) {
     width: 100%;
     height: 100%;
     background: var(--surface-100);
+    overflow: visible;
+}
+
+:deep(.leaflet-container) {
+    overflow: visible !important;
+}
+
+:deep(.leaflet-pane) {
+    overflow: visible !important;
+}
+
+:deep(.leaflet-marker-pane) {
+    overflow: visible !important;
 }
 
 .loading-overlay {
@@ -250,64 +372,242 @@ function escapeHtml(s) {
     max-width: 90%;
 }
 
-:deep(.room-marker) {
-    background: none;
-    border: none;
+:deep(.custom-map-marker) {
+    background: none !important;
+    border: none !important;
 }
 
-:deep(.room-marker-container) {
+:deep(.responsive-marker) {
+    overflow: visible !important;
+}
+
+:deep(.marker-container) {
+    position: relative !important;
+    max-width: 100vw !important;
+}
+
+:deep(.marker-container) {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    position: relative !important;
+}
+
+:deep(.marker-group) {
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
-    cursor: pointer !important;
-    transition: transform 0.2s ease !important;
-    width: 100% !important;
-    height: 100% !important;
+    position: relative !important;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
-:deep(.room-marker-container:hover) {
-    transform: scale(1.1);
+:deep(.marker-group.marker-hover) {
+    transform: translateY(-6px) scale(1.08) !important;
+    z-index: 1000 !important;
 }
 
-:deep(.room-marker-label) {
-    background: rgba(255, 255, 255, 0.98) !important;
-    color: #1f2937 !important;
-    padding: 6px 12px !important;
-    border-radius: 6px !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
-    white-space: nowrap !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
-    border: 1px solid rgba(0, 0, 0, 0.15) !important;
+:deep(.marker-pulse-ring) {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: color-mix(in srgb, var(--primary-color) 30%, transparent) !important;
+    animation: pulse-ring 2s ease-out infinite !important;
+    pointer-events: none !important;
+}
+
+:deep(.topic-pulse) {
+    background: color-mix(in srgb, #22c55e 30%, transparent) !important;
+    width: 28px !important;
+    height: 28px !important;
+}
+
+:deep(.marker-dot) {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 50% !important;
+    position: relative !important;
+    z-index: 10 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 3px solid white !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3), 0 0 0 0 color-mix(in srgb, var(--primary-color) 40%, transparent) !important;
+    animation: dot-pulse 2s ease-out infinite !important;
+    transition: all 0.3s ease !important;
+}
+
+:deep(.room-dot) {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+}
+
+:deep(.topic-dot) {
+    width: 20px !important;
+    height: 20px !important;
+    border: 2px solid white !important;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+}
+
+:deep(.marker-dot-inner) {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+:deep(.marker-group.marker-hover .marker-dot) {
+    transform: scale(1.15) !important;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 0 6px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+}
+
+:deep(.marker-card) {
+    margin-top: 6px !important;
+    position: relative !important;
+    min-width: 120px !important;
     max-width: 180px !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+}
+
+:deep(.room-card) {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+:deep(.topic-card) {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+    box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
+    min-width: 110px !important;
+    max-width: 160px !important;
+}
+
+:deep(.marker-group.marker-hover .marker-card) {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+}
+
+:deep(.marker-group.marker-hover .topic-card) {
+    box-shadow: 0 12px 32px rgba(34, 197, 94, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.3) !important;
+}
+
+:deep(.marker-card-content) {
+    padding: 6px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    position: relative !important;
+    z-index: 2 !important;
+}
+
+:deep(.marker-icon) {
+    font-size: 14px !important;
+    line-height: 1 !important;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.1)) !important;
+}
+
+:deep(.marker-title) {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.2px !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+    word-break: break-word !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    position: relative !important;
-    z-index: 1 !important;
-    margin-top: 4px !important;
-    display: block !important;
-    visibility: visible !important;
+    flex: 1 !important;
+    line-height: 1.3 !important;
+    max-height: 2.6em !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+}
+
+:deep(.room-card .marker-title) {
+    color: #1f2937 !important;
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+:deep(.topic-card .marker-title) {
+    color: white !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+:deep(.marker-card-glow) {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(135deg, transparent 0%, color-mix(in srgb, var(--primary-color) 10%, transparent) 50%, transparent 100%) !important;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+    pointer-events: none !important;
+    border-radius: 12px !important;
+}
+
+:deep(.topic-glow) {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%) !important;
+}
+
+:deep(.marker-group.marker-hover .marker-card-glow) {
     opacity: 1 !important;
+    animation: glow-shimmer 2s ease-in-out infinite !important;
 }
 
-:deep(.room-marker-dot) {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    border: 3px solid white;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-    position: relative;
-    z-index: 2;
+@keyframes pulse-ring {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+    }
 }
 
-:deep(.room-marker-container:hover .room-marker-dot) {
-    transform: scale(1.1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+@keyframes dot-pulse {
+    0%,
+    100% {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 0 color-mix(in srgb, var(--primary-color) 40%, transparent);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 4px color-mix(in srgb, var(--primary-color) 20%, transparent);
+    }
 }
 
-:deep(.room-marker-container:hover .room-marker-label) {
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+@keyframes glow-shimmer {
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+// Dark mode desteği
+:deep(.app-dark) {
+    .room-card {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    }
+
+    .room-card .marker-title {
+        background: linear-gradient(135deg, #f9fafb 0%, #e5e7eb 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 }
 </style>
