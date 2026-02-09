@@ -1,20 +1,20 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: artemis-postgres
-    environment:
-      POSTGRES_DB: artemisdb
-      POSTGRES_USER: artemisuser
-      POSTGRES_PASSWORD: 123456
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    networks:
-      - artemis-network
+  # postgres:
+  #   image: postgres:15
+  #   container_name: artemis-postgres
+  #   environment:
+  #     POSTGRES_DB: artemisdb
+  #     POSTGRES_USER: artemisuser
+  #     POSTGRES_PASSWORD: 123456
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - artemis-network
 
   identity-api:
     build:
@@ -31,8 +31,8 @@ services:
     depends_on:
       - postgres
     restart: unless-stopped
-    networks:
-      - artemis-network
+    # networks:
+    #   - artemis-network
 
   artemis-api:
     build:
@@ -49,8 +49,8 @@ services:
       - postgres
       - identity-api
     restart: unless-stopped
-    networks:
-      - artemis-network
+    # networks:
+    #   - artemis-network
 
   gateway-api:
     build:
@@ -66,8 +66,8 @@ services:
       - identity-api
       - artemis-api
     restart: unless-stopped
-    networks:
-      - artemis-network
+    # networks:
+    #   - artemis-network
 
   web-webapi:
     build:
@@ -81,12 +81,12 @@ services:
     depends_on:
       - gateway-api
     restart: unless-stopped
-    networks:
-      - artemis-network
+    # networks:
+    #   - artemis-network
 
-volumes:
-  postgres_data:
+# volumes:
+#   postgres_data:
 
-networks:
-  artemis-network:
-    driver: bridge
+# networks:
+#   artemis-network:
+#     driver: bridge
