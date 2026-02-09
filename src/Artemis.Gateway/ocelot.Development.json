@@ -5,7 +5,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "identity-api",
+          "Host": "localhost",
           "Port": 5095
         }
       ],
@@ -17,7 +17,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "artemis-api",
+          "Host": "localhost",
           "Port": 5094
         }
       ],
@@ -26,6 +26,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://gateway-api:5091"
+    "BaseUrl": "http://localhost:5091"
   }
 }

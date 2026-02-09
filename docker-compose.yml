@@ -13,19 +13,80 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - artemis-network
 
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: artemis-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@artemis.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+  identity-api:
+    build:
+      context: .
+      dockerfile: src/Identity.Api/Dockerfile
+    container_name: artemis-identity-api
     ports:
-      - "8080:80"
+      - "5095:5095"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5095
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=ArtemisIdentity;Username=artemisuser;Password=123456
+      - ConnectionStrings__ArtemisConnection=Host=postgres;Port=5432;Database=artemisdb;Username=artemisuser;Password=123456
     depends_on:
       - postgres
     restart: unless-stopped
+    networks:
+      - artemis-network
+
+  artemis-api:
+    build:
+      context: .
+      dockerfile: src/Artemis.API/Dockerfile
+    container_name: artemis-api
+    ports:
+      - "5094:5094"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5094
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=artemisdb;Username=artemisuser;Password=123456
+    depends_on:
+      - postgres
+      - identity-api
+    restart: unless-stopped
+    networks:
+      - artemis-network
+
+  gateway-api:
+    build:
+      context: .
+      dockerfile: src/Artemis.Gateway/Dockerfile
+    container_name: artemis-gateway-api
+    ports:
+      - "5091:5091"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5091
+    depends_on:
+      - identity-api
+      - artemis-api
+    restart: unless-stopped
+    networks:
+      - artemis-network
+
+  web-webapi:
+    build:
+      context: .
+      dockerfile: src/Web/WebApi/Dockerfile
+    container_name: artemis-web-webapi
+    ports:
+      - "5175:5175"
+    environment:
+      - VITE_IDENTITY_TOKEN_URL=http://localhost:5091/identity/connect/token
+    depends_on:
+      - gateway-api
+    restart: unless-stopped
+    networks:
+      - artemis-network
 
 volumes:
   postgres_data:
 
+networks:
+  artemis-network:
+    driver: bridge
