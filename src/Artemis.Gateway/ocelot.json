@@ -23,6 +23,18 @@
       ],
       "UpstreamPathTemplate": "/api/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/{everything}",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "artemis-api",
+          "Port": 5094
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST" ]
     }
   ],
   "GlobalConfiguration": {

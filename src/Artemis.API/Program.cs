@@ -47,11 +47,15 @@ builder.Services.AddCors(options =>
     });
 });
 
+var identityAuthority = builder.Configuration["IdentityAuthority"] 
+    ?? builder.Configuration["IDENTITY_AUTHORITY"] 
+    ?? "http://identity-api:5095";
+
 builder.Services
     .AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = "http://localhost:5095";
+        options.Authority = identityAuthority;
         options.RequireHttpsMetadata = false;
         options.Audience = "artemis.api";
     });
@@ -62,11 +66,6 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ArtemisDbContext>();
     dbContext.Database.Migrate();
-    
-    // // Tek seferlik yasak kelime ekleme - kullanmak için yorumu kaldırın
-    // var forbiddenWordsCreator = new ForbiddenWordsCreator(dbContext);
-    // var wordsToAdd = new List<string> { "kelime1", "kelime2", "kelime3" }; // Buraya eklemek istediğiniz kelimeleri yazın
-    // forbiddenWordsCreator.SaveExpandedForbiddenWordsAsync(wordsToAdd).GetAwaiter().GetResult();
 }
 
 app.UseHttpsRedirection();
@@ -78,6 +77,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
-app.Urls.Add("http://0.0.0.0:5094");
 
+// URL'ler ASPNETCORE_URLS environment variable'ından alınır
+// Docker ortamında docker-compose.yml'de ayarlanmıştır
+// Development ortamında launchSettings.json'dan alınır
 app.Run();

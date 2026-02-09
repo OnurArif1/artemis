@@ -1,25 +1,24 @@
-# Build stage
 FROM node:20-alpine AS build
 WORKDIR /app
 
-# Copy package files
+ARG VITE_SIGNALR_HUB_URL=http://localhost:5094/hubs/chat
+ARG VITE_IDENTITY_TOKEN_URL=http://localhost:5091/identity/connect/token
+
+ENV VITE_SIGNALR_HUB_URL=$VITE_SIGNALR_HUB_URL
+ENV VITE_IDENTITY_TOKEN_URL=$VITE_IDENTITY_TOKEN_URL
+
 COPY src/Web/WebApi/package*.json ./
 RUN npm ci
 
-# Copy source code
 COPY src/Web/WebApi/ ./
 
-# Build the application
 RUN npm run build
 
-# Production stage
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 
-# Copy built files from build stage
 COPY --from=build /app/dist .
 
-# Copy nginx configuration
 COPY src/Web/WebApi/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 5175
