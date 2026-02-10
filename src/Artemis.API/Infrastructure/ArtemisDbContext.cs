@@ -28,6 +28,7 @@ public class ArtemisDbContext : DbContext
     public DbSet<ForbiddenWord> ForbiddenWords { get; set; }
     public DbSet<Interest> Interests { get; set; }
     public DbSet<PartyInterest> PartyInterests { get; set; }
+    public DbSet<PartyPurpose> PartyPurposes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +52,7 @@ public class ArtemisDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ForbiddenWordEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new InterestEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PartyInterestEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new PartyPurposeEntityTypeConfiguration());
     }
 
     public override int SaveChanges()

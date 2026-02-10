@@ -18,4 +18,5 @@ public class Party : BaseEntity, IChangingDate
     public ICollection<Subscribe> CreatedSubscribes { get; set; } = new List<Subscribe>();
     public ICollection<Subscribe> SubscribedTo { get; set; } = new List<Subscribe>();
     public ICollection<PartyInterest> PartyInterests { get; set; } = new List<PartyInterest>();
+    public ICollection<PartyPurpose> PartyPurposes { get; set; } = new List<PartyPurpose>();
 }
