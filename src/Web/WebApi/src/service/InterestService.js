@@ -14,7 +14,7 @@ export default class InterestService {
     async savePartyInterests(interestIds) {
         const response = await this.request({
             method: 'post',
-            url: '/party-interest/save',
+            url: '/partyInterest/save',
             data: { interestIds }
         });
         return response?.data ?? response;
@@ -23,7 +23,7 @@ export default class InterestService {
     async getMyInterests() {
         const response = await this.request({
             method: 'get',
-            url: '/party-interest/my-interests'
+            url: '/partyInterest/my-interests'
         });
         return response?.data ?? response;
     }

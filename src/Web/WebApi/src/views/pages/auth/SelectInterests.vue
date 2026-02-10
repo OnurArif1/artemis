@@ -139,7 +139,7 @@ onMounted(async () => {
                         <i class="pi pi-heart text-white text-2xl"></i>
                         <h1 class="text-3xl font-bold text-white">İlgi Alanlarınız</h1>
                     </div>
-                    <p class="text-white/90 text-sm font-light">Adım 1 / 3</p>
+                    <p class="text-white/90 text-sm font-light">Adım 1 / 2</p>
                 </div>
 
                 <!-- İçerik alanı -->

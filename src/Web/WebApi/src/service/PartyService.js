@@ -40,4 +40,15 @@ export default class PartyService {
     async delete(partyId) {
         return this.request({ method: 'delete', url: `/party/delete/${partyId}` });
     }
+
+    async updateProfile(partyName, description) {
+        await this.request({
+            method: 'post',
+            url: '/party/update-profile',
+            data: {
+                partyName,
+                description
+            }
+        });
+    }
 }

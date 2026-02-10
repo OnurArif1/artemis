@@ -67,11 +67,32 @@ public class PartyService : IPartyService
         if (party is not null)
         {
             party.PartyName = viewModel.PartyName;
+            party.Description = viewModel.Description;
             party.PartyType = viewModel.PartyType;
             party.IsBanned = viewModel.IsBanned;
             party.DeviceId = viewModel.DeviceId;
             await _artemisDbContext.SaveChangesAsync();
         }    
+    }
+
+    public async ValueTask UpdateByEmail(string email, string partyName, string? description)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            throw new ArgumentException("Email is required.", nameof(email));
+        }
+
+        var party = await _artemisDbContext.Parties
+            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
+
+        if (party == null)
+        {
+            throw new InvalidOperationException("User not found.");
+        }
+
+        party.PartyName = partyName;
+        party.Description = description;
+        await _artemisDbContext.SaveChangesAsync();
     }
 
     public async ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel)

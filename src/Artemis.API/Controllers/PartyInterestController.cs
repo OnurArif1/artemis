@@ -58,6 +58,7 @@ public class PartyInterestController : ControllerBase
     }
 
     [HttpGet("my-interests")]
+    [Authorize]
     public async Task<IActionResult> GetMyInterestsAsync()
     {
         // Get user's email from JWT token
