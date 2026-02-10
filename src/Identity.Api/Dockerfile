@@ -21,6 +21,7 @@ WORKDIR "/src/src/Identity.Api"
 RUN dotnet build "Identity.Api.csproj" -c ${BUILD_CONFIGURATION} -o /app/build
 
 FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
 WORKDIR "/src/src/Identity.Api"
 # Temporarily rename Artemis.API appsettings files to avoid conflicts during publish
 RUN mv /src/src/Artemis.API/appsettings.json /src/src/Artemis.API/appsettings.json.bak 2>/dev/null || true && \
