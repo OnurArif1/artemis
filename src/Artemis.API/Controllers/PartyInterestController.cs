@@ -2,17 +2,18 @@ using Artemis.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Text.Json.Serialization;
 
 namespace Artemis.API.Services;
 
 public class SavePartyInterestsRequest
 {
+    [JsonPropertyName("interestIds")]
     public List<int> InterestIds { get; set; } = new();
 }
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
 public class PartyInterestController : ControllerBase
 {
     private readonly IPartyInterestService _partyInterestService;
