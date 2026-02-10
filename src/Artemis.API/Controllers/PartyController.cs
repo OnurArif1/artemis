@@ -1,7 +1,5 @@
 using Artemis.API.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Text.Json.Serialization;
 
 namespace Artemis.API.Services;
@@ -46,16 +44,14 @@ public class PartyController : ControllerBase
             return BadRequest(new { message = "Party name is required." });
         }
 
-        // Get user's email from JWT token
-        var email = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
-        if (string.IsNullOrEmpty(email))
+        if (string.IsNullOrEmpty(request.Email))
         {
-            return Unauthorized(new { message = "User information not found." });
+            return BadRequest(new { message = "Email is required." });
         }
 
         try
         {
-            await _partyService.UpdateByEmail(email, request.PartyName, request.Description);
+            await _partyService.UpdateByEmail(request.Email, request.PartyName, request.Description);
             return Ok(new { message = "Profile updated successfully." });
         }
         catch (ArgumentException ex)
@@ -88,6 +84,9 @@ public class PartyController : ControllerBase
 
 public class UpdatePartyProfileRequest
 {
+    [JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
+
     [JsonPropertyName("partyName")]
     public string PartyName { get; set; } = string.Empty;
 

@@ -41,11 +41,12 @@ export default class PartyService {
         return this.request({ method: 'delete', url: `/party/delete/${partyId}` });
     }
 
-    async updateProfile(partyName, description) {
+    async updateProfile(email, partyName, description) {
         await this.request({
             method: 'post',
             url: '/party/update-profile',
             data: {
+                email,
                 partyName,
                 description
             }

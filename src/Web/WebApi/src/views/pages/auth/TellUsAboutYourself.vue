@@ -6,6 +6,7 @@ import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import request from '@/service/request';
 import PartyService from '@/service/PartyService';
+import { getEmailFromToken } from '@/utils/jwt';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -28,9 +29,23 @@ const saveProfile = async () => {
         return;
     }
 
+    // Get email from JWT token
+    const token = authStore.token || localStorage.getItem('auth.token');
+    const email = getEmailFromToken(token);
+    
+    if (!email) {
+        toast.add({
+            severity: 'error',
+            summary: 'Hata',
+            detail: 'Kullanıcı bilgileri bulunamadı. Lütfen tekrar giriş yapın.',
+            life: 5000
+        });
+        return;
+    }
+
     saving.value = true;
     try {
-        await partyService.updateProfile(fullName.value.trim(), bio.value.trim() || null);
+        await partyService.updateProfile(email, fullName.value.trim(), bio.value.trim() || null);
         toast.add({
             severity: 'success',
             summary: 'Başarılı',
