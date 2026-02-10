@@ -39,7 +39,6 @@ public class PartyController : ControllerBase
     }
 
     [HttpPost("update-profile")]
-    [Authorize]
     public async Task<IActionResult> UpdateProfileAsync([FromBody] UpdatePartyProfileRequest request)
     {
         if (request == null || string.IsNullOrEmpty(request.PartyName))

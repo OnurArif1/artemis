@@ -11,11 +11,11 @@ export default class InterestService {
         return response?.data ?? response;
     }
 
-    async savePartyInterests(interestIds) {
+    async savePartyInterests(email, interestIds) {
         const response = await this.request({
             method: 'post',
             url: '/partyInterest/save',
-            data: { interestIds }
+            data: { email, interestIds }
         });
         return response?.data ?? response;
     }

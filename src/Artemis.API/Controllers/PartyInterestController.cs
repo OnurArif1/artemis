@@ -1,13 +1,15 @@
 using Artemis.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using System.Text.Json.Serialization;
 
 namespace Artemis.API.Services;
 
 public class SavePartyInterestsRequest
 {
+    [JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
+
     [JsonPropertyName("interestIds")]
     public List<int> InterestIds { get; set; } = new();
 }
@@ -31,16 +33,14 @@ public class PartyInterestController : ControllerBase
             return BadRequest(new { message = "At least one interest must be selected." });
         }
 
-        // Get user's email from JWT token
-        var email = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
-        if (string.IsNullOrEmpty(email))
+        if (string.IsNullOrEmpty(request.Email))
         {
-            return Unauthorized(new { message = "User information not found." });
+            return BadRequest(new { message = "Email is required." });
         }
 
         try
         {
-            await _partyInterestService.SavePartyInterestsAsync(email, request.InterestIds);
+            await _partyInterestService.SavePartyInterestsAsync(request.Email, request.InterestIds);
             return Ok(new { message = "Your interests have been saved successfully." });
         }
         catch (ArgumentException ex)
@@ -57,33 +57,33 @@ public class PartyInterestController : ControllerBase
         }
     }
 
-    [HttpGet("my-interests")]
-    [Authorize]
-    public async Task<IActionResult> GetMyInterestsAsync()
-    {
-        // Get user's email from JWT token
-        var email = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
-        if (string.IsNullOrEmpty(email))
-        {
-            return Unauthorized(new { message = "User information not found." });
-        }
+    // [HttpGet("my-interests")]
+    // [Authorize]
+    // public async Task<IActionResult> GetMyInterestsAsync()
+    // {
+    //     // Get user's email from JWT token
+    //     var email = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
+    //     if (string.IsNullOrEmpty(email))
+    //     {
+    //         return Unauthorized(new { message = "User information not found." });
+    //     }
 
-        try
-        {
-            var interests = await _partyInterestService.GetMyInterestsAsync(email);
-            return Ok(interests);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = "An error occurred: " + ex.Message });
-        }
-    }
+    //     try
+    //     {
+    //         var interests = await _partyInterestService.GetMyInterestsAsync(email);
+    //         return Ok(interests);
+    //     }
+    //     catch (ArgumentException ex)
+    //     {
+    //         return BadRequest(new { message = ex.Message });
+    //     }
+    //     catch (InvalidOperationException ex)
+    //     {
+    //         return NotFound(new { message = ex.Message });
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         return StatusCode(500, new { message = "An error occurred: " + ex.Message });
+    //     }
+    // }
 }

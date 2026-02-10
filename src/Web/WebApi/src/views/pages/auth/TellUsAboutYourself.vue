@@ -91,7 +91,7 @@ onMounted(() => {
                                 v-model="fullName"
                                 type="text"
                                 placeholder="John Doe"
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-gray-800"
+                                class="w-full px-4 py-3 bg-black border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-400"
                                 required
                             />
                         </div>
@@ -106,7 +106,7 @@ onMounted(() => {
                                 v-model="bio"
                                 rows="6"
                                 placeholder="Kendiniz hakkında bir şeyler yazın..."
-                                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-gray-800 resize-none"
+                                class="w-full px-4 py-3 bg-black border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-400 resize-none"
                             ></textarea>
                         </div>
 

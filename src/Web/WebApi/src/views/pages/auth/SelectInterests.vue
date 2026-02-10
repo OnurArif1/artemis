@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { useToast } from 'primevue/usetoast';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
+import { getEmailFromToken } from '@/utils/jwt';
 import request from '@/service/request';
 import InterestService from '@/service/InterestService';
 
@@ -92,16 +93,41 @@ const saveInterests = async () => {
         return;
     }
 
+    // Get email from JWT token
+    const token = authStore.token || localStorage.getItem('auth.token');
+    if (!token) {
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: 'Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.',
+            life: 5000
+        });
+        router.push({ name: 'login' });
+        return;
+    }
+
+    const email = getEmailFromToken(token);
+    if (!email) {
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: 'Kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.',
+            life: 5000
+        });
+        router.push({ name: 'login' });
+        return;
+    }
+
     saving.value = true;
     try {
-        await interestService.savePartyInterests(selectedInterests.value);
+        await interestService.savePartyInterests(email, selectedInterests.value);
         toast.add({
             severity: 'success',
             summary: 'Başarılı',
             detail: 'İlgi alanlarınız kaydedildi.',
             life: 3000
         });
-        router.push({ name: 'room' });
+        router.push({ name: 'tellUsAboutYourself' });
     } catch (err) {
         toast.add({
             severity: 'error',
