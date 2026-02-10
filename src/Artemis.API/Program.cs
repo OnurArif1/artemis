@@ -23,6 +23,7 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IInterestService, InterestService>();
 builder.Services.AddScoped<IPartyInterestService, PartyInterestService>();
+builder.Services.AddScoped<IPartyPurposeService, PartyPurposeService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 

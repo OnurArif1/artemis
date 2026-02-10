@@ -65,6 +65,12 @@ const router = createRouter({
             name: 'tellUsAboutYourself',
             meta: { requiresAuth: true },
             component: () => import('@/views/pages/auth/TellUsAboutYourself.vue')
+        },
+        {
+            path: '/select-purposes',
+            name: 'selectPurposes',
+            meta: { requiresAuth: true },
+            component: () => import('@/views/pages/auth/SelectPurposes.vue')
         }
     ]
 });
@@ -93,8 +99,8 @@ router.beforeEach((to, _from, next) => {
         return;
     }
     
-    // Select interests and tell us about yourself pages require auth - allow them
-    if (to.name === 'selectInterests' || to.name === 'tellUsAboutYourself') {
+    // Select interests, tell us about yourself, and select purposes pages require auth - allow them
+    if (to.name === 'selectInterests' || to.name === 'tellUsAboutYourself' || to.name === 'selectPurposes') {
         next();
         return;
     }

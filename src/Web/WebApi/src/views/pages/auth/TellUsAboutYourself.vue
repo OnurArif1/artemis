@@ -52,7 +52,7 @@ const saveProfile = async () => {
             detail: 'Profil bilgileriniz kaydedildi.',
             life: 3000
         });
-        router.push({ name: 'room' });
+        router.push({ name: 'selectPurposes' });
     } catch (err) {
         toast.add({
             severity: 'error',
@@ -78,7 +78,7 @@ onMounted(() => {
         
         <!-- İlerleme çubuğu -->
         <div class="absolute top-0 left-0 right-0 h-1 bg-gray-300">
-            <div class="h-full bg-gradient-to-r from-pink-500 to-purple-500" style="width: 30%"></div>
+            <div class="h-full bg-gradient-to-r from-pink-500 to-purple-500" style="width: 50%"></div>
         </div>
 
         <div class="relative w-full max-w-2xl mt-8">
