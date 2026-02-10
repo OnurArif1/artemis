@@ -201,5 +201,31 @@ export default {
         friends: 'Friends',
         community: 'Community',
         events: 'Events'
+    },
+    interest: {
+        Sports: 'Sports',
+        Fitness: 'Fitness',
+        Hiking: 'Hiking',
+        Coffee: 'Coffee',
+        Food: 'Food',
+        Cooking: 'Cooking',
+        Music: 'Music',
+        Concerts: 'Concerts',
+        Art: 'Art',
+        Photography: 'Photography',
+        Travel: 'Travel',
+        Books: 'Books',
+        Movies: 'Movies',
+        Gaming: 'Gaming',
+        Tech: 'Tech',
+        Business: 'Business',
+        Meditation: 'Meditation',
+        Yoga: 'Yoga',
+        Dancing: 'Dancing',
+        Languages: 'Languages',
+        Volunteering: 'Volunteering',
+        Nature: 'Nature',
+        Animals: 'Animals',
+        Outdoor: 'Outdoor'
     }
 };

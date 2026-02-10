@@ -202,5 +202,31 @@ export default {
         friends: 'Arkadaşlar',
         community: 'Topluluk',
         events: 'Etkinlikler'
+    },
+    interest: {
+        Sports: 'Spor',
+        Fitness: 'Fitness',
+        Hiking: 'Yürüyüş',
+        Coffee: 'Kahve',
+        Food: 'Yemek',
+        Cooking: 'Yemek Yapma',
+        Music: 'Müzik',
+        Concerts: 'Konserler',
+        Art: 'Sanat',
+        Photography: 'Fotoğrafçılık',
+        Travel: 'Seyahat',
+        Books: 'Kitap',
+        Movies: 'Film',
+        Gaming: 'Oyun',
+        Tech: 'Teknoloji',
+        Business: 'İş',
+        Meditation: 'Meditasyon',
+        Yoga: 'Yoga',
+        Dancing: 'Dans',
+        Languages: 'Diller',
+        Volunteering: 'Gönüllülük',
+        Nature: 'Doğa',
+        Animals: 'Hayvanlar',
+        Outdoor: 'Açık Hava'
     }
 };

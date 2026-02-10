@@ -172,7 +172,7 @@ onMounted(async () => {
                                 'text-sm font-medium text-center',
                                 isSelected(interest.id) ? 'text-purple-700' : 'text-gray-700'
                             ]">
-                                {{ interest.name }}
+                                {{ t(`interest.${interest.name}`) }}
                             </span>
                         </button>
                     </div>

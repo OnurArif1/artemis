@@ -1,12 +1,10 @@
 using Artemis.API.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Artemis.API.Services;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
 public class InterestController : ControllerBase
 {
     private readonly IInterestService _interestService;
