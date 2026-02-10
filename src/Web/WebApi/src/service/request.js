@@ -11,10 +11,13 @@ const service = axios.create({
 
 service.interceptors.request.use(
     (config) => {
-        const auth = useAuthStore();
-        if (auth.token) {
+        // Get token from localStorage directly to ensure it's always available
+        const token = localStorage.getItem('auth.token');
+        if (token) {
             config.headers = config.headers || {};
-            config.headers.Authorization = `Bearer ${auth.token}`;
+            config.headers.Authorization = `Bearer ${token}`;
+        } else {
+            console.warn('No auth token found for request:', config.url);
         }
         return config;
     },

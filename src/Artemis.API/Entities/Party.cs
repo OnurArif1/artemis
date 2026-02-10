@@ -16,4 +16,5 @@ public class Party : BaseEntity, IChangingDate
     public ICollection<MentionPartyMap> MentionPartyMaps { get; set; } = new List<MentionPartyMap>();
     public ICollection<Subscribe> CreatedSubscribes { get; set; } = new List<Subscribe>();
     public ICollection<Subscribe> SubscribedTo { get; set; } = new List<Subscribe>();
+    public ICollection<PartyInterest> PartyInterests { get; set; } = new List<PartyInterest>();
 }

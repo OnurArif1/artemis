@@ -53,6 +53,12 @@ const router = createRouter({
             name: 'login',
             meta: { requiresAuth: false },
             component: () => import('@/views/pages/auth/Login.vue')
+        },
+        {
+            path: '/select-interests',
+            name: 'selectInterests',
+            meta: { requiresAuth: true },
+            component: () => import('@/views/pages/auth/SelectInterests.vue')
         }
     ]
 });
@@ -78,6 +84,12 @@ router.beforeEach((to, _from, next) => {
     // If route requires auth but user is not authenticated, redirect to login
     if (requiresAuth && !auth.isAuthenticated()) {
         next({ name: 'login' });
+        return;
+    }
+    
+    // Select interests page requires auth - allow it
+    if (to.name === 'selectInterests') {
+        next();
         return;
     }
     

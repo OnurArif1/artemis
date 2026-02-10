@@ -25,7 +25,6 @@ const registerPasswordAgain = ref('');
 const registerPartyType = ref(1); // 0=None, 1=Person, 2=Organization
 const registerError = ref('');
 const registerLoading = ref(false);
-const agreeToTerms = ref(false);
 
 const partyTypeOptions = computed(() => [
     { label: t('auth.partyTypeNone'), value: 0 },
@@ -96,7 +95,6 @@ function toggleMode() {
     isRegisterMode.value = !isRegisterMode.value;
     errorMsg.value = '';
     registerError.value = '';
-    agreeToTerms.value = false;
 }
 
 async function onRegister() {
@@ -104,11 +102,8 @@ async function onRegister() {
     const e = (registerEmail.value || '').trim();
     const p = registerPassword.value || '';
     const p2 = registerPasswordAgain.value || '';
-    
-    if (!agreeToTerms.value) {
-        registerError.value = 'Hizmet şartlarını ve gizlilik politikasını kabul etmelisiniz.';
-        return;
-    }
+    const displayNameValue = (displayName.value || '').trim();
+    const usernameValue = (username.value || '').trim();
     
     if (!e) {
         registerError.value = t('auth.emailRequired');
@@ -128,18 +123,75 @@ async function onRegister() {
     }
     registerLoading.value = true;
     try {
-        await axios.post('/identity/account/register', { email: e, password: p, partyType: registerPartyType.value }, { headers: { 'Content-Type': 'application/json' } });
-        toast.add({
-            severity: 'success',
-            summary: t('auth.accountCreated'),
-            detail: t('auth.accountCreatedDetail'),
-            life: 4000
-        });
-        // Switch to login mode after successful registration
-        setTimeout(() => {
-            isRegisterMode.value = false;
-            email.value = e;
-        }, 1000);
+        // Prepare register request with all form fields
+        // Backend expects: Email, Password, PartyName, PartyType, DeviceId, IsBanned
+        const registerData = {
+            Email: e,
+            Password: p,
+            PartyName: displayNameValue || usernameValue || null,
+            PartyType: registerPartyType.value,
+            DeviceId: null, // Optional - can be set later if needed
+            IsBanned: false // Default to false for new registrations
+        };
+        
+        await axios.post('/identity/account/register', registerData, { headers: { 'Content-Type': 'application/json' } });
+        
+        // Register başarılı olduktan sonra otomatik login yap
+        try {
+            const form = new URLSearchParams();
+            form.append('grant_type', 'password');
+            form.append('client_id', 'artemis.client');
+            form.append('client_secret', 'artemis_secret');
+            form.append('username', e);
+            form.append('password', p);
+            form.append('scope', 'openid profile email roles artemis.api');
+
+            const tokenUrl = import.meta.env.VITE_IDENTITY_TOKEN_URL;
+            const resp = await axios.post(tokenUrl, form, {
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
+
+            const accessToken = resp?.data?.access_token;
+            const expiresIn = resp?.data?.expires_in;
+            if (accessToken) {
+                // Store token in localStorage
+                localStorage.setItem('auth.token', accessToken);
+                if (expiresIn) {
+                    localStorage.setItem('auth.expiresAt', (Date.now() + Number(expiresIn) * 1000).toString());
+                }
+                
+                // Set token in axios defaults
+                axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+                
+                // Set token in auth store
+                if (auth.setToken) {
+                    auth.setToken(accessToken, expiresIn ? Number(expiresIn) : undefined);
+                }
+                
+                // Verify token is stored before redirecting
+                const storedToken = localStorage.getItem('auth.token');
+                if (!storedToken) {
+                    throw new Error('Token could not be stored');
+                }
+                
+                // İlgi alanları seçim sayfasına yönlendir
+                router.push({ name: 'selectInterests' });
+            } else {
+                throw new Error('Invalid login response');
+            }
+        } catch (loginErr) {
+            // Otomatik login başarısız olursa, kullanıcıyı login sayfasında bırak
+            toast.add({
+                severity: 'success',
+                summary: t('auth.accountCreated'),
+                detail: 'Hesabınız oluşturuldu. Lütfen giriş yapın.',
+                life: 4000
+            });
+            setTimeout(() => {
+                isRegisterMode.value = false;
+                email.value = e;
+            }, 1000);
+        }
     } catch (err) {
         const d = err?.response?.data;
         let msg = d?.error;
@@ -173,22 +225,9 @@ async function onRegister() {
                 </div>
 
                 <!-- Title -->
-                <h1 class="text-4xl font-bold text-gray-900 mb-10 text-center">
-                    {{ isRegisterMode ? t('auth.createAccountTitle') : t('auth.loginTitle') }}
+                <h1 v-if="!isRegisterMode" class="text-4xl font-bold text-gray-900 mb-10 text-center">
+                    {{ t('auth.loginTitle') }}
                 </h1>
-
-                <!-- Register Mode: Terms Checkbox -->
-                <div v-if="isRegisterMode" class="mb-6 p-4 bg-amber-50 rounded-xl border border-amber-200 shadow-sm">
-                    <div class="flex items-start gap-3">
-                        <Checkbox v-model="agreeToTerms" inputId="terms" :binary="true" />
-                        <label for="terms" class="text-sm text-gray-700 cursor-pointer leading-relaxed">
-                            {{ t('auth.agreeToTerms') }}
-                            <a href="#" class="text-orange-600 hover:text-orange-700 underline font-medium transition-colors">{{ t('auth.termsOfService') }}</a>
-                            {{ t('auth.and') }}
-                            <a href="#" class="text-orange-600 hover:text-orange-700 underline font-medium transition-colors">{{ t('auth.privacyPolicy') }}</a>
-                        </label>
-                    </div>
-                </div>
 
                 <!-- Login Form -->
                 <form v-if="!isRegisterMode" @submit.prevent="onLogin" class="space-y-6">

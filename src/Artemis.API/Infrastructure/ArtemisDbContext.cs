@@ -26,6 +26,8 @@ public class ArtemisDbContext : DbContext
     public DbSet<Topic> Topics { get; set; }
     public DbSet<TopicHashtagMap> TopicHashtagMaps { get; set; }
     public DbSet<ForbiddenWord> ForbiddenWords { get; set; }
+    public DbSet<Interest> Interests { get; set; }
+    public DbSet<PartyInterest> PartyInterests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +49,8 @@ public class ArtemisDbContext : DbContext
         modelBuilder.ApplyConfiguration(new TopicEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TopicHashtagMapEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new ForbiddenWordEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new InterestEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new PartyInterestEntityTypeConfiguration());
     }
 
     public override int SaveChanges()
