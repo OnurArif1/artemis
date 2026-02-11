@@ -2,7 +2,6 @@
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from '@/composables/useI18n';
-import { useLayout } from '@/layout/composables/layout';
 import { useAuthStore } from '@/stores/auth';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
@@ -16,7 +15,6 @@ const router = useRouter();
 const roomService = new RoomService(request);
 const topicService = new TopicService(request);
 const { t } = useI18n();
-const { isDarkTheme } = useLayout();
 const authStore = useAuthStore();
 const mapContainer = ref(null);
 const loading = ref(true);
@@ -42,6 +40,166 @@ const USER_LOCATION_RADIUS_KM = 40; // Kullanıcı konumu etrafında 40km yarı�
 let currentZoomLevel = 6;
 let showingDetailedMarkers = false;
 let userLocation = null;
+
+// Firework confetti canvas
+let confettiCanvas = null;
+let confettiCtx = null;
+let animationFrameId = null;
+let resizeHandler = null;
+let isAnimating = false;
+const particles = ref([]);
+
+// Firework confetti fonksiyonu
+function createFirework(x, y) {
+    const colors = ['#FF8C00', '#FF7A00', '#FF6A00', '#FFD700', '#FFA500', '#FF6347', '#FF1493', '#00CED1', '#9333ea', '#7c3aed'];
+    const particleCount = 60;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const angle = (Math.PI * 2 * i) / particleCount;
+        const speed = 3 + Math.random() * 5;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        particles.value.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            color: color,
+            life: 1.0,
+            decay: 0.012 + Math.random() * 0.008,
+            size: 4 + Math.random() * 5,
+            gravity: 0.12
+        });
+    }
+}
+
+function animateConfetti() {
+    if (!confettiCtx || !confettiCanvas || !isAnimating) {
+        animationFrameId = null;
+        isAnimating = false;
+        return;
+    }
+    
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    
+    for (let i = particles.value.length - 1; i >= 0; i--) {
+        const p = particles.value[i];
+        
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += p.gravity;
+        p.life -= p.decay;
+        
+        if (p.life <= 0 || p.y > confettiCanvas.height || p.x < 0 || p.x > confettiCanvas.width) {
+            particles.value.splice(i, 1);
+            continue;
+        }
+        
+        confettiCtx.globalAlpha = p.life;
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.beginPath();
+        confettiCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        confettiCtx.fill();
+    }
+    
+    // Animasyonu devam ettir
+    if (isAnimating) {
+        animationFrameId = requestAnimationFrame(animateConfetti);
+    } else {
+        animationFrameId = null;
+    }
+}
+
+function ensureCanvas() {
+    if (!confettiCanvas || !confettiCtx) {
+        // Canvas oluştur
+        confettiCanvas = document.createElement('canvas');
+        confettiCanvas.style.position = 'fixed';
+        confettiCanvas.style.top = '0';
+        confettiCanvas.style.left = '0';
+        confettiCanvas.style.width = '100%';
+        confettiCanvas.style.height = '100%';
+        confettiCanvas.style.pointerEvents = 'none';
+        confettiCanvas.style.zIndex = '10000';
+        document.body.appendChild(confettiCanvas);
+        confettiCtx = confettiCanvas.getContext('2d');
+    }
+}
+
+function launchFireworks() {
+    // Sadece login sonrası ilk yüklemede göster
+    const hasShownConfetti = sessionStorage.getItem('confettiShown');
+    if (hasShownConfetti) return;
+    sessionStorage.setItem('confettiShown', 'true');
+    
+    // Canvas'ın hazır olduğundan emin ol
+    ensureCanvas();
+    
+    if (!confettiCanvas || !confettiCtx) {
+        console.error('Canvas oluşturulamadı');
+        return;
+    }
+    
+    // Canvas boyutunu ayarla
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+    
+    // Önceki partikülleri temizle
+    particles.value = [];
+    
+    // Önceki animasyonu durdur
+    isAnimating = false;
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    
+    // Animasyonu başlat
+    isAnimating = true;
+    animateConfetti();
+    
+    // Ekranın ortasından başlayarak tüm ekrana firework'ler başlat
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    
+    // Merkezden başlayarak çoklu firework'ler
+    const fireworkCount = 8;
+    for (let i = 0; i < fireworkCount; i++) {
+        setTimeout(() => {
+            // Merkezden başlayarak farklı açılarda ve mesafelerde firework'ler
+            const angle = (Math.PI * 2 * i) / fireworkCount;
+            const distance = 50 + Math.random() * 100;
+            const x = centerX + Math.cos(angle) * distance;
+            const y = centerY + Math.sin(angle) * distance;
+            createFirework(x, y);
+        }, i * 150);
+    }
+    
+    // Ekranın farklı yerlerine de rastgele firework'ler ekle
+    setTimeout(() => {
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => {
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                createFirework(x, y);
+            }, i * 200);
+        }
+    }, 1000);
+    
+    // 4 saniye sonra animasyonu durdur
+    setTimeout(() => {
+        isAnimating = false;
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+        // Canvas'ı temizle
+        if (confettiCtx && confettiCanvas) {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        }
+        particles.value = [];
+    }, 4000);
+}
 
 // PartyPurposeType options
 const purposeOptions = [
@@ -78,7 +236,8 @@ function updateTileLayer() {
     }
 
     const L = window.L;
-    const tileUrl = isDarkTheme.value ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    // Varsayılan olarak beyaz (light) tile layer kullan
+    const tileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
     tileLayer = L.tileLayer(tileUrl, {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -88,6 +247,15 @@ function updateTileLayer() {
 }
 
 onMounted(async () => {
+    // Canvas için resize handler
+    resizeHandler = () => {
+        if (confettiCanvas) {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+        }
+    };
+    window.addEventListener('resize', resizeHandler);
+    
     if (!mapContainer.value) return;
 
     const L = window.L;
@@ -232,12 +400,14 @@ onMounted(async () => {
         error.value = t('common.error') + ': ' + (e?.message || String(e));
     } finally {
         loading.value = false;
+        
+        // Sayfa yüklendikten sonra confetti başlat
+        setTimeout(() => {
+            launchFireworks();
+        }, 300);
     }
 });
 
-watch(isDarkTheme, () => {
-    updateTileLayer();
-});
 
 onBeforeUnmount(() => {
     if (map) {
@@ -246,6 +416,20 @@ onBeforeUnmount(() => {
     }
     markersLayer = null;
     tileLayer = null;
+    
+    // Confetti temizliği
+    isAnimating = false;
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    if (resizeHandler) {
+        window.removeEventListener('resize', resizeHandler);
+    }
+    if (confettiCanvas && confettiCanvas.parentNode) {
+        confettiCanvas.parentNode.removeChild(confettiCanvas);
+    }
+    particles.value = [];
 });
 
 function escapeHtml(s) {
