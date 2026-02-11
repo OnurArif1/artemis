@@ -41,7 +41,7 @@
 
         &.layout-static {
             .layout-main-container {
-                margin-left: 22rem;
+                margin-left: 0; // Sidebar kaldırıldığı için margin-left sıfırlandı
             }
 
             &.layout-static-inactive {

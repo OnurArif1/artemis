@@ -92,9 +92,7 @@ const profileMenuItems = computed(() => [
 
 <template>
     <div class="layout-topbar">
-        <button type="button" class="layout-menu-button layout-topbar-action" @click="toggleMenu">
-            <i class="pi pi-bars"></i>
-        </button>
+        <!-- Hamburger menü butonu kaldırıldı - sidebar artık yok -->
         <div class="layout-topbar-logo-container">
             <span class="layout-topbar-logo">Ghossip</span>
         </div>

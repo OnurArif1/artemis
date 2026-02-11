@@ -1,19 +1,23 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from '@/composables/useI18n';
 import { useLayout } from '@/layout/composables/layout';
+import { useAuthStore } from '@/stores/auth';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import TopicService from '@/service/TopicService';
 import Chat from '@/views/chat/Chat.vue';
 import TopicCommentChat from '@/views/chat/TopicCommentChat.vue';
+import Dropdown from 'primevue/dropdown';
 
 const route = useRoute();
+const router = useRouter();
 const roomService = new RoomService(request);
 const topicService = new TopicService(request);
 const { t } = useI18n();
 const { isDarkTheme } = useLayout();
+const authStore = useAuthStore();
 const mapContainer = ref(null);
 const loading = ref(true);
 const error = ref('');
@@ -21,6 +25,11 @@ const showChatDialog = ref(false);
 const selectedRoom = ref(null);
 const showTopicChatDialog = ref(false);
 const selectedTopic = ref(null);
+const rightPanelCollapsed = ref(false);
+const selectedPurpose = ref(null);
+const selectedVisibility = ref(null);
+const liveCount = ref(0);
+const totalCount = ref(0);
 let map = null;
 let markersLayer = null;
 let tileLayer = null;
@@ -29,8 +38,37 @@ let cachedTopics = [];
 
 const TURKEY_CENTER = [39, 35.5];
 const CITY_CLUSTER_DISTANCE_KM = 50; // Şehir bazlı gruplama için mesafe (50km - şehir bazlı)
+const USER_LOCATION_RADIUS_KM = 40; // Kullanıcı konumu etrafında 40km yarıçap
 let currentZoomLevel = 6;
 let showingDetailedMarkers = false;
+let userLocation = null;
+
+// PartyPurposeType options
+const purposeOptions = [
+    { label: 'Tümü', value: null },
+    { label: 'Sosyalleşme', value: 1 },
+    { label: 'Flört', value: 2 },
+    { label: 'Ağ Kurma', value: 3 },
+    { label: 'Arkadaş Edinme', value: 4 },
+    { label: 'Keşfetme', value: 5 }
+];
+
+const visibilityOptions = [
+    { label: 'Herkes', value: 'everyone' },
+    { label: 'Arkadaşlar', value: 'friends' },
+    { label: 'Sadece Ben', value: 'onlyme' }
+];
+
+// Bottom navigation items - Sol menüden taşınan öğeler
+const bottomNavItems = [
+    { name: 'Map', icon: 'pi-map-marker', route: 'room', active: true },
+    { name: 'Odalar', icon: 'pi-map-marker', route: 'room', active: false },
+    { name: 'Oda Ekle', icon: 'pi-plus-circle', route: 'createRoom', active: false },
+    { name: 'Konular', icon: 'pi-book', route: 'topic', active: false },
+    { name: 'Konu Ekle', icon: 'pi-plus-circle', route: 'createTopic', active: false },
+    { name: 'Kategoriler', icon: 'pi-tags', route: 'category', active: false },
+    { name: 'Profile', icon: 'pi-user', route: 'profile', active: false }
+];
 
 function updateTileLayer() {
     if (!map) return;
@@ -77,6 +115,10 @@ onMounted(async () => {
         // Cache'le
         cachedRooms = rooms;
         cachedTopics = topics;
+        
+        // Update counts
+        liveCount.value = rooms.length;
+        totalCount.value = rooms.length + topics.length;
         
         if (!Array.isArray(rooms) || !Array.isArray(topics)) {
             loading.value = false;
@@ -160,12 +202,32 @@ onMounted(async () => {
             }
         }
 
-        // Türkiye'ye zoom yap
-        const TURKEY_BOUNDS = [
-            [35.8, 25.9],
-            [42.2, 44.9]
-        ];
-        map.fitBounds(TURKEY_BOUNDS, { padding: [50, 50], maxZoom: 7 });
+        // Kullanıcı konumunu al ve 40km etrafındaki odalar/topiclere zoom yap
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = [position.coords.latitude, position.coords.longitude];
+                    zoomToUserLocationWithRadius(L, rooms, topics, userLocation);
+                },
+                (err) => {
+                    console.warn('Konum alınamadı:', err);
+                    // Konum alınamazsa Türkiye'ye zoom yap
+                    const TURKEY_BOUNDS = [
+                        [35.8, 25.9],
+                        [42.2, 44.9]
+                    ];
+                    map.fitBounds(TURKEY_BOUNDS, { padding: [50, 50], maxZoom: 7 });
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        } else {
+            // Geolocation desteklenmiyorsa Türkiye'ye zoom yap
+            const TURKEY_BOUNDS = [
+                [35.8, 25.9],
+                [42.2, 44.9]
+            ];
+            map.fitBounds(TURKEY_BOUNDS, { padding: [50, 50], maxZoom: 7 });
+        }
     } catch (e) {
         error.value = t('common.error') + ': ' + (e?.message || String(e));
     } finally {
@@ -591,20 +653,330 @@ function updateMarkersBasedOnZoom(L) {
         }
     }
 }
+
+// Computed properties
+const userInitial = computed(() => {
+    const email = authStore.userEmail || '';
+    return email.charAt(0).toUpperCase() || 'U';
+});
+
+// Navigation functions
+function refreshMap() {
+    if (map) {
+        map.invalidateSize();
+        loading.value = true;
+        setTimeout(() => {
+            loading.value = false;
+        }, 500);
+    }
+}
+
+function centerOnLocation() {
+    if (map && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const userLoc = [position.coords.latitude, position.coords.longitude];
+            userLocation = userLoc;
+            const L = window.L;
+            zoomToUserLocationWithRadius(L, cachedRooms, cachedTopics, userLoc);
+        });
+    }
+}
+
+function setCurrentLocation() {
+    if (map && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const userLoc = [position.coords.latitude, position.coords.longitude];
+            userLocation = userLoc;
+            const L = window.L;
+            zoomToUserLocationWithRadius(L, cachedRooms, cachedTopics, userLoc);
+        });
+    }
+}
+
+function setFutureLocation() {
+    // Haritaya tıklama ile gelecek konum belirleme
+    if (map) {
+        map.once('click', (e) => {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            // Burada gelecek konum kaydedilebilir
+            console.log('Future location:', lat, lng);
+        });
+    }
+}
+
+function navigateTo(routeName) {
+    if (routeName === 'room') {
+        return; // Zaten bu sayfadayız
+    }
+    router.push({ name: routeName });
+}
+
+// Kullanıcı konumunun 40km etrafındaki odalar ve topiclere zoom yap
+function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
+    if (!map || !userLoc) return;
+    
+    const [userLat, userLng] = userLoc;
+    
+    // 40km yarıçap içindeki odaları ve topicleri filtrele
+    const nearbyRooms = allRooms.filter(room => {
+        const lat = Number(room.locationY ?? room.LocationY);
+        const lng = Number(room.locationX ?? room.LocationX);
+        if (Number.isNaN(lat) || Number.isNaN(lng)) return false;
+        const distance = calculateDistance(userLat, userLng, lat, lng);
+        return distance <= USER_LOCATION_RADIUS_KM;
+    });
+    
+    const nearbyTopics = allTopics.filter(topic => {
+        const lat = Number(topic.locationY ?? topic.LocationY);
+        const lng = Number(topic.locationX ?? topic.LocationX);
+        if (Number.isNaN(lat) || Number.isNaN(lng)) return false;
+        const distance = calculateDistance(userLat, userLng, lat, lng);
+        return distance <= USER_LOCATION_RADIUS_KM;
+    });
+    
+    // Yakındaki öğeleri göster
+    if (markersLayer) {
+        markersLayer.clearLayers();
+    }
+    
+    // Yakındaki odaları göster
+    nearbyRooms.forEach(room => {
+        const lat = Number(room.locationY ?? room.LocationY);
+        const lng = Number(room.locationX ?? room.LocationX);
+        if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+            createDetailedRoomMarker(room, lat, lng, L);
+        }
+    });
+    
+    // Yakındaki topicleri göster
+    nearbyTopics.forEach(topic => {
+        const lat = Number(topic.locationY ?? topic.LocationY);
+        const lng = Number(topic.locationX ?? topic.LocationX);
+        if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+            createDetailedTopicMarker(topic, lat, lng, L);
+        }
+    });
+    
+    // Tüm yakındaki öğeleri içeren bounds hesapla
+    const allNearbyItems = [...nearbyRooms, ...nearbyTopics];
+    if (allNearbyItems.length > 0) {
+        const coords = allNearbyItems
+            .map(item => {
+                const lat = Number(item.locationY ?? item.LocationY);
+                const lng = Number(item.locationX ?? item.LocationX);
+                return !Number.isNaN(lat) && !Number.isNaN(lng) ? [lat, lng] : null;
+            })
+            .filter(coord => coord !== null);
+        
+        if (coords.length > 0) {
+            // Kullanıcı konumunu da ekle
+            coords.push(userLoc);
+            
+            const bounds = L.latLngBounds(coords);
+            map.fitBounds(bounds, { 
+                padding: [100, 100], 
+                maxZoom: 13,
+                animate: true,
+                duration: 1.0
+            });
+            
+            // Kullanıcı konumunu marker olarak göster
+            const userMarker = L.marker(userLoc, {
+                icon: L.divIcon({
+                    className: 'user-location-marker',
+                    html: '<div class="user-location-dot"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(markersLayer);
+            
+            // 40km yarıçapını göster
+            const radiusCircle = L.circle(userLoc, {
+                radius: USER_LOCATION_RADIUS_KM * 1000, // metre cinsinden
+                color: '#9333ea',
+                fillColor: '#9333ea',
+                fillOpacity: 0.1,
+                weight: 2,
+                dashArray: '5, 5'
+            }).addTo(markersLayer);
+        } else {
+            // Yakında öğe yoksa kullanıcı konumuna zoom yap
+            map.setView(userLoc, 12, { animate: true, duration: 1.0 });
+        }
+    } else {
+        // Yakında hiç öğe yoksa kullanıcı konumuna zoom yap
+        map.setView(userLoc, 12, { animate: true, duration: 1.0 });
+        
+        // 40km yarıçapını göster
+        const radiusCircle = L.circle(userLoc, {
+            radius: USER_LOCATION_RADIUS_KM * 1000,
+            color: '#9333ea',
+            fillColor: '#9333ea',
+            fillOpacity: 0.1,
+            weight: 2,
+            dashArray: '5, 5'
+        }).addTo(markersLayer);
+    }
+    
+    // Counts güncelle
+    liveCount.value = nearbyRooms.length;
+    totalCount.value = nearbyRooms.length + nearbyTopics.length;
+}
 </script>
 
 <template>
-    <div class="room-map-wrapper">
-        <div ref="mapContainer" class="room-map" />
-        <div v-if="loading" class="loading-overlay">
-            <ProgressSpinner style="width: 32px; height: 32px" />
-            <span class="ml-2">{{ t('common.loading') }}</span>
-        </div>
-        <div v-if="error" class="error-overlay">
-            <div class="p-3 surface-100 border-round text-red-600">
-                {{ error }}
+    <div class="room-map-fullscreen">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav-bar">
+            <div class="top-nav-left">
+                <button class="nav-btn" @click="refreshMap">
+                    <i class="pi pi-refresh"></i>
+                </button>
+                <button class="nav-btn" @click="centerOnLocation">
+                    <i class="pi pi-map-marker"></i>
+                </button>
+                <Dropdown 
+                    v-model="selectedPurpose" 
+                    :options="purposeOptions" 
+                    optionLabel="label" 
+                    placeholder="What I'm Looking For"
+                    class="nav-dropdown"
+                    optionValue="value"
+                />
+                <Dropdown 
+                    v-model="selectedVisibility" 
+                    :options="visibilityOptions" 
+                    optionLabel="label" 
+                    placeholder="Who Can See Me"
+                    class="nav-dropdown"
+                    optionValue="value"
+                />
+            </div>
+            <div class="top-nav-right">
+                <button class="nav-btn">
+                    <i class="pi pi-comments"></i>
+                </button>
+                <button class="nav-btn">
+                    <i class="pi pi-bell"></i>
+                </button>
+                <button class="nav-btn profile-btn">
+                    <span class="profile-initial">{{ userInitial }}</span>
+                </button>
             </div>
         </div>
+
+        <!-- Map Container -->
+        <div class="room-map-wrapper">
+            <!-- Map -->
+            <div ref="mapContainer" class="room-map" />
+            
+            <!-- Map Overlay Controls -->
+            <div class="map-overlay-controls">
+                <div class="visible-badge">
+                    <span class="visible-dot"></span>
+                    Visible
+                </div>
+                <div class="location-buttons">
+                    <button class="location-btn" @click="setCurrentLocation">
+                        <i class="pi pi-map-marker"></i>
+                        <div class="btn-content">
+                            <div class="btn-title">Where I'm At</div>
+                            <div class="btn-subtitle">Use location</div>
+                        </div>
+                    </button>
+                    <button class="location-btn" @click="setFutureLocation">
+                        <i class="pi pi-send"></i>
+                        <div class="btn-content">
+                            <div class="btn-title">Where I'll Be</div>
+                            <div class="btn-subtitle">Tap map</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel" :class="{ collapsed: rightPanelCollapsed }">
+                <div class="panel-header">
+                    <h3>MY PINS</h3>
+                    <button class="panel-toggle" @click="rightPanelCollapsed = !rightPanelCollapsed">
+                        <i :class="rightPanelCollapsed ? 'pi pi-chevron-left' : 'pi pi-chevron-right'"></i>
+                    </button>
+                </div>
+                <div class="panel-content" v-if="!rightPanelCollapsed">
+                    <div class="panel-section">
+                        <h4>WHERE I'M AT</h4>
+                        <p class="empty-state">No current pin</p>
+                    </div>
+                    <div class="panel-section">
+                        <h4>WHERE I'LL BE (0/5)</h4>
+                        <p class="empty-state">No upcoming pins</p>
+                    </div>
+                    <div class="panel-section">
+                        <h4>ARRIVAL COLORS</h4>
+                        <div class="color-legend">
+                            <div class="legend-item">
+                                <div class="legend-color blue"></div>
+                                <span>4h+</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color yellow"></div>
+                                <span>2-4h</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color orange"></div>
+                                <span>&lt;2h</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color red"></div>
+                                <span>Now</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-section">
+                        <h4>WORLDWIDE</h4>
+                        <div class="worldwide-stats">
+                            <div class="stat-card purple">
+                                <div class="stat-value">0</div>
+                                <div class="stat-label">Live</div>
+                            </div>
+                            <div class="stat-card purple">
+                                <div class="stat-value">0</div>
+                                <div class="stat-label">Month</div>
+                            </div>
+                        </div>
+                        <p class="panel-hint">Drag to move • Click resize</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading & Error -->
+            <div v-if="loading" class="loading-overlay">
+                <ProgressSpinner style="width: 32px; height: 32px" />
+                <span class="ml-2">{{ t('common.loading') }}</span>
+            </div>
+            <div v-if="error" class="error-overlay">
+                <div class="p-3 surface-100 border-round text-red-600">
+                    {{ error }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav-bar">
+            <button 
+                v-for="item in bottomNavItems" 
+                :key="item.name"
+                class="bottom-nav-item"
+                :class="{ active: item.active || route.name === item.route }"
+                @click="navigateTo(item.route)"
+            >
+                <i :class="item.icon"></i>
+                <span>{{ item.name }}</span>
+            </button>
+        </div>
+
+        <!-- Dialogs -->
         <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${selectedRoom?.title || t('common.rooms')}`" :style="{ width: '1200px', height: '800px' }" :maximizable="true">
             <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
         </Dialog>
@@ -615,11 +987,169 @@ function updateMarkersBasedOnZoom(L) {
 </template>
 
 <style scoped lang="scss">
+.room-map-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    background: #f5f5f5;
+    z-index: 1;
+    
+    // Hide AppLayout sidebar completely (topbar RoomMap'te kendi topbar'ını kullanıyor)
+    :deep(.layout-sidebar) {
+        display: none !important;
+    }
+    
+    :deep(.layout-main-container) {
+        margin-left: 0 !important;
+        padding-top: 0 !important;
+    }
+    
+    // Ensure full screen
+    :deep(.layout-main) {
+        padding: 0 !important;
+    }
+}
+
+// Top Navigation Bar
+.top-nav-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.top-nav-left, .top-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: none;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    &:hover {
+        background: #e0e0e0;
+    }
+    
+    i {
+        font-size: 18px;
+        color: #333;
+    }
+}
+
+.profile-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.profile-initial {
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.nav-dropdown {
+    min-width: 180px;
+}
+
+:deep(.p-dropdown) {
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+// Bottom Navigation Bar
+.bottom-nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70px;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px;
+    z-index: 1000;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #666;
+    border-radius: 12px;
+    min-width: 60px;
+    flex: 1;
+    max-width: 100px;
+    
+    i {
+        font-size: 18px;
+    }
+    
+    span {
+        font-size: 10px;
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.2;
+    }
+    
+    &.active {
+        color: #9333ea;
+        background: rgba(147, 51, 234, 0.1);
+        
+        i {
+            color: #9333ea;
+        }
+    }
+    
+    &:hover {
+        background: rgba(0, 0, 0, 0.05);
+    }
+}
+
 .room-map-wrapper {
     position: relative;
     width: 100%;
-    height: calc(100vh - 120px);
-    min-height: 600px;
+    height: 100%;
+    margin-top: 60px;
+    margin-bottom: 70px;
+    min-height: calc(100vh - 130px);
 }
 
 .room-map {
@@ -1019,5 +1549,242 @@ function updateMarkersBasedOnZoom(L) {
         transform: translate(-50%, -50%) scale(1.8);
         opacity: 0;
     }
+}
+
+// User location marker styles
+:deep(.user-location-marker) {
+    background: none !important;
+    border: none !important;
+}
+
+:deep(.user-location-dot) {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #9333ea;
+    border: 4px solid white;
+    box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+    animation: user-pulse 2s ease-out infinite;
+}
+
+@keyframes user-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(147, 51, 234, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+}
+
+// Right Panel
+.right-panel {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    width: 280px;
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 500;
+    transition: all 0.3s ease;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+    
+    &.collapsed {
+        width: 50px;
+        padding: 12px 8px;
+    }
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    
+    h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+}
+
+.panel-section {
+    margin-bottom: 20px;
+    
+    h4 {
+        font-size: 12px;
+        font-weight: 600;
+        color: #666;
+        margin: 0 0 8px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+}
+
+.empty-state {
+    font-size: 13px;
+    color: #999;
+    margin: 0;
+}
+
+.color-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #333;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    
+    &.blue { background: #3b82f6; }
+    &.yellow { background: #eab308; }
+    &.orange { background: #f97316; }
+    &.red { background: #ef4444; }
+}
+
+.worldwide-stats {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.stat-card {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+    
+    &.purple {
+        background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+        color: white;
+    }
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 11px;
+    opacity: 0.9;
+}
+
+.panel-hint {
+    font-size: 11px;
+    color: #999;
+    margin: 8px 0 0 0;
+    font-style: italic;
+}
+
+// Map Overlay Controls
+.map-overlay-controls {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    z-index: 400;
+    pointer-events: none;
+}
+
+.visible-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    pointer-events: auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.visible-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+    animation: pulse-dot 2s ease-out infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.2);
+    }
+}
+
+.location-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    pointer-events: auto;
+}
+
+.location-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 200px;
+    
+    &:hover {
+        border-color: #9333ea;
+        box-shadow: 0 6px 16px rgba(147, 51, 234, 0.2);
+        transform: translateY(-2px);
+    }
+    
+    i {
+        font-size: 24px;
+        color: #9333ea;
+    }
+}
+
+.btn-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.btn-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.btn-subtitle {
+    font-size: 12px;
+    color: #666;
 }
 </style>

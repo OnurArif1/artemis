@@ -4,6 +4,7 @@
     min-height: 100vh;
     justify-content: space-between;
     padding: 6rem 2rem 0 2rem;
+    margin-left: 0 !important; // Sidebar kaldırıldığı için margin-left sıfırlandı
     transition: margin-left var(--layout-section-transition-duration);
 }
 
