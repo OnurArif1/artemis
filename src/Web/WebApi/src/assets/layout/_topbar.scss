@@ -156,6 +156,13 @@
     }
 }
 
+// Dark mode için Electric Purple'un koyu tonu ile çekici ama göz yormayan renk
+:root[class*='app-dark'] .layout-topbar {
+    background: linear-gradient(135deg, rgba(45, 20, 70, 0.95) 0%, rgba(35, 15, 55, 0.95) 100%); // Electric Purple'un koyu tonları
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 12px rgba(99, 0, 255, 0.15);
+}
+
 @media (max-width: 991px) {
     .layout-topbar {
         padding: 0 2rem;

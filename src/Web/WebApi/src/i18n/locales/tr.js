@@ -37,12 +37,16 @@ export default {
         required: 'Zorunlu',
         warning: 'Uyarı',
         info: 'Bilgi',
-        actions: 'İşlemler'
+        actions: 'İşlemler',
+        map: 'Harita',
+        categories: 'Kategoriler',
+        profile: 'Profil'
     },
     topic: {
         list: 'Konu Listesi',
         create: 'Konu Ekleme',
         createTitle: 'Yeni Konu Oluştur',
+        addTopic: 'Konu Ekle',
         addRoom: 'Konuya Oda Ekle',
         addRoomMessage: 'Bu konuya bir oda eklemek ister misiniz?',
         createRoom: 'Oda Oluştur',
@@ -89,6 +93,7 @@ export default {
         leafletLoadError: 'Leaflet yüklenemedi. Lütfen sayfayı yenileyin.',
         create: 'Oda Ekleme',
         createTitle: 'Yeni Oda Oluştur',
+        addRoom: 'Oda Ekle',
         title: 'Başlık',
         titlePlaceholder: 'Oda başlığını girin',
         topic: 'Konu',

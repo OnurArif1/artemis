@@ -217,15 +217,14 @@ const visibilityOptions = [
 ];
 
 // Bottom navigation items - Sol menüden taşınan öğeler
-const bottomNavItems = [
-    { name: 'Map', icon: 'pi-map-marker', route: 'room', active: true },
-    { name: 'Odalar', icon: 'pi-map-marker', route: 'room', active: false },
-    { name: 'Oda Ekle', icon: 'pi-plus-circle', route: 'createRoom', active: false },
-    { name: 'Konular', icon: 'pi-book', route: 'topic', active: false },
-    { name: 'Konu Ekle', icon: 'pi-plus-circle', route: 'createTopic', active: false },
-    { name: 'Kategoriler', icon: 'pi-tags', route: 'category', active: false },
-    { name: 'Profile', icon: 'pi-user', route: 'profile', active: false }
-];
+const bottomNavItems = computed(() => [
+    { name: t('common.map'), icon: 'pi-map-marker', route: 'room', active: true },
+    { name: t('room.addRoom'), icon: 'pi-plus-circle', route: 'createRoom', active: false },
+    { name: t('common.topics'), icon: 'pi-book', route: 'topic', active: false },
+    { name: t('topic.addTopic'), icon: 'pi-plus-circle', route: 'createTopic', active: false },
+    { name: t('common.categories'), icon: 'pi-tags', route: 'category', active: false },
+    { name: t('common.profile'), icon: 'pi-user', route: 'profile', active: false }
+]);
 
 function updateTileLayer() {
     if (!map) return;
@@ -270,6 +269,104 @@ onMounted(async () => {
 
     loading.value = true;
     error.value = '';
+    
+    // Önce konum izni iste - sayfa yüklendiğinde hemen
+    if (!navigator.geolocation) {
+        // Geolocation desteklenmiyorsa normal akışa devam et
+        await loadMapData(L);
+        return;
+    }
+
+    // Konum izni iste - her sayfa yüklemesinde bir kez
+    // Tarayıcı izin durumunu kontrol et ve izin verilmemişse/reddedilmişse prompt göster
+    // maximumAge: 0 ile önbelleğe alınmış konum kullanılmaz, her zaman yeni konum istenir
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            // İzin verildi - kullanıcı konumunu al ve yakındaki odalar/konuları göster
+            userLocation = [position.coords.latitude, position.coords.longitude];
+            
+            try {
+                const [roomRes, topicRes] = await Promise.all([
+                    roomService.getList({ pageIndex: 1, pageSize: 1000 }),
+                    topicService.getList({ pageIndex: 1, pageSize: 1000 })
+                ]);
+                
+                const rooms = roomRes?.resultViewModels ?? roomRes?.ResultViewModels ?? [];
+                const topics = topicRes?.resultViewModels ?? topicRes?.ResultViewModels ?? [];
+                
+                // Cache'le
+                cachedRooms = rooms;
+                cachedTopics = topics;
+                
+                if (!Array.isArray(rooms) || !Array.isArray(topics)) {
+                    loading.value = false;
+                    return;
+                }
+
+                if (markersLayer) {
+                    map.removeLayer(markersLayer);
+                }
+                markersLayer = L.layerGroup().addTo(map);
+
+                // Zoom değişikliğini dinle
+                map.on('zoomend', () => {
+                    currentZoomLevel = map.getZoom();
+                    updateMarkersBasedOnZoom(L);
+                });
+
+                // Query'de roomId varsa önce onu kontrol et
+                const roomIdFromQuery = route.query.roomId;
+                if (roomIdFromQuery) {
+                    const roomIdNum = parseInt(roomIdFromQuery);
+                    if (!isNaN(roomIdNum)) {
+                        const targetRoom = rooms.find((r) => (r.id ?? r.Id) === roomIdNum);
+                        if (targetRoom) {
+                            selectedRoom.value = {
+                                id: roomIdNum,
+                                title: targetRoom.title ?? targetRoom.Title ?? `${t('room.prefix')}${roomIdNum}`
+                            };
+                            showChatDialog.value = true;
+
+                            const roomLat = Number(targetRoom.locationY ?? targetRoom.LocationY);
+                            const roomLng = Number(targetRoom.locationX ?? targetRoom.LocationX);
+                            if (!Number.isNaN(roomLat) && !Number.isNaN(roomLng)) {
+                                map.setView([roomLat, roomLng], 15);
+                                createDetailedRoomMarker(targetRoom, roomLat, roomLng, L);
+                                loading.value = false;
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                // Kullanıcı konumunun 40km etrafındaki odalar ve konuları göster
+                zoomToUserLocationWithRadius(L, rooms, topics, userLocation);
+            } catch (e) {
+                error.value = t('common.error') + ': ' + (e?.message || String(e));
+            } finally {
+                loading.value = false;
+                
+                // Sayfa yüklendikten sonra confetti başlat
+                setTimeout(() => {
+                    launchFireworks();
+                }, 300);
+            }
+        },
+        async (err) => {
+            // İzin reddedildi veya konum alınamadı - normal akışa devam et
+            console.warn('Konum izni reddedildi veya konum alınamadı:', err);
+            await loadMapData(L);
+        },
+        { 
+            enableHighAccuracy: true, 
+            timeout: 15000, 
+            maximumAge: 0  // Önbelleğe alınmış konum kullanma, her zaman yeni konum iste
+        }
+    );
+});
+
+// Normal harita yükleme fonksiyonu (konum izni yoksa veya reddedilirse)
+async function loadMapData(L) {
     try {
         const [roomRes, topicRes] = await Promise.all([
             roomService.getList({ pageIndex: 1, pageSize: 1000 }),
@@ -368,33 +465,6 @@ onMounted(async () => {
                 }
             }
         }
-
-        // Kullanıcı konumunu al ve 40km etrafındaki odalar/topiclere zoom yap
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    userLocation = [position.coords.latitude, position.coords.longitude];
-                    zoomToUserLocationWithRadius(L, rooms, topics, userLocation);
-                },
-                (err) => {
-                    console.warn('Konum alınamadı:', err);
-                    // Konum alınamazsa Türkiye'ye zoom yap
-                    const TURKEY_BOUNDS = [
-                        [35.8, 25.9],
-                        [42.2, 44.9]
-                    ];
-                    map.fitBounds(TURKEY_BOUNDS, { padding: [50, 50], maxZoom: 7 });
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        } else {
-            // Geolocation desteklenmiyorsa Türkiye'ye zoom yap
-            const TURKEY_BOUNDS = [
-                [35.8, 25.9],
-                [42.2, 44.9]
-            ];
-            map.fitBounds(TURKEY_BOUNDS, { padding: [50, 50], maxZoom: 7 });
-        }
     } catch (e) {
         error.value = t('common.error') + ': ' + (e?.message || String(e));
     } finally {
@@ -405,7 +475,7 @@ onMounted(async () => {
             launchFireworks();
         }, 300);
     }
-});
+}
 
 
 onBeforeUnmount(() => {
@@ -901,6 +971,9 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
     
     const [userLat, userLng] = userLoc;
     
+    // Detaylı marker'ları gösteriyoruz
+    showingDetailedMarkers = true;
+    
     // 40km yarıçap içindeki odaları ve topicleri filtrele
     const nearbyRooms = allRooms.filter(room => {
         const lat = Number(room.locationY ?? room.LocationY);
@@ -1141,6 +1214,13 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
     padding: 0 20px;
     z-index: 1000;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+// Dark mode için yumuşak gri ton (Dark Charcoal #1A1A1D yerine daha açık)
+:deep(.app-dark) .top-nav-bar {
+    background: rgba(45, 45, 48, 0.95); // #2D2D30 - Dark Charcoal'dan daha yumuşak
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .top-nav-left, .top-nav-right {

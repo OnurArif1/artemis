@@ -36,12 +36,16 @@ export default {
         error: 'Error',
         required: 'Required',
         warning: 'Warning',
-        info: 'Info'
+        info: 'Info',
+        map: 'Map',
+        categories: 'Categories',
+        profile: 'Profile'
     },
     topic: {
         list: 'Topic List',
         create: 'Create Topic',
         createTitle: 'Create New Topic',
+        addTopic: 'Add Topic',
         addRoom: 'Add Room to Topic',
         addRoomMessage: 'Would you like to add a room to this topic?',
         createRoom: 'Create Room',
@@ -88,6 +92,7 @@ export default {
         leafletLoadError: 'Leaflet could not be loaded. Please refresh the page.',
         create: 'Create Room',
         createTitle: 'Create New Room',
+        addRoom: 'Add Room',
         title: 'Title',
         titlePlaceholder: 'Enter room title',
         topic: 'Topic',
