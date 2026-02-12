@@ -39,7 +39,9 @@ export default {
         info: 'Info',
         map: 'Map',
         categories: 'Categories',
-        profile: 'Profile'
+        profile: 'Profile',
+        today: 'Today',
+        yesterday: 'Yesterday'
     },
     topic: {
         list: 'Topic List',

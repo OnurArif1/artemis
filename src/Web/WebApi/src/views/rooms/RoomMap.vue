@@ -823,6 +823,38 @@ function createDetailedRoomMarker(room, lat, lng, L) {
     
     const marker = L.marker([lat, lng], { icon }).addTo(markersLayer);
     
+    // Marker oluşturulduktan sonra DOM'a erişip her marker-group'a ayrı hover event'leri ekle
+    setTimeout(() => {
+        const iconElement = marker._icon;
+        if (iconElement) {
+            const container = iconElement.querySelector('.marker-container');
+            if (container) {
+                const roomGroup = container.querySelector('.room-marker-group');
+                const topicGroup = container.querySelector('.topic-marker-group');
+                
+                // Room marker-group için hover event'leri
+                if (roomGroup) {
+                    roomGroup.addEventListener('mouseenter', () => {
+                        roomGroup.classList.add('marker-hover');
+                    });
+                    roomGroup.addEventListener('mouseleave', () => {
+                        roomGroup.classList.remove('marker-hover');
+                    });
+                }
+                
+                // Topic marker-group için hover event'leri
+                if (topicGroup) {
+                    topicGroup.addEventListener('mouseenter', () => {
+                        topicGroup.classList.add('marker-hover');
+                    });
+                    topicGroup.addEventListener('mouseleave', () => {
+                        topicGroup.classList.remove('marker-hover');
+                    });
+                }
+            }
+        }
+    }, 100);
+    
     marker.on('click', (e) => {
         const target = e.originalEvent.target;
         if (target.closest('.topic-marker-group')) {
@@ -881,6 +913,23 @@ function createDetailedTopicMarker(topic, lat, lng, L) {
     });
     
     const marker = L.marker([lat, lng], { icon }).addTo(markersLayer);
+    
+    // Hover event'leri ekle - tooltip göstermek için
+    marker.on('mouseover', (e) => {
+        const container = e.target._icon?.querySelector('.marker-container');
+        if (container) {
+            const topicGroup = container.querySelector('.topic-marker-group');
+            if (topicGroup) topicGroup.classList.add('marker-hover');
+        }
+    });
+    
+    marker.on('mouseout', (e) => {
+        const container = e.target._icon?.querySelector('.marker-container');
+        if (container) {
+            const topicGroup = container.querySelector('.topic-marker-group');
+            if (topicGroup) topicGroup.classList.remove('marker-hover');
+        }
+    });
     
     marker.on('click', () => {
         selectedTopic.value = {
@@ -1128,12 +1177,12 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
             <div ref="mapContainer" class="room-map" />
             
             <!-- Map Overlay Controls -->
-            <div class="map-overlay-controls">
+            <!-- <div class="map-overlay-controls">
                 <div class="visible-badge">
                     <span class="visible-dot"></span>
                     Visible
                 </div>
-            </div>
+            </div> -->
 
             <!-- Loading & Error -->
             <div v-if="loading" class="loading-overlay">
@@ -1162,10 +1211,10 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
         </div>
 
         <!-- Dialogs -->
-        <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${selectedRoom?.title || t('common.rooms')}`" :style="{ width: '1200px', height: '800px' }" :maximizable="true">
+        <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${selectedRoom?.title || t('common.rooms')}`" :style="{ width: '1200px', height: '800px', backgroundColor: 'white' }" :maximizable="true" class="chat-dialog">
             <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
         </Dialog>
-        <Dialog v-model:visible="showTopicChatDialog" modal :closable="true" :header="`${selectedTopic?.title || t('common.topics')}`" :style="{ width: '1200px', height: '800px' }" :maximizable="true">
+        <Dialog v-model:visible="showTopicChatDialog" modal :closable="true" :header="`${selectedTopic?.title || t('common.topics')}`" :style="{ width: '1200px', height: '800px', backgroundColor: 'white' }" :maximizable="true" class="chat-dialog">
             <TopicCommentChat v-if="selectedTopic" :topicIdProp="selectedTopic.id" />
         </Dialog>
     </div>
@@ -1485,9 +1534,13 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
     max-width: 180px !important;
     border-radius: 10px !important;
     overflow: hidden !important;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     word-wrap: break-word !important;
     word-break: break-word !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transform: translateY(-5px) !important;
+    pointer-events: none !important;
 }
 
 :deep(.room-card) {
@@ -1502,11 +1555,16 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
     max-width: 160px !important;
 }
 
+:deep(.marker-group:hover .marker-card),
 :deep(.marker-group.marker-hover .marker-card) {
+    opacity: 1 !important;
+    visibility: visible !important;
     transform: translateY(-3px) !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.1) !important;
+    pointer-events: auto !important;
 }
 
+:deep(.marker-group:hover .topic-card),
 :deep(.marker-group.marker-hover .topic-card) {
     box-shadow: 0 12px 32px rgba(34, 197, 94, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.3) !important;
 }
@@ -1574,6 +1632,7 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%, rgba(255, 255, 255, 0.1) 100%) !important;
 }
 
+:deep(.marker-group:hover .marker-card-glow),
 :deep(.marker-group.marker-hover .marker-card-glow) {
     opacity: 1 !important;
     animation: glow-shimmer 2s ease-in-out infinite !important;
@@ -1978,5 +2037,98 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
 .btn-subtitle {
     font-size: 12px;
     color: #666;
+}
+
+// Chat Dialog Header - Electric Purple tonları ve BEYAZ arka plan
+:deep(.chat-dialog) {
+    // Dialog wrapper'ı beyaz
+    &.p-dialog {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    .p-dialog-header {
+        background: linear-gradient(135deg, rgba(99, 0, 255, 0.95), rgba(82, 0, 204, 0.95)) !important;
+        border-bottom: 1px solid rgba(99, 0, 255, 0.3);
+        color: white !important;
+        
+        .p-dialog-title {
+            color: white !important;
+            font-weight: 600;
+        }
+        
+        .p-dialog-header-icon {
+            color: white !important;
+            
+            &:hover {
+                background: rgba(255, 255, 255, 0.2);
+            }
+        }
+    }
+    
+    .p-dialog-content {
+        background: white !important;
+        background-color: white !important;
+        padding: 0 !important;
+    }
+    
+    // Dialog'un kendisi de beyaz
+    .p-dialog {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    // Dialog wrapper div'i
+    > div {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    .p-dialog-mask {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+    }
+    
+    // Chat container ve card'ları özellikle beyaz yap
+    .chat-container,
+    .chat-card,
+    .chat-body,
+    .messages-container,
+    .empty-messages,
+    .message-wrapper,
+    .message-bubble:not(.own-bubble),
+    .chat-footer {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    // Dark mode override - çok agresif
+    :root[class*='dark'] &,
+    :root[class*='app-dark'] &,
+    [class*='dark'] &,
+    [class*='app-dark'] & {
+        &.p-dialog,
+        .p-dialog-content,
+        .p-dialog {
+            background: white !important;
+            background-color: white !important;
+        }
+        
+        > div {
+            background: white !important;
+            background-color: white !important;
+        }
+        
+        .chat-container,
+        .chat-card,
+        .chat-body,
+        .messages-container,
+        .empty-messages,
+        .message-wrapper,
+        .message-bubble:not(.own-bubble),
+        .chat-footer {
+            background: white !important;
+            background-color: white !important;
+        }
+    }
 }
 </style>

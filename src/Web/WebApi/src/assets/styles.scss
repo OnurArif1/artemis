@@ -2,3 +2,70 @@
 @use '@/assets/tailwind.css';
 @use '@/assets/layout/layout.scss';
 @use '@/assets/demo/demo.scss';
+
+// Chat Dialog için global override - beyaz arka plan zorunlu
+.chat-dialog {
+    &.p-dialog {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    .p-dialog-content {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    .p-dialog {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    > div {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    .chat-container,
+    .chat-card,
+    .chat-body,
+    .messages-container,
+    .chat-footer {
+        background: white !important;
+        background-color: white !important;
+    }
+}
+
+// Dark mode için de override - çok agresif
+:root[class*='dark'] .chat-dialog,
+:root[class*='app-dark'] .chat-dialog,
+[class*='dark'] .chat-dialog,
+[class*='app-dark'] .chat-dialog {
+    &.p-dialog {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    .p-dialog-content {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    .p-dialog {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    > div {
+        background: white !important;
+        background-color: white !important;
+    }
+    
+    .chat-container,
+    .chat-card,
+    .chat-body,
+    .messages-container,
+    .chat-footer {
+        background: white !important;
+        background-color: white !important;
+    }
+}

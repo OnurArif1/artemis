@@ -40,7 +40,9 @@ export default {
         actions: 'İşlemler',
         map: 'Harita',
         categories: 'Kategoriler',
-        profile: 'Profil'
+        profile: 'Profil',
+        today: 'Bugün',
+        yesterday: 'Dün'
     },
     topic: {
         list: 'Konu Listesi',

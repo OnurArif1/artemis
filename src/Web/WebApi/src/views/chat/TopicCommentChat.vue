@@ -323,6 +323,32 @@ function onEnterKey(event) {
     }
 }
 
+function getInitials(name) {
+    if (!name) return '?';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+}
+
+function formatDate(date) {
+    const now = new Date();
+    const messageDate = new Date(date);
+    const diffTime = Math.abs(now - messageDate);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+        return t('common.today');
+    } else if (diffDays === 1) {
+        return t('common.yesterday');
+    } else if (diffDays < 7) {
+        return messageDate.toLocaleDateString(locale.value === 'tr' ? 'tr-TR' : 'en-US', { weekday: 'long' });
+    } else {
+        return messageDate.toLocaleDateString(locale.value === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'short' });
+    }
+}
+
 watch(
     () => props.topicIdProp,
     async (newTopicId, oldTopicId) => {
@@ -345,34 +371,58 @@ watch(
 
 <template>
     <div class="chat-container">
-        <div class="card">
+        <div class="chat-card">
+            <!-- Modern Header -->
             <div class="chat-header">
-                <div class="flex align-items-center gap-2">
-                    <i class="pi pi-comments text-2xl"></i>
-                    <h2 class="m-0">{{ topicTitle }}</h2>
-                </div>
-                <div class="flex align-items-center gap-2">
-                    <div class="connection-status" :class="{ connected: isConnected }">
-                        <i :class="isConnected ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
-                        <span>{{ connectionStatus }}</span>
+                <div class="header-left">
+                    <div class="topic-icon">
+                        <i class="pi pi-comments"></i>
+                    </div>
+                    <div class="topic-info">
+                        <h2 class="topic-title">{{ topicTitle }}</h2>
+                        <div class="connection-status" :class="{ connected: isConnected }">
+                            <div class="status-dot"></div>
+                            <span>{{ connectionStatus }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Messages Area -->
             <div class="chat-body">
                 <div ref="commentContainer" class="messages-container">
                     <div v-if="comments.length === 0" class="empty-messages">
-                        <i class="pi pi-inbox text-4xl text-300"></i>
-                        <p class="text-500">{{ t('chat.noMessages') }}</p>
+                        <div class="empty-icon">
+                            <i class="pi pi-comments"></i>
+                        </div>
+                        <p class="empty-text">{{ t('chat.noMessages') }}</p>
                     </div>
                     <template v-else>
-                        <div v-for="(comment, index) in comments" :key="comment.id" class="message-group">
-                            <div v-if="index === 0 || comments[index - 1].partyId !== comment.partyId" class="message-party-name">
-                                {{ comment.partyName }}
+                        <div 
+                            v-for="(comment, index) in comments" 
+                            :key="comment.id" 
+                            class="message-wrapper"
+                            :class="{ 'is-own-message': comment.partyId === currentPartyId }"
+                        >
+                            <!-- Show avatar and name only for first message from a user or when user changes -->
+                            <div 
+                                v-if="index === 0 || comments[index - 1].partyId !== comment.partyId" 
+                                class="message-header"
+                                :class="{ 'own-header': comment.partyId === currentPartyId }"
+                            >
+                                <div class="message-avatar" :class="{ 'own-avatar': comment.partyId === currentPartyId }">
+                                    {{ getInitials(comment.partyName) }}
+                                </div>
+                                <span class="message-sender">{{ comment.partyName }}</span>
+                                <span class="message-date">
+                                    {{ formatDate(comment.timestamp) }}
+                                </span>
                             </div>
-                            <div class="message-item">
-                                <div class="message-content">{{ comment.content }}</div>
-                                <div class="message-time">
+                            
+                            <!-- Message Bubble -->
+                            <div class="message-bubble" :class="{ 'own-bubble': comment.partyId === currentPartyId }">
+                                <div class="message-text">{{ comment.content }}</div>
+                                <div class="message-timestamp">
                                     {{ comment.timestamp.toLocaleTimeString(locale.value === 'tr' ? 'tr-TR' : 'en-US', { hour: '2-digit', minute: '2-digit' }) }}
                                 </div>
                             </div>
@@ -381,15 +431,24 @@ watch(
                 </div>
             </div>
 
+            <!-- Modern Input Area -->
             <div class="chat-footer">
-                <div class="flex gap-2 align-items-center w-full">
-                    <InputText
-                        v-model="commentText"
-                        @keydown="onEnterKey"
-                        :placeholder="t('chat.messagePlaceholder')"
-                        class="flex-1"
-                    />
-                    <Button :label="t('chat.send')" icon="pi pi-send" @click="sendComment" :disabled="!isConnected || !commentText.trim() || !topicId" />
+                <div class="input-wrapper">
+                    <div class="input-container">
+                        <InputText
+                            v-model="commentText"
+                            @keydown="onEnterKey"
+                            :placeholder="t('chat.messagePlaceholder')"
+                            class="message-input"
+                        />
+                        <button 
+                            class="send-button"
+                            @click="sendComment" 
+                            :disabled="!isConnected || !commentText.trim() || !topicId"
+                        >
+                            <i class="pi pi-send"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -398,58 +457,148 @@ watch(
 
 <style scoped>
 .chat-container {
-    padding: 1rem;
+    padding: 0;
     max-width: 100%;
-    margin: 0 auto;
+    margin: 0;
     height: 100%;
     display: flex;
     flex-direction: column;
+    background: white !important;
 }
 
+.chat-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: white !important;
+    border-radius: 0;
+}
+
+/* Modern Header */
 .chat-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    border-bottom: 1px solid var(--surface-border);
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, rgba(99, 0, 255, 0.05), rgba(99, 0, 255, 0.02));
+    border-bottom: 1px solid rgba(99, 0, 255, 0.1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.topic-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    background: linear-gradient(135deg, #6300FF, #5200CC);
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 12px rgba(99, 0, 255, 0.2);
+}
+
+.topic-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.topic-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #374151;
+    line-height: 1.3;
 }
 
 .connection-status {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
 }
 
 .connection-status.connected {
-    color: var(--green-600);
-    background-color: var(--green-50);
+    color: #22c55e;
 }
 
 .connection-status:not(.connected) {
-    color: var(--red-600);
-    background-color: var(--red-50);
+    color: #ef4444;
 }
 
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.connection-status.connected .status-dot {
+    background: #22c55e;
+}
+
+.connection-status:not(.connected) .status-dot {
+    background: #ef4444;
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Chat Body */
 .chat-body {
     display: flex;
     flex-direction: column;
     flex: 1;
-    min-height: 300px;
-    max-height: 500px;
+    min-height: 0;
+    overflow: hidden;
+    background: white !important;
 }
 
 .messages-container {
     flex: 1;
     overflow-y: auto;
-    padding: 1rem;
+    padding: 1.5rem 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1rem;
+    background: white !important;
 }
 
+.messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+    background: rgba(99, 0, 255, 0.2);
+    border-radius: 3px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 0, 255, 0.3);
+}
+
+/* Empty State */
 .empty-messages {
     display: flex;
     flex-direction: column;
@@ -457,53 +606,140 @@ watch(
     justify-content: center;
     height: 100%;
     gap: 1rem;
+    padding: 3rem 1rem;
 }
 
-.message-group {
+.empty-icon {
+    width: 5rem;
+    height: 5rem;
+    background: linear-gradient(135deg, rgba(99, 0, 255, 0.1), rgba(99, 0, 255, 0.05));
+    border-radius: 50%;
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    margin-bottom: 0.5rem;
+    align-items: center;
+    justify-content: center;
+    color: #6300FF;
+    font-size: 2rem;
 }
 
-.message-party-name {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: var(--primary-color);
-    margin-bottom: 0.25rem;
-    padding-left: 0.5rem;
+.empty-text {
+    color: #6b7280;
+    font-size: 0.9375rem;
+    margin: 0;
 }
 
-.message-item {
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    background-color: var(--surface-100);
-    max-width: 100%;
-    animation: slideIn 0.3s ease-out;
+/* Message Wrapper */
+.message-wrapper {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    max-width: 75%;
+    animation: messageSlideIn 0.3s ease-out;
 }
 
-.message-content {
-    word-wrap: break-word;
-    line-height: 1.5;
-}
-
-.message-time {
-    font-size: 0.7rem;
-    color: var(--text-color-secondary);
-    opacity: 0.7;
+.message-wrapper.is-own-message {
     align-self: flex-end;
+    align-items: flex-end;
 }
 
-.chat-footer {
-    padding: 1rem;
-    border-top: 1px solid var(--surface-border);
-    background-color: var(--surface-0);
+/* Message Header */
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
-@keyframes slideIn {
+.message-header.own-header {
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6300FF, #5200CC);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.message-avatar.own-avatar {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.message-sender {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+.message-date {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-left: auto;
+}
+
+.message-header.own-header .message-date {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+/* Message Bubble */
+.message-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    max-width: 100%;
+    position: relative;
+    word-wrap: break-word;
+    border: 1px solid #e5e7eb;
+}
+
+.message-bubble.own-bubble {
+    background: linear-gradient(135deg, #6300FF, #5200CC);
+    color: white;
+    border-color: transparent;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.message-wrapper:not(.is-own-message) .message-bubble {
+    border-bottom-left-radius: 0.25rem;
+}
+
+.message-text {
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: #374151;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.message-bubble.own-bubble .message-text {
+    color: white;
+}
+
+.message-timestamp {
+    font-size: 0.6875rem;
+    color: #9ca3af;
+    margin-top: 0.375rem;
+    text-align: right;
+}
+
+.message-bubble.own-bubble .message-timestamp {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.message-wrapper:not(.is-own-message) .message-timestamp {
+    text-align: left;
+}
+
+@keyframes messageSlideIn {
     from {
         opacity: 0;
         transform: translateY(10px);
@@ -514,20 +750,103 @@ watch(
     }
 }
 
-.messages-container::-webkit-scrollbar {
-    width: 8px;
+/* Chat Footer */
+.chat-footer {
+    padding: 1.25rem 1.5rem;
+    background: white;
+    border-top: 1px solid #e5e7eb;
 }
 
-.messages-container::-webkit-scrollbar-track {
-    background: var(--surface-100);
+.input-wrapper {
+    width: 100%;
 }
 
-.messages-container::-webkit-scrollbar-thumb {
-    background: var(--surface-300);
-    border-radius: 4px;
+.input-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #f9fafb;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 1.5rem;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
 }
 
-.messages-container::-webkit-scrollbar-thumb:hover {
-    background: var(--surface-400);
+.input-container:focus-within {
+    border-color: #6300FF;
+    box-shadow: 0 0 0 3px rgba(99, 0, 255, 0.1);
+    background: white;
+}
+
+:deep(.message-input) {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9375rem;
+    color: #374151;
+}
+
+:deep(.message-input:focus) {
+    outline: none;
+    box-shadow: none;
+}
+
+:deep(.message-input::placeholder) {
+    color: #9ca3af;
+}
+
+.send-button {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #6300FF, #5200CC);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(99, 0, 255, 0.3);
+}
+
+.send-button:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(99, 0, 255, 0.4);
+}
+
+.send-button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.send-button i {
+    font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .message-wrapper {
+        max-width: 85%;
+    }
+    
+    .chat-header {
+        padding: 1rem;
+    }
+    
+    .topic-title {
+        font-size: 1.125rem;
+    }
+    
+    .messages-container {
+        padding: 1rem 0.75rem;
+    }
 }
 </style>
