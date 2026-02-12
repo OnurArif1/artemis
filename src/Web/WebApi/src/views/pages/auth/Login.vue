@@ -17,20 +17,38 @@ const toast = useToast();
 
 // Register form state
 const isRegisterMode = ref(false);
-const displayName = ref('');
-const username = ref('');
 const registerEmail = ref('');
 const registerPassword = ref('');
 const registerPasswordAgain = ref('');
-const registerPartyType = ref(1); // 0=None, 1=Person, 2=Organization
 const registerError = ref('');
 const registerLoading = ref(false);
 
-const partyTypeOptions = computed(() => [
-    { label: t('auth.partyTypeNone'), value: 0 },
-    { label: t('auth.partyTypePerson'), value: 1 },
-    { label: t('auth.partyTypeOrganization'), value: 2 }
-]);
+// Password validation rules
+const passwordRules = computed(() => {
+    const p = registerPassword.value || '';
+    return {
+        minLength: p.length >= 6,
+        hasUppercase: /[A-Z]/.test(p),
+        hasLowercase: /[a-z]/.test(p),
+        hasNumber: /[0-9]/.test(p),
+        passwordsMatch: p === registerPasswordAgain.value && p.length > 0
+    };
+});
+
+const isPasswordValid = computed(() => {
+    return passwordRules.value.minLength && 
+           passwordRules.value.hasUppercase && 
+           passwordRules.value.hasLowercase && 
+           passwordRules.value.hasNumber &&
+           passwordRules.value.passwordsMatch;
+});
+
+const canSubmitRegister = computed(() => {
+    return registerEmail.value.trim() && 
+           isPasswordValid.value && 
+           !registerLoading.value;
+});
+
 
 function getLoginError(err) {
     const d = err?.response?.data;
@@ -104,8 +122,6 @@ async function onRegister() {
     const e = (registerEmail.value || '').trim();
     const p = registerPassword.value || '';
     const p2 = registerPasswordAgain.value || '';
-    const displayNameValue = (displayName.value || '').trim();
-    const usernameValue = (username.value || '').trim();
     
     if (!e) {
         registerError.value = t('auth.emailRequired');
@@ -125,13 +141,14 @@ async function onRegister() {
     }
     registerLoading.value = true;
     try {
-        // Prepare register request with all form fields
+        // Prepare register request
         // Backend expects: Email, Password, PartyName, PartyType, DeviceId, IsBanned
+        // Default PartyType to 1 (Person)
         const registerData = {
             Email: e,
             Password: p,
-            PartyName: displayNameValue || usernameValue || null,
-            PartyType: registerPartyType.value,
+            PartyName: e, // Use email as PartyName
+            PartyType: 1, // Default to Person
             DeviceId: null, // Optional - can be set later if needed
             IsBanned: false // Default to false for new registrations
         };
@@ -207,65 +224,54 @@ async function onRegister() {
         registerLoading.value = false;
     }
 }
+
 </script>
 
 <template>
-    <div class="login-page min-h-screen flex items-center justify-center p-6">
-        <!-- Background Pattern -->
-        <div class="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-purple-50 opacity-50"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(99,0,255,0.1),transparent_50%)]"></div>
+    <div class="login-page min-h-screen flex">
+        <!-- Logo - Top Left -->
+        <div class="logo-top-left">
+            <div class="logo-badge">
+                <i class="pi pi-map-marker text-electric-purple text-xl"></i>
+                <span class="text-lg font-bold text-dark-charcoal ml-2">Ghossip</span>
+            </div>
+        </div>
         
-        <div class="relative w-full max-w-md">
-            <!-- Card Container -->
-            <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-10 border border-gray-100">
-                <!-- Logo -->
-                <div class="flex items-center gap-2 mb-10 justify-center">
-                    <div class="p-2 bg-purple-100 rounded-xl">
-                        <i class="pi pi-map-marker text-2xl text-electric-purple"></i>
-                    </div>
-                    <span class="text-3xl font-bold text-dark-charcoal">Ghossip</span>
-                </div>
-
-                <!-- Title -->
-                <h1 v-if="!isRegisterMode" class="text-4xl font-bold text-dark-charcoal mb-10 text-center">
-                    {{ t('auth.loginTitle') }}
-                </h1>
+        <!-- Left Panel - Login Form -->
+        <div class="login-left-panel">
+            <div class="login-content-wrapper">
 
                 <!-- Login Form -->
-                <form v-if="!isRegisterMode" @submit.prevent="onLogin" class="space-y-6">
-                    <div>
-                        <label for="email" class="block text-sm font-semibold text-gray-800 mb-3">
+                <form v-if="!isRegisterMode" @submit.prevent="onLogin" class="login-form">
+                    <div class="form-group">
+                        <label for="email" class="form-label">
                             {{ t('auth.email') }}
                         </label>
-                        <div class="relative group">
-                            <InputText 
-                                id="email"
-                                v-model="email" 
-                                type="email" 
-                                :placeholder="t('auth.emailPlaceholder')" 
-                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
-                            />
-                        </div>
+                        <InputText 
+                            id="email"
+                            v-model="email" 
+                            type="email" 
+                            :placeholder="t('auth.emailPlaceholder')" 
+                            class="form-input"
+                        />
                     </div>
 
-                    <div>
-                        <label for="password" class="block text-sm font-semibold text-gray-800 mb-3">
+                    <div class="form-group">
+                        <label for="password" class="form-label">
                             {{ t('auth.password') }}
                         </label>
-                        <div class="relative group">
-                            <Password 
-                                id="password"
-                                v-model="password" 
-                                :placeholder="t('auth.passwordPlaceholder')" 
-                                :toggle-mask="true" 
-                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
-                                class="w-full"
-                                :feedback="false"
-                            />
-                        </div>
+                        <Password 
+                            id="password"
+                            v-model="password" 
+                            :placeholder="t('auth.passwordPlaceholder')" 
+                            :toggle-mask="true" 
+                            inputClass="form-input"
+                            class="w-full"
+                            :feedback="false"
+                        />
                     </div>
 
-                    <div v-if="errorMsg" class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                    <div v-if="errorMsg" class="error-message">
                         {{ errorMsg }}
                     </div>
 
@@ -273,111 +279,91 @@ async function onRegister() {
                         type="submit"
                         :label="t('auth.login')" 
                         :loading="loading"
-                        class="w-full !bg-gradient-to-r !from-electric-purple !to-[#5200CC] hover:!from-[#5200CC] hover:!to-[#4100AA] !text-white !py-3.5 !rounded-xl !font-semibold !text-base !shadow-lg hover:!shadow-xl !transition-all !transform hover:!scale-[1.02]"
+                        class="submit-button"
                     />
 
-                    <div class="text-center text-sm text-gray-600 pt-2">
-                        {{ t('auth.noAccount') }}
-                        <button type="button" @click="toggleMode" class="text-electric-purple hover:text-[#5200CC] font-semibold ml-1 transition-colors">
+                    <div class="form-footer">
+                        <span class="text-gray-600">{{ t('auth.noAccount') }}</span>
+                        <button type="button" @click="toggleMode" class="footer-link">
                             {{ t('auth.signUp') }}
                         </button>
                     </div>
                 </form>
 
                 <!-- Register Form -->
-                <form v-else @submit.prevent="onRegister" class="space-y-6">
-                    <div>
-                        <label for="displayName" class="block text-sm font-semibold text-gray-800 mb-3">
-                            {{ t('auth.displayName') }}
-                        </label>
-                        <div class="relative group">
-                            <InputText 
-                                id="displayName"
-                                v-model="displayName" 
-                                :placeholder="t('auth.displayNamePlaceholder')" 
-                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="username" class="block text-sm font-semibold text-gray-800 mb-3">
-                            {{ t('auth.username') }}
-                        </label>
-                        <div class="relative group">
-                            <InputText 
-                                id="username"
-                                v-model="username" 
-                                :placeholder="t('auth.usernamePlaceholder')" 
-                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="reg-email" class="block text-sm font-semibold text-gray-800 mb-3">
+                <form v-else @submit.prevent="onRegister" class="login-form">
+                    <div class="form-group">
+                        <label for="reg-email" class="form-label">
                             {{ t('auth.email') }}
                         </label>
-                        <div class="relative group">
-                            <InputText 
-                                id="reg-email"
-                                v-model="registerEmail" 
-                                type="email" 
-                                :placeholder="t('auth.emailPlaceholder')" 
-                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="reg-password" class="block text-sm font-semibold text-gray-800 mb-3">
-                            {{ t('auth.password') }}
-                        </label>
-                        <div class="relative group">
-                            <Password 
-                                id="reg-password"
-                                v-model="registerPassword" 
-                                :placeholder="t('auth.passwordHint')" 
-                                :toggle-mask="true" 
-                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
-                                class="w-full"
-                                :feedback="true"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="reg-password-again" class="block text-sm font-semibold text-gray-800 mb-3">
-                            {{ t('auth.password') }} ({{ t('auth.passwordRepeat') }})
-                        </label>
-                        <div class="relative group">
-                            <Password 
-                                id="reg-password-again"
-                                v-model="registerPasswordAgain" 
-                                :placeholder="t('auth.passwordRepeatPlaceholder')" 
-                                :toggle-mask="true" 
-                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
-                                class="w-full"
-                                :feedback="false"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="reg-party-type" class="block text-sm font-semibold text-gray-800 mb-3">
-                            {{ t('auth.type') }}
-                        </label>
-                        <SelectButton 
-                            id="reg-party-type" 
-                            v-model="registerPartyType" 
-                            :options="partyTypeOptions" 
-                            optionLabel="label" 
-                            optionValue="value"
-                            class="w-full"
+                        <InputText 
+                            id="reg-email"
+                            v-model="registerEmail" 
+                            type="email" 
+                            :placeholder="t('auth.emailPlaceholder')" 
+                            class="form-input"
                         />
                     </div>
 
-                    <div v-if="registerError" class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                    <div class="form-group">
+                        <label for="reg-password" class="form-label">
+                            {{ t('auth.password') }}
+                        </label>
+                        
+                        <!-- Password Rules -->
+                        <div class="password-rules">
+                            <div class="rule-item" :class="{ 'rule-valid': passwordRules.minLength }">
+                                <i :class="passwordRules.minLength ? 'pi pi-check-circle' : 'pi pi-circle'" 
+                                   class="rule-icon"></i>
+                                <span>En az 6 karakter</span>
+                            </div>
+                            <div class="rule-item" :class="{ 'rule-valid': passwordRules.hasUppercase }">
+                                <i :class="passwordRules.hasUppercase ? 'pi pi-check-circle' : 'pi pi-circle'" 
+                                   class="rule-icon"></i>
+                                <span>En az bir büyük harf</span>
+                            </div>
+                            <div class="rule-item" :class="{ 'rule-valid': passwordRules.hasLowercase }">
+                                <i :class="passwordRules.hasLowercase ? 'pi pi-check-circle' : 'pi pi-circle'" 
+                                   class="rule-icon"></i>
+                                <span>En az bir küçük harf</span>
+                            </div>
+                            <div class="rule-item" :class="{ 'rule-valid': passwordRules.hasNumber }">
+                                <i :class="passwordRules.hasNumber ? 'pi pi-check-circle' : 'pi pi-circle'" 
+                                   class="rule-icon"></i>
+                                <span>En az bir rakam</span>
+                            </div>
+                        </div>
+                        
+                        <Password 
+                            id="reg-password"
+                            v-model="registerPassword" 
+                            :placeholder="t('auth.passwordHint')" 
+                            :toggle-mask="true" 
+                            inputClass="form-input"
+                            class="w-full"
+                            :feedback="false"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reg-password-again" class="form-label">
+                            {{ t('auth.password') }} ({{ t('auth.passwordRepeat') }})
+                        </label>
+                        <Password 
+                            id="reg-password-again"
+                            v-model="registerPasswordAgain" 
+                            :placeholder="t('auth.passwordRepeatPlaceholder')" 
+                            :toggle-mask="true" 
+                            inputClass="form-input"
+                            :class="['w-full', { 'password-mismatch': registerPasswordAgain && !passwordRules.passwordsMatch }]"
+                            :feedback="false"
+                        />
+                        <div v-if="registerPasswordAgain && !passwordRules.passwordsMatch" class="password-error-text">
+                            Şifreler eşleşmiyor
+                        </div>
+                    </div>
+
+                    <div v-if="registerError" class="error-message">
                         {{ registerError }}
                     </div>
 
@@ -385,16 +371,67 @@ async function onRegister() {
                         type="submit"
                         :label="t('auth.createAccount')" 
                         :loading="registerLoading"
-                        class="w-full !bg-gradient-to-r !from-electric-purple !to-[#5200CC] hover:!from-[#5200CC] hover:!to-[#4100AA] !text-white !py-3.5 !rounded-xl !font-semibold !text-base !shadow-lg hover:!shadow-xl !transition-all !transform hover:!scale-[1.02]"
+                        :disabled="!canSubmitRegister"
+                        class="submit-button"
                     />
 
-                    <div class="text-center text-sm text-gray-600 pt-2">
-                        {{ t('auth.haveAccount') }}
-                        <button type="button" @click="toggleMode" class="text-electric-purple hover:text-[#5200CC] font-semibold ml-1 transition-colors">
+                    <div class="form-footer">
+                        <span class="text-gray-600">{{ t('auth.haveAccount') }}</span>
+                        <button type="button" @click="toggleMode" class="footer-link">
                             {{ t('auth.signIn') }}
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- Right Panel - Visual Background -->
+        <div class="login-right-panel">
+            <div class="right-panel-content">
+                <!-- Decorative Elements -->
+                <div class="floating-card card-1">
+                    <div class="card-header">
+                        <div class="card-dot"></div>
+                        <span class="card-title">Topluluk Buluşması</span>
+                    </div>
+                    <div class="card-time">09:30 - 10:00</div>
+                </div>
+
+                <div class="floating-card card-2">
+                    <div class="card-header">
+                        <div class="card-dot"></div>
+                        <span class="card-title">Günlük Toplantı</span>
+                    </div>
+                    <div class="card-time">12:00 - 13:00</div>
+                    <div class="card-avatars">
+                        <div class="avatar"></div>
+                        <div class="avatar"></div>
+                        <div class="avatar"></div>
+                        <div class="avatar"></div>
+                    </div>
+                </div>
+
+                <!-- Calendar -->
+                <div class="calendar-widget">
+                    <div class="calendar-header">
+                        <span>Pzt</span>
+                        <span>Sal</span>
+                        <span>Çar</span>
+                        <span>Per</span>
+                        <span>Cum</span>
+                        <span>Cmt</span>
+                        <span>Paz</span>
+                    </div>
+                    <div class="calendar-dates">
+                        <span>22</span>
+                        <span>23</span>
+                        <span class="active">24</span>
+                        <span>25</span>
+                        <span>26</span>
+                        <span>27</span>
+                        <span>28</span>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -404,90 +441,431 @@ async function onRegister() {
 
 <style scoped>
 .login-page {
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
     position: relative;
-    background: linear-gradient(135deg, #f3f0ff 0%, #ffffff 50%, #f3f0ff 100%);
 }
 
-.custom-input {
-    background-color: #1A1A1D !important;
-    color: white !important;
-    border: none !important;
-    transition: all 0.2s ease;
+.logo-top-left {
+    position: fixed;
+    top: 2rem;
+    left: 2rem;
+    z-index: 100;
 }
 
-.custom-input::placeholder {
+/* Left Panel - Form */
+.login-left-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 50%, #f9f9f9 100%);
+    padding: 3rem;
+    overflow-y: auto;
+}
+
+.login-content-wrapper {
+    width: 100%;
+    max-width: 480px;
+}
+
+.logo-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.login-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1A1A1D;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.login-subtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1A1A1D;
+}
+
+.form-input {
+    width: 100% !important;
+    padding: 1rem 1.25rem !important;
+    background: white !important;
+    color: #1A1A1D !important;
+    border: 1.5px solid #e5e7eb !important;
+    border-radius: 0.75rem !important;
+    font-size: 0.9375rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.form-input::placeholder {
     color: #9ca3af !important;
 }
 
-.custom-input:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(99, 0, 255, 0.5);
-    transform: translateY(-1px);
+.form-input:hover {
+    border-color: rgba(99, 0, 255, 0.3) !important;
 }
 
-.custom-input:hover {
-    background-color: #2a2a2d !important;
+.form-input:focus {
+    outline: none !important;
+    border-color: #6300FF !important;
+    box-shadow: 0 0 0 3px rgba(99, 0, 255, 0.1) !important;
 }
 
-:deep(.p-password-input) {
-    width: 100%;
-    background-color: #1A1A1D !important;
+.submit-button {
+    width: 100% !important;
+    background: linear-gradient(135deg, #6300FF, #5200CC) !important;
     color: white !important;
-    transition: all 0.2s ease;
+    padding: 1rem 2rem !important;
+    border-radius: 0.75rem !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(99, 0, 255, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.submit-button:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(99, 0, 255, 0.4) !important;
+}
+
+.submit-button:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+}
+
+
+.form-footer {
+    text-align: center;
+    font-size: 0.875rem;
+    margin-top: 1rem;
+}
+
+.footer-link {
+    color: #6300FF;
+    font-weight: 600;
+    margin-left: 0.25rem;
+    transition: color 0.3s ease;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.footer-link:hover {
+    color: #5200CC;
+}
+
+.error-message {
+    padding: 0.875rem 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 0.75rem;
+    color: #dc2626;
+    font-size: 0.875rem;
+}
+
+/* Password Input Styles */
+:deep(.p-password-input) {
+    width: 100% !important;
+    padding: 1rem 3rem 1rem 1.25rem !important;
+    background: white !important;
+    color: #1A1A1D !important;
+    border: 1.5px solid #e5e7eb !important;
+    border-radius: 0.75rem !important;
+    font-size: 0.9375rem !important;
+    transition: all 0.3s ease !important;
 }
 
 :deep(.p-password-input:hover) {
-    background-color: #2a2a2d !important;
+    border-color: rgba(99, 0, 255, 0.3) !important;
+}
+
+:deep(.p-password-input:focus) {
+    outline: none !important;
+    border-color: #6300FF !important;
+    box-shadow: 0 0 0 3px rgba(99, 0, 255, 0.1) !important;
 }
 
 :deep(.p-password-input::placeholder) {
     color: #9ca3af !important;
 }
 
-:deep(.p-password-panel) {
-    padding: 0.75rem;
-    background: white;
+/* Password Rules */
+.password-rules {
+    background: #f9fafb;
+    border: 1px solid rgba(99, 0, 255, 0.1);
     border-radius: 0.75rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rule-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    transition: all 0.3s ease;
+}
+
+.rule-item .rule-icon {
+    font-size: 1rem;
+    color: #d1d5db;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.rule-item.rule-valid {
+    color: #1A1A1D;
+}
+
+.rule-item.rule-valid .rule-icon {
+    color: #6300FF;
+}
+
+.password-error-text {
+    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    color: #dc2626;
+}
+
+.password-mismatch :deep(.p-password-input) {
+    border-color: #dc2626 !important;
 }
 
 :deep(.p-password-toggle-icon) {
-    color: white !important;
+    color: #6b7280 !important;
     right: 1rem !important;
-    transition: color 0.2s ease;
+    transition: all 0.3s ease !important;
 }
 
 :deep(.p-password-toggle-icon:hover) {
     color: #6300FF !important;
 }
 
-:deep(.p-checkbox .p-checkbox-box) {
-    border-radius: 0.375rem;
-    border-color: #d1d5db;
-    transition: all 0.2s ease;
+/* Right Panel - Visual */
+.login-right-panel {
+    flex: 1;
+    background: linear-gradient(135deg, #6300FF 0%, #5200CC 50%, #4100AA 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
 }
 
-:deep(.p-checkbox .p-checkbox-box.p-highlight) {
+.login-right-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    opacity: 0.6;
+}
+
+.right-panel-content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 500px;
+}
+
+.floating-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    animation: float 3s ease-in-out infinite;
+}
+
+.card-1 {
+    animation-delay: 0s;
+}
+
+.card-2 {
+    animation-delay: 0.5s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-dot {
+    width: 0.5rem;
+    height: 0.5rem;
     background: #6300FF;
-    border-color: #6300FF;
+    border-radius: 50%;
 }
 
+.card-title {
+    font-weight: 600;
+    color: #1A1A1D;
+    font-size: 0.9375rem;
+}
+
+.card-time {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-left: 1.25rem;
+}
+
+.card-avatars {
+    display: flex;
+    gap: -0.5rem;
+    margin-top: 0.75rem;
+    margin-left: 1.25rem;
+}
+
+.avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6300FF, #5200CC);
+    border: 2px solid white;
+    margin-left: -0.5rem;
+}
+
+.avatar:first-child {
+    margin-left: 0;
+}
+
+.calendar-widget {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.calendar-dates {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.calendar-dates span {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #1A1A1D;
+    transition: all 0.3s ease;
+}
+
+.calendar-dates span.active {
+    background: linear-gradient(135deg, #6300FF, #5200CC);
+    color: white;
+    font-weight: 600;
+}
+
+/* SelectButton Styles */
 :deep(.p-selectbutton .p-button) {
     border-radius: 0.75rem;
     padding: 0.875rem 1.25rem;
-    border-color: #d1d5db;
-    transition: all 0.2s ease;
+    border: 1.5px solid #e5e7eb;
+    background: white;
+    color: #1A1A1D;
+    transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 :deep(.p-selectbutton .p-button:hover) {
+    background: #fafafa;
+    border-color: rgba(99, 0, 255, 0.3);
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 :deep(.p-selectbutton .p-button.p-highlight) {
     background: linear-gradient(135deg, #6300FF, #5200CC);
     border-color: #6300FF;
     color: white;
-    box-shadow: 0 4px 12px rgba(99, 0, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(99, 0, 255, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .login-page {
+        flex-direction: column;
+    }
+    
+    .login-right-panel {
+        display: none;
+    }
+    
+    .login-left-panel {
+        min-height: 100vh;
+    }
+}
+
+@media (max-width: 640px) {
+    .login-left-panel {
+        padding: 2rem 1.5rem;
+    }
+    
+    .login-title {
+        font-size: 2rem;
+    }
+    
+    .social-buttons {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
