@@ -23,7 +23,6 @@ const showChatDialog = ref(false);
 const selectedRoom = ref(null);
 const showTopicChatDialog = ref(false);
 const selectedTopic = ref(null);
-const rightPanelCollapsed = ref(false);
 const selectedPurpose = ref(null);
 const selectedVisibility = ref(null);
 const liveCount = ref(0);
@@ -1060,77 +1059,6 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
                 <div class="visible-badge">
                     <span class="visible-dot"></span>
                     Visible
-                </div>
-                <div class="location-buttons">
-                    <button class="location-btn" @click="setCurrentLocation">
-                        <i class="pi pi-map-marker"></i>
-                        <div class="btn-content">
-                            <div class="btn-title">Where I'm At</div>
-                            <div class="btn-subtitle">Use location</div>
-                        </div>
-                    </button>
-                    <button class="location-btn" @click="setFutureLocation">
-                        <i class="pi pi-send"></i>
-                        <div class="btn-content">
-                            <div class="btn-title">Where I'll Be</div>
-                            <div class="btn-subtitle">Tap map</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Right Panel -->
-            <div class="right-panel" :class="{ collapsed: rightPanelCollapsed }">
-                <div class="panel-header">
-                    <h3>MY PINS</h3>
-                    <button class="panel-toggle" @click="rightPanelCollapsed = !rightPanelCollapsed">
-                        <i :class="rightPanelCollapsed ? 'pi pi-chevron-left' : 'pi pi-chevron-right'"></i>
-                    </button>
-                </div>
-                <div class="panel-content" v-if="!rightPanelCollapsed">
-                    <div class="panel-section">
-                        <h4>WHERE I'M AT</h4>
-                        <p class="empty-state">No current pin</p>
-                    </div>
-                    <div class="panel-section">
-                        <h4>WHERE I'LL BE (0/5)</h4>
-                        <p class="empty-state">No upcoming pins</p>
-                    </div>
-                    <div class="panel-section">
-                        <h4>ARRIVAL COLORS</h4>
-                        <div class="color-legend">
-                            <div class="legend-item">
-                                <div class="legend-color blue"></div>
-                                <span>4h+</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color yellow"></div>
-                                <span>2-4h</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color orange"></div>
-                                <span>&lt;2h</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-color red"></div>
-                                <span>Now</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="panel-section">
-                        <h4>WORLDWIDE</h4>
-                        <div class="worldwide-stats">
-                            <div class="stat-card purple">
-                                <div class="stat-value">0</div>
-                                <div class="stat-label">Live</div>
-                            </div>
-                            <div class="stat-card purple">
-                                <div class="stat-value">0</div>
-                                <div class="stat-label">Month</div>
-                            </div>
-                        </div>
-                        <p class="panel-hint">Drag to move • Click resize</p>
-                    </div>
                 </div>
             </div>
 
