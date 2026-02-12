@@ -73,12 +73,12 @@ onMounted(() => {
 
 <template>
     <div class="tell-us-about-yourself-page min-h-screen flex items-center justify-center p-6">
-        <!-- Pembe-mor degrade arka plan -->
-        <div class="absolute inset-0 bg-gradient-to-br from-pink-500 via-purple-500 to-purple-600"></div>
+        <!-- Mor degrade arka plan -->
+        <div class="absolute inset-0 bg-gradient-to-br from-electric-purple via-[#5200CC] to-[#4100AA]"></div>
         
         <!-- İlerleme çubuğu -->
         <div class="absolute top-0 left-0 right-0 h-1 bg-gray-300">
-            <div class="h-full bg-gradient-to-r from-pink-500 to-purple-500" style="width: 50%"></div>
+            <div class="h-full bg-gradient-to-r from-electric-purple to-[#5200CC]" style="width: 50%"></div>
         </div>
 
         <div class="relative w-full max-w-2xl mt-8">
@@ -88,10 +88,10 @@ onMounted(() => {
                 <div class="p-8 md:p-12">
                     <!-- Başlık -->
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-electric-purple to-[#5200CC] flex items-center justify-center">
                             <i class="pi pi-user text-white text-xl"></i>
                         </div>
-                        <h1 class="text-3xl font-bold text-gray-800">Bize kendinizden bahsedin</h1>
+                        <h1 class="text-3xl font-bold text-dark-charcoal">Bize kendinizden bahsedin</h1>
                     </div>
 
                     <!-- Form -->
@@ -106,7 +106,7 @@ onMounted(() => {
                                 v-model="fullName"
                                 type="text"
                                 placeholder="John Doe"
-                                class="w-full px-4 py-3 bg-black border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-400"
+                                class="w-full px-4 py-3 bg-dark-charcoal border-2 border-gray-200 rounded-xl focus:outline-none focus:border-electric-purple transition-colors text-white placeholder-gray-400"
                                 required
                             />
                         </div>
@@ -121,7 +121,7 @@ onMounted(() => {
                                 v-model="bio"
                                 rows="6"
                                 placeholder="Kendiniz hakkında bir şeyler yazın..."
-                                class="w-full px-4 py-3 bg-black border-2 border-gray-200 rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-white placeholder-gray-400 resize-none"
+                                class="w-full px-4 py-3 bg-dark-charcoal border-2 border-gray-200 rounded-xl focus:outline-none focus:border-electric-purple transition-colors text-white placeholder-gray-400 resize-none"
                             ></textarea>
                         </div>
 
@@ -129,7 +129,7 @@ onMounted(() => {
                         <button
                             type="submit"
                             :disabled="saving || !fullName.trim()"
-                            class="w-full py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                            class="w-full py-4 bg-gradient-to-r from-electric-purple via-[#5200CC] to-[#4100AA] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
                         >
                             <span v-if="!saving">Devam Et</span>
                             <span v-else class="flex items-center justify-center gap-2">

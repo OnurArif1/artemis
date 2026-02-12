@@ -12,6 +12,13 @@ export default {
             lg: '992px',
             xl: '1200px',
             '2xl': '1920px'
+        },
+        extend: {
+            colors: {
+                'electric-purple': '#6300FF',
+                'dark-charcoal': '#1A1A1D',
+                'pure-white': '#FFFFFF'
+            }
         }
     }
 };

@@ -154,13 +154,13 @@ onMounted(async () => {
 <template>
     <div class="select-interests-page min-h-screen flex items-center justify-center p-6">
         <!-- Mor degrade arka plan -->
-        <div class="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-500 to-purple-700"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-electric-purple via-[#5200CC] to-[#4100AA]"></div>
         
         <div class="relative w-full max-w-4xl">
             <!-- Beyaz kart -->
             <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
-                <!-- Başlık çubuğu (pembemsi-mor degrade) -->
-                <div class="bg-gradient-to-r from-pink-500 via-purple-500 to-purple-600 px-8 py-6">
+                <!-- Başlık çubuğu (mor degrade) -->
+                <div class="bg-gradient-to-r from-electric-purple via-[#5200CC] to-[#4100AA] px-8 py-6">
                     <div class="flex items-center gap-3 mb-2">
                         <i class="pi pi-heart text-white text-2xl"></i>
                         <h1 class="text-3xl font-bold text-white">İlgi Alanlarınız</h1>
@@ -177,7 +177,7 @@ onMounted(async () => {
 
                     <!-- Loading durumu -->
                     <div v-if="loading" class="flex justify-center items-center py-12">
-                        <i class="pi pi-spin pi-spinner text-4xl text-purple-500"></i>
+                        <i class="pi pi-spin pi-spinner text-4xl text-electric-purple"></i>
                     </div>
 
                     <!-- İlgi alanları grid -->
@@ -189,14 +189,14 @@ onMounted(async () => {
                             :class="[
                                 'flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer',
                                 isSelected(interest.id)
-                                    ? 'bg-purple-100 border-purple-500 shadow-md transform scale-105'
-                                    : 'bg-white border-gray-200 hover:border-purple-300 hover:shadow-sm'
+                                    ? 'bg-purple-100 border-electric-purple shadow-md transform scale-105'
+                                    : 'bg-white border-gray-200 hover:border-electric-purple hover:shadow-sm'
                             ]"
                         >
                             <span class="text-3xl mb-2">{{ getEmoji(interest.name) }}</span>
                             <span :class="[
                                 'text-sm font-medium text-center',
-                                isSelected(interest.id) ? 'text-purple-700' : 'text-gray-700'
+                                isSelected(interest.id) ? 'text-electric-purple' : 'text-gray-700'
                             ]">
                                 {{ t(`interest.${interest.name}`) }}
                             </span>
@@ -208,7 +208,7 @@ onMounted(async () => {
                         <button
                             @click="saveInterests"
                             :disabled="selectedInterests.length === 0 || saving"
-                            class="px-8 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                            class="px-8 py-3 bg-gradient-to-r from-electric-purple to-[#5200CC] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                         >
                             <span v-if="!saving">Devam Et</span>
                             <span v-else class="flex items-center gap-2">

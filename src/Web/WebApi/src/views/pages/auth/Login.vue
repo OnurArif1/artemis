@@ -212,22 +212,22 @@ async function onRegister() {
 <template>
     <div class="login-page min-h-screen flex items-center justify-center p-6">
         <!-- Background Pattern -->
-        <div class="absolute inset-0 bg-gradient-to-br from-orange-50 via-white to-orange-50 opacity-50"></div>
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,140,0,0.1),transparent_50%)]"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-purple-50 via-white to-purple-50 opacity-50"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(99,0,255,0.1),transparent_50%)]"></div>
         
         <div class="relative w-full max-w-md">
             <!-- Card Container -->
             <div class="bg-white rounded-2xl shadow-2xl p-8 md:p-10 border border-gray-100">
                 <!-- Logo -->
                 <div class="flex items-center gap-2 mb-10 justify-center">
-                    <div class="p-2 bg-orange-100 rounded-xl">
-                        <i class="pi pi-map-marker text-2xl text-[#FF8C00]"></i>
+                    <div class="p-2 bg-purple-100 rounded-xl">
+                        <i class="pi pi-map-marker text-2xl text-electric-purple"></i>
                     </div>
-                    <span class="text-3xl font-bold text-gray-900">Ghossip</span>
+                    <span class="text-3xl font-bold text-dark-charcoal">Ghossip</span>
                 </div>
 
                 <!-- Title -->
-                <h1 v-if="!isRegisterMode" class="text-4xl font-bold text-gray-900 mb-10 text-center">
+                <h1 v-if="!isRegisterMode" class="text-4xl font-bold text-dark-charcoal mb-10 text-center">
                     {{ t('auth.loginTitle') }}
                 </h1>
 
@@ -243,7 +243,7 @@ async function onRegister() {
                                 v-model="email" 
                                 type="email" 
                                 :placeholder="t('auth.emailPlaceholder')" 
-                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-gray-800 text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all"
+                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
                             />
                         </div>
                     </div>
@@ -258,7 +258,7 @@ async function onRegister() {
                                 v-model="password" 
                                 :placeholder="t('auth.passwordPlaceholder')" 
                                 :toggle-mask="true" 
-                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-gray-800 text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all"
+                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
                                 class="w-full"
                                 :feedback="false"
                             />
@@ -273,12 +273,12 @@ async function onRegister() {
                         type="submit"
                         :label="t('auth.login')" 
                         :loading="loading"
-                        class="w-full !bg-gradient-to-r !from-[#FF8C00] !to-[#FF7A00] hover:!from-[#FF7A00] hover:!to-[#FF6A00] !text-white !py-3.5 !rounded-xl !font-semibold !text-base !shadow-lg hover:!shadow-xl !transition-all !transform hover:!scale-[1.02]"
+                        class="w-full !bg-gradient-to-r !from-electric-purple !to-[#5200CC] hover:!from-[#5200CC] hover:!to-[#4100AA] !text-white !py-3.5 !rounded-xl !font-semibold !text-base !shadow-lg hover:!shadow-xl !transition-all !transform hover:!scale-[1.02]"
                     />
 
                     <div class="text-center text-sm text-gray-600 pt-2">
                         {{ t('auth.noAccount') }}
-                        <button type="button" @click="toggleMode" class="text-[#FF8C00] hover:text-[#FF7A00] font-semibold ml-1 transition-colors">
+                        <button type="button" @click="toggleMode" class="text-electric-purple hover:text-[#5200CC] font-semibold ml-1 transition-colors">
                             {{ t('auth.signUp') }}
                         </button>
                     </div>
@@ -295,7 +295,7 @@ async function onRegister() {
                                 id="displayName"
                                 v-model="displayName" 
                                 :placeholder="t('auth.displayNamePlaceholder')" 
-                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-gray-800 text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all"
+                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
                             />
                         </div>
                     </div>
@@ -309,7 +309,7 @@ async function onRegister() {
                                 id="username"
                                 v-model="username" 
                                 :placeholder="t('auth.usernamePlaceholder')" 
-                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-gray-800 text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all"
+                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
                             />
                         </div>
                     </div>
@@ -324,7 +324,7 @@ async function onRegister() {
                                 v-model="registerEmail" 
                                 type="email" 
                                 :placeholder="t('auth.emailPlaceholder')" 
-                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-gray-800 text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all"
+                                class="custom-input w-full pl-12 pr-4 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
                             />
                         </div>
                     </div>
@@ -339,7 +339,7 @@ async function onRegister() {
                                 v-model="registerPassword" 
                                 :placeholder="t('auth.passwordHint')" 
                                 :toggle-mask="true" 
-                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-gray-800 text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all"
+                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
                                 class="w-full"
                                 :feedback="true"
                             />
@@ -356,7 +356,7 @@ async function onRegister() {
                                 v-model="registerPasswordAgain" 
                                 :placeholder="t('auth.passwordRepeatPlaceholder')" 
                                 :toggle-mask="true" 
-                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-gray-800 text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all"
+                                inputClass="custom-input w-full pl-12 pr-14 py-3.5 bg-dark-charcoal text-white border-0 rounded-xl placeholder-gray-400 focus:ring-2 focus:ring-electric-purple focus:ring-offset-2 transition-all"
                                 class="w-full"
                                 :feedback="false"
                             />
@@ -385,12 +385,12 @@ async function onRegister() {
                         type="submit"
                         :label="t('auth.createAccount')" 
                         :loading="registerLoading"
-                        class="w-full !bg-gradient-to-r !from-[#FF8C00] !to-[#FF7A00] hover:!from-[#FF7A00] hover:!to-[#FF6A00] !text-white !py-3.5 !rounded-xl !font-semibold !text-base !shadow-lg hover:!shadow-xl !transition-all !transform hover:!scale-[1.02]"
+                        class="w-full !bg-gradient-to-r !from-electric-purple !to-[#5200CC] hover:!from-[#5200CC] hover:!to-[#4100AA] !text-white !py-3.5 !rounded-xl !font-semibold !text-base !shadow-lg hover:!shadow-xl !transition-all !transform hover:!scale-[1.02]"
                     />
 
                     <div class="text-center text-sm text-gray-600 pt-2">
                         {{ t('auth.haveAccount') }}
-                        <button type="button" @click="toggleMode" class="text-[#FF8C00] hover:text-[#FF7A00] font-semibold ml-1 transition-colors">
+                        <button type="button" @click="toggleMode" class="text-electric-purple hover:text-[#5200CC] font-semibold ml-1 transition-colors">
                             {{ t('auth.signIn') }}
                         </button>
                     </div>
@@ -405,11 +405,11 @@ async function onRegister() {
 <style scoped>
 .login-page {
     position: relative;
-    background: linear-gradient(135deg, #fff5e6 0%, #ffffff 50%, #fff5e6 100%);
+    background: linear-gradient(135deg, #f3f0ff 0%, #ffffff 50%, #f3f0ff 100%);
 }
 
 .custom-input {
-    background-color: #1f2937 !important;
+    background-color: #1A1A1D !important;
     color: white !important;
     border: none !important;
     transition: all 0.2s ease;
@@ -421,23 +421,23 @@ async function onRegister() {
 
 .custom-input:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.5);
+    box-shadow: 0 0 0 2px rgba(99, 0, 255, 0.5);
     transform: translateY(-1px);
 }
 
 .custom-input:hover {
-    background-color: #374151 !important;
+    background-color: #2a2a2d !important;
 }
 
 :deep(.p-password-input) {
     width: 100%;
-    background-color: #1f2937 !important;
+    background-color: #1A1A1D !important;
     color: white !important;
     transition: all 0.2s ease;
 }
 
 :deep(.p-password-input:hover) {
-    background-color: #374151 !important;
+    background-color: #2a2a2d !important;
 }
 
 :deep(.p-password-input::placeholder) {
@@ -458,7 +458,7 @@ async function onRegister() {
 }
 
 :deep(.p-password-toggle-icon:hover) {
-    color: #FF8C00 !important;
+    color: #6300FF !important;
 }
 
 :deep(.p-checkbox .p-checkbox-box) {
@@ -468,8 +468,8 @@ async function onRegister() {
 }
 
 :deep(.p-checkbox .p-checkbox-box.p-highlight) {
-    background: #FF8C00;
-    border-color: #FF8C00;
+    background: #6300FF;
+    border-color: #6300FF;
 }
 
 :deep(.p-selectbutton .p-button) {
@@ -485,9 +485,9 @@ async function onRegister() {
 }
 
 :deep(.p-selectbutton .p-button.p-highlight) {
-    background: linear-gradient(135deg, #FF8C00, #FF7A00);
-    border-color: #FF8C00;
+    background: linear-gradient(135deg, #6300FF, #5200CC);
+    border-color: #6300FF;
     color: white;
-    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(99, 0, 255, 0.3);
 }
 </style>

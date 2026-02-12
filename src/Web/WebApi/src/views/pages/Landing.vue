@@ -17,29 +17,29 @@ const goToLogin = () => {
             <nav class="container mx-auto px-6 py-4 flex items-center justify-between">
                 <!-- Logo -->
                 <div class="flex items-center gap-2">
-                    <i class="pi pi-map-marker text-2xl text-orange-500"></i>
-                    <span class="text-xl font-bold text-gray-900">{{ t('landing.logo') }}</span>
+                    <i class="pi pi-map-marker text-2xl text-electric-purple"></i>
+                    <span class="text-xl font-bold text-dark-charcoal">{{ t('landing.logo') }}</span>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="hidden md:flex items-center gap-8">
-                    <a href="#how-it-works" class="text-gray-700 hover:text-orange-500 transition-colors">{{ t('landing.navHowItWorks') }}</a>
-                    <a href="#features" class="text-gray-700 hover:text-orange-500 transition-colors">{{ t('landing.navFeatures') }}</a>
-                    <a href="#who-its-for" class="text-gray-700 hover:text-orange-500 transition-colors">{{ t('landing.navWhoItsFor') }}</a>
-                    <a href="#safety" class="text-gray-700 hover:text-orange-500 transition-colors">{{ t('landing.navSafety') }}</a>
-                    <a href="#stories" class="text-gray-700 hover:text-orange-500 transition-colors">{{ t('landing.navStories') }}</a>
+                    <a href="#how-it-works" class="text-gray-700 hover:text-electric-purple transition-colors">{{ t('landing.navHowItWorks') }}</a>
+                    <a href="#features" class="text-gray-700 hover:text-electric-purple transition-colors">{{ t('landing.navFeatures') }}</a>
+                    <a href="#who-its-for" class="text-gray-700 hover:text-electric-purple transition-colors">{{ t('landing.navWhoItsFor') }}</a>
+                    <a href="#safety" class="text-gray-700 hover:text-electric-purple transition-colors">{{ t('landing.navSafety') }}</a>
+                    <a href="#stories" class="text-gray-700 hover:text-electric-purple transition-colors">{{ t('landing.navStories') }}</a>
                 </div>
 
                 <!-- Header Actions -->
                 <div class="flex items-center gap-4">
-                    <button @click="goToLogin" class="text-gray-700 hover:text-orange-500 transition-colors font-medium hidden sm:block">
+                    <button @click="goToLogin" class="text-gray-700 hover:text-electric-purple transition-colors font-medium hidden sm:block">
                         {{ t('landing.navLogin') }}
                     </button>
                     <Button 
                         @click="goToLogin" 
                         :label="t('landing.navGetStarted')" 
                         severity="warning"
-                        class="!bg-orange-500 hover:!bg-orange-600 !text-white !px-6 !py-2 !rounded-full !font-medium !shadow-lg hover:!shadow-xl"
+                        class="!bg-electric-purple hover:!bg-[#5200CC] !text-white !px-6 !py-2 !rounded-full !font-medium !shadow-lg hover:!shadow-xl"
                     />
                 </div>
             </nav>
@@ -53,14 +53,14 @@ const goToLogin = () => {
                     <div class="space-y-8">
                         <!-- Community Badge -->
                         <div class="inline-flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full">
-                            <i class="pi pi-users text-orange-500"></i>
+                            <i class="pi pi-users text-electric-purple"></i>
                             <span class="text-gray-700 text-sm font-medium">{{ t('landing.connectCommunity') }}</span>
                         </div>
 
                         <!-- Main Title -->
-                        <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                        <h1 class="text-5xl lg:text-6xl font-bold text-dark-charcoal leading-tight">
                             {{ t('landing.mainTitle') }}
-                            <span class="text-orange-500 block mt-2">{{ t('landing.mainTitleHighlight') }}</span>
+                            <span class="text-electric-purple block mt-2">{{ t('landing.mainTitleHighlight') }}</span>
                         </h1>
 
                         <!-- Description -->
@@ -81,7 +81,7 @@ const goToLogin = () => {
                                 icon="pi pi-arrow-right" 
                                 iconPos="right"
                                 severity="warning"
-                                class="!bg-orange-500 hover:!bg-orange-600 !text-white !px-8 !py-3 !rounded-full !text-lg !font-semibold !shadow-lg hover:!shadow-xl"
+                                class="!bg-electric-purple hover:!bg-[#5200CC] !text-white !px-8 !py-3 !rounded-full !text-lg !font-semibold !shadow-lg hover:!shadow-xl"
                             />
                             <Button 
                                 :label="t('landing.exploreHowItWorks')" 
@@ -98,7 +98,7 @@ const goToLogin = () => {
                     <div class="relative flex justify-center lg:justify-end">
                         <div class="relative w-full max-w-md">
                             <!-- Phone Frame -->
-                            <div class="relative bg-gray-900 rounded-[3rem] p-4 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                            <div class="relative bg-dark-charcoal rounded-[3rem] p-4 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-300">
                                 <div class="bg-white rounded-[2.5rem] overflow-hidden">
                                     <!-- Phone Screen Content -->
                                     <div class="relative h-[600px] bg-gradient-to-br from-blue-50 to-green-50">
@@ -116,44 +116,44 @@ const goToLogin = () => {
 
                                         <!-- Map Pins/Markers -->
                                         <div class="absolute top-20 left-1/4">
-                                            <div class="bg-orange-500 rounded-full p-3 shadow-lg">
+                                            <div class="bg-electric-purple rounded-full p-3 shadow-lg">
                                                 <i class="pi pi-coffee text-white text-xl"></i>
                                             </div>
                                         </div>
                                         <div class="absolute top-40 right-1/4">
-                                            <div class="bg-green-500 rounded-full p-3 shadow-lg">
+                                            <div class="bg-electric-purple rounded-full p-3 shadow-lg">
                                                 <i class="pi pi-users text-white text-xl"></i>
                                             </div>
                                         </div>
                                         <div class="absolute top-60 left-1/3">
-                                            <div class="bg-orange-500 rounded-full p-3 shadow-lg">
+                                            <div class="bg-electric-purple rounded-full p-3 shadow-lg">
                                                 <i class="pi pi-calendar text-white text-xl"></i>
                                             </div>
                                         </div>
                                         <div class="absolute bottom-40 left-1/4">
-                                            <div class="bg-blue-500 rounded-full p-3 shadow-lg">
+                                            <div class="bg-electric-purple rounded-full p-3 shadow-lg">
                                                 <i class="pi pi-suitcase text-white text-xl"></i>
                                             </div>
                                         </div>
                                         <div class="absolute bottom-60 right-1/3">
-                                            <div class="bg-pink-500 rounded-full p-3 shadow-lg">
+                                            <div class="bg-electric-purple rounded-full p-3 shadow-lg">
                                                 <i class="pi pi-music text-white text-xl"></i>
                                             </div>
                                         </div>
 
                                         <!-- Labels -->
                                         <div class="absolute top-8 right-8">
-                                            <span class="bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+                                            <span class="bg-electric-purple text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
                                                 {{ t('landing.community') }}
                                             </span>
                                         </div>
                                         <div class="absolute top-32 right-12">
-                                            <span class="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+                                            <span class="bg-electric-purple text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
                                                 {{ t('landing.friends') }}
                                             </span>
                                         </div>
                                         <div class="absolute bottom-32 right-8">
-                                            <span class="bg-blue-400 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
+                                            <span class="bg-electric-purple text-white px-3 py-1 rounded-full text-xs font-semibold shadow-md">
                                                 {{ t('landing.events') }}
                                             </span>
                                         </div>
@@ -170,7 +170,7 @@ const goToLogin = () => {
 
 <style scoped>
 .landing-page {
-    background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 50%, #fdba74 100%);
+    background: linear-gradient(135deg, #f3f0ff 0%, #e8e0ff 50%, #ddd0ff 100%);
     min-height: 100vh;
 }
 

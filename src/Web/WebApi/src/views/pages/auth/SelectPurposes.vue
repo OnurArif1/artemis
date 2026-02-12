@@ -102,12 +102,12 @@ onMounted(() => {
 
 <template>
     <div class="select-purposes-page min-h-screen flex items-center justify-center p-6">
-        <!-- Pembe-mor degrade arka plan -->
-        <div class="absolute inset-0 bg-gradient-to-br from-pink-500 via-purple-500 to-purple-600"></div>
+        <!-- Mor degrade arka plan -->
+        <div class="absolute inset-0 bg-gradient-to-br from-electric-purple via-[#5200CC] to-[#4100AA]"></div>
         
         <!-- İlerleme çubuğu -->
         <div class="absolute top-0 left-0 right-0 h-1 bg-gray-300">
-            <div class="h-full bg-gradient-to-r from-pink-500 to-purple-500" style="width: 100%"></div>
+            <div class="h-full bg-gradient-to-r from-electric-purple to-[#5200CC]" style="width: 100%"></div>
         </div>
 
         <div class="relative w-full max-w-2xl mt-8">
@@ -117,10 +117,10 @@ onMounted(() => {
                 <div class="p-8 md:p-12">
                     <!-- Başlık -->
                     <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-electric-purple to-[#5200CC] flex items-center justify-center">
                             <i class="pi pi-heart text-white text-xl"></i>
                         </div>
-                        <h1 class="text-3xl font-bold text-gray-800">Seni buraya getiren ne?</h1>
+                        <h1 class="text-3xl font-bold text-dark-charcoal">Seni buraya getiren ne?</h1>
                     </div>
 
                     <!-- Talimat metni -->
@@ -136,25 +136,25 @@ onMounted(() => {
                             :class="[
                                 'flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200',
                                 isSelected(purpose.id)
-                                    ? 'bg-purple-50 border-purple-500 shadow-md'
-                                    : 'bg-white border-gray-200 hover:border-purple-300'
+                                    ? 'bg-purple-50 border-electric-purple shadow-md'
+                                    : 'bg-white border-gray-200 hover:border-electric-purple'
                             ]"
                         >
                             <input
                                 type="checkbox"
                                 :checked="isSelected(purpose.id)"
                                 @change="togglePurpose(purpose.id)"
-                                class="w-5 h-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 focus:ring-2 cursor-pointer"
+                                class="w-5 h-5 text-electric-purple border-gray-300 rounded focus:ring-electric-purple focus:ring-2 cursor-pointer"
                             />
                             <span :class="[
                                 'ml-4 text-lg font-medium',
-                                isSelected(purpose.id) ? 'text-purple-700' : 'text-gray-700'
+                                isSelected(purpose.id) ? 'text-electric-purple' : 'text-gray-700'
                             ]">
                                 {{ purpose.label }}
                             </span>
                             <i
                                 v-if="isSelected(purpose.id)"
-                                class="pi pi-check-circle ml-auto text-purple-500 text-2xl"
+                                class="pi pi-check-circle ml-auto text-electric-purple text-2xl"
                             ></i>
                         </label>
                     </div>
@@ -164,7 +164,7 @@ onMounted(() => {
                         <!-- Geri butonu -->
                         <button
                             @click="router.push({ name: 'tellUsAboutYourself' })"
-                            class="flex-1 py-4 bg-white border-2 border-purple-500 text-purple-600 font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
+                            class="flex-1 py-4 bg-white border-2 border-electric-purple text-electric-purple font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-[1.02]"
                         >
                             Geri
                         </button>
@@ -173,7 +173,7 @@ onMounted(() => {
                         <button
                             @click="savePurposes"
                             :disabled="selectedPurposes.length === 0 || saving"
-                            class="flex-1 py-4 bg-gradient-to-r from-pink-500 via-purple-500 to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
+                            class="flex-1 py-4 bg-gradient-to-r from-electric-purple via-[#5200CC] to-[#4100AA] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02]"
                         >
                             <span v-if="!saving">Devam Et</span>
                             <span v-else class="flex items-center justify-center gap-2">

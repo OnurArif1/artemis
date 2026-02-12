@@ -51,7 +51,7 @@ const particles = ref([]);
 
 // Firework confetti fonksiyonu
 function createFirework(x, y) {
-    const colors = ['#FF8C00', '#FF7A00', '#FF6A00', '#FFD700', '#FFA500', '#FF6347', '#FF1493', '#00CED1', '#9333ea', '#7c3aed'];
+    const colors = ['#6300FF', '#5200CC', '#4100AA', '#300088', '#200066', '#7c3aed', '#9333ea', '#00CED1', '#a670ff', '#c2a0ff'];
     const particleCount = 60;
     
     for (let i = 0; i < particleCount; i++) {
@@ -1835,7 +1835,7 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
     
     &.blue { background: #3b82f6; }
     &.yellow { background: #eab308; }
-    &.orange { background: #f97316; }
+    &.orange { background: #6300FF; }
     &.red { background: #ef4444; }
 }
 
