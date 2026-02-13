@@ -441,26 +441,19 @@ onMounted(() => {
     display: flex;
     align-items: flex-start;
     justify-content: center;
+    background: linear-gradient(135deg, rgba(99, 0, 255, 0.02), rgba(255, 255, 255, 1), rgba(99, 0, 255, 0.02));
 }
 
 .create-room-card {
     position: relative;
     width: 100%;
-    background: linear-gradient(
-        145deg,
-        color-mix(in srgb, var(--surface-card) 98%, var(--primary-color)) 0%,
-        var(--surface-card) 50%,
-        color-mix(in srgb, var(--surface-card) 95%, var(--primary-color)) 100%
-    );
+    background: white;
     border-radius: 24px;
     padding: 3rem;
     box-shadow:
-        0 20px 60px rgba(0, 0, 0, 0.12),
-        0 8px 24px rgba(0, 0, 0, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.02);
-    border: 1.5px solid color-mix(in srgb, var(--primary-color) 12%, transparent);
-    backdrop-filter: blur(20px) saturate(180%);
+        0 4px 20px rgba(99, 0, 255, 0.08),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1.5px solid rgba(99, 0, 255, 0.1);
     animation: cardSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     overflow: hidden;
 }
@@ -532,15 +525,7 @@ onMounted(() => {
     font-size: 2rem;
     font-weight: 800;
     margin-bottom: 2.5rem;
-    color: var(--text-color);
-    background: linear-gradient(
-        135deg,
-        var(--text-color) 0%,
-        color-mix(in srgb, var(--primary-color) 30%, var(--text-color)) 100%
-    );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #1A1A1D;
     letter-spacing: -0.02em;
     z-index: 1;
 }
@@ -561,7 +546,7 @@ onMounted(() => {
 
     label {
         font-weight: 600;
-        color: var(--text-color);
+        color: #374151;
         font-size: 0.95rem;
         letter-spacing: 0.01em;
         display: flex;
@@ -569,9 +554,8 @@ onMounted(() => {
         gap: 0.25rem;
 
         .required {
-            color: var(--red-500);
+            color: #ef4444;
             font-weight: 700;
-            filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--red-500) 40%, transparent));
         }
     }
 
@@ -581,48 +565,46 @@ onMounted(() => {
     :deep(.p-selectbutton) {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 12px;
-        border: 1.5px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
-        background: linear-gradient(
-            135deg,
-            color-mix(in srgb, var(--surface-0) 98%, var(--primary-color)) 0%,
-            var(--surface-0) 100%
-        );
-        box-shadow:
-            0 2px 8px rgba(0, 0, 0, 0.04),
-            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        border: 1.5px solid #e5e7eb;
+        background: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         padding: 0.75rem 1rem;
         font-size: 0.95rem;
+        color: #374151;
     }
 
     :deep(.p-inputtext:focus),
     :deep(.p-inputnumber-input:focus),
     :deep(.p-dropdown:not(.p-disabled).p-focus),
     :deep(.p-selectbutton .p-button.p-highlight) {
-        border-color: var(--primary-color);
+        border-color: #6300FF;
         box-shadow:
-            0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent),
-            0 4px 16px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.1)),
-            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            0 0 0 3px rgba(99, 0, 255, 0.1),
+            0 2px 8px rgba(99, 0, 255, 0.15);
         transform: translateY(-1px);
+        background: white;
     }
 
     :deep(.p-selectbutton .p-button) {
         border-radius: 10px;
-        border: 1.5px solid color-mix(in srgb, var(--primary-color) 20%, transparent);
+        border: 1.5px solid #e5e7eb;
+        background: white;
+        color: #374151;
         transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         font-weight: 500;
     }
 
     :deep(.p-selectbutton .p-button.p-highlight) {
-        background: linear-gradient(
-            135deg,
-            var(--primary-color) 0%,
-            color-mix(in srgb, var(--primary-color) 90%, #ff6b9d) 100%
-        );
-        box-shadow:
-            0 4px 12px color-mix(in srgb, var(--primary-color) 35%, rgba(0, 0, 0, 0.2)),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        background: linear-gradient(135deg, #6300FF, #5200CC);
+        color: white;
+        box-shadow: 0 4px 12px rgba(99, 0, 255, 0.3);
         transform: scale(1.05);
+        border-color: #6300FF;
+    }
+    
+    :deep(.p-selectbutton .p-button:not(.p-highlight):hover) {
+        background: #f9fafb;
+        border-color: #d1d5db;
     }
 }
 
@@ -714,24 +696,16 @@ onMounted(() => {
     align-items: center;
     gap: 1rem;
     padding: 1.25rem 1.5rem;
-    background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--primary-color) 12%, var(--surface-0)) 0%,
-        color-mix(in srgb, var(--primary-color) 8%, var(--surface-0)) 100%
-    );
+    background: linear-gradient(135deg, rgba(99, 0, 255, 0.05), rgba(99, 0, 255, 0.02));
     border-radius: 16px;
-    color: var(--text-color);
+    color: #374151;
     font-weight: 600;
-    border: 1.5px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
-    box-shadow:
-        0 4px 16px color-mix(in srgb, var(--primary-color) 20%, rgba(0, 0, 0, 0.1)),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(12px);
+    border: 1.5px solid rgba(99, 0, 255, 0.15);
+    box-shadow: 0 2px 8px rgba(99, 0, 255, 0.08);
 
     i {
-        color: var(--primary-color);
+        color: #6300FF;
         font-size: 1.5rem;
-        filter: drop-shadow(0 2px 4px color-mix(in srgb, var(--primary-color) 40%, transparent));
         animation: iconPulse 2s ease-in-out infinite;
     }
 }
@@ -765,26 +739,21 @@ onMounted(() => {
 .party-search-wrapper :deep(.p-inputtext) {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 12px;
-    border: 1.5px solid color-mix(in srgb, var(--primary-color) 15%, transparent);
-    background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--surface-0) 98%, var(--primary-color)) 0%,
-        var(--surface-0) 100%
-    );
-    box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    border: 1.5px solid #e5e7eb;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     padding: 0.75rem 1rem;
     font-size: 0.95rem;
+    color: #374151;
 }
 
 .party-search-wrapper :deep(.p-inputtext:focus) {
-    border-color: var(--primary-color);
+    border-color: #6300FF;
     box-shadow:
-        0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent),
-        0 4px 16px color-mix(in srgb, var(--primary-color) 25%, rgba(0, 0, 0, 0.1)),
-        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        0 0 0 3px rgba(99, 0, 255, 0.1),
+        0 2px 8px rgba(99, 0, 255, 0.15);
     transform: translateY(-1px);
+    background: white;
 }
 
 .party-dropdown {

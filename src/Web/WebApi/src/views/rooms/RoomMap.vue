@@ -218,12 +218,12 @@ const visibilityOptions = [
 
 // Bottom navigation items - Sol menüden taşınan öğeler
 const bottomNavItems = computed(() => [
-    { name: t('common.map'), icon: 'pi-map-marker', route: 'room', active: true },
-    { name: t('room.addRoom'), icon: 'pi-plus-circle', route: 'createRoom', active: false },
-    { name: t('common.topics'), icon: 'pi-book', route: 'topic', active: false },
-    { name: t('topic.addTopic'), icon: 'pi-plus-circle', route: 'createTopic', active: false },
-    { name: t('common.categories'), icon: 'pi-tags', route: 'category', active: false },
-    { name: t('common.profile'), icon: 'pi-user', route: 'profile', active: false }
+    { name: t('common.map'), icon: 'pi pi-map-marker', route: 'room', active: true },
+    { name: t('room.addRoom'), icon: 'pi pi-home', route: 'createRoom', active: false },
+    { name: t('common.topics'), icon: 'pi pi-book', route: 'topic', active: false },
+    { name: t('topic.addTopic'), icon: 'pi pi-plus', route: 'createTopic', active: false },
+    { name: t('common.categories'), icon: 'pi pi-th-large', route: 'category', active: false },
+    { name: t('common.profile'), icon: 'pi pi-user', route: 'profile', active: false }
 ]);
 
 function updateTileLayer() {
