@@ -210,6 +210,15 @@ export default {
         community: 'Topluluk',
         events: 'Etkinlikler'
     },
+    profile: {
+        about: 'Hakkımda',
+        interests: 'İlgi Alanlarım',
+        noDescription: 'Henüz bir açıklama eklenmemiş.',
+        descriptionPlaceholder: 'Kendiniz hakkında bir şeyler yazın...',
+        edit: 'Düzenle',
+        save: 'Kaydet',
+        cancel: 'İptal'
+    },
     interest: {
         Sports: 'Spor',
         Fitness: 'Fitness',
