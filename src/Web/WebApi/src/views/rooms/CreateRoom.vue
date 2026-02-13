@@ -441,7 +441,6 @@ onMounted(() => {
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    background: linear-gradient(135deg, rgba(99, 0, 255, 0.02), rgba(255, 255, 255, 1), rgba(99, 0, 255, 0.02));
 }
 
 .create-room-card {
@@ -605,6 +604,86 @@ onMounted(() => {
     :deep(.p-selectbutton .p-button:not(.p-highlight):hover) {
         background: #f9fafb;
         border-color: #d1d5db;
+    }
+}
+
+// Dropdown panel stilleri - beyaz arka plan ve mor vurgular
+:deep(.p-dropdown-panel) {
+    background: white !important;
+    border: 1.5px solid rgba(99, 0, 255, 0.2) !important;
+    border-radius: 12px !important;
+    box-shadow:
+        0 8px 32px rgba(99, 0, 255, 0.15),
+        0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    padding: 0.5rem !important;
+    margin-top: 0.5rem !important;
+}
+
+// Dropdown içindeki arama kutusu
+:deep(.p-dropdown-filter-container) {
+    padding: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+    
+    .p-dropdown-filter {
+        width: 100% !important;
+        padding: 0.75rem 1rem !important;
+        border-radius: 10px !important;
+        border: 1.5px solid #e5e7eb !important;
+        background: white !important;
+        color: #374151 !important;
+        font-size: 0.95rem !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        
+        &:focus {
+            border-color: #6300FF !important;
+            box-shadow:
+                0 0 0 3px rgba(99, 0, 255, 0.1),
+                0 2px 8px rgba(99, 0, 255, 0.15) !important;
+            outline: none !important;
+        }
+        
+        &::placeholder {
+            color: #9ca3af !important;
+        }
+    }
+    
+    .p-dropdown-filter-icon {
+        color: #6300FF !important;
+        right: 1rem !important;
+    }
+}
+
+// Dropdown liste öğeleri
+:deep(.p-dropdown-items-wrapper) {
+    background: white !important;
+    border-radius: 8px !important;
+    
+    .p-dropdown-items {
+        padding: 0.25rem !important;
+        
+        .p-dropdown-item {
+            padding: 0.875rem 1rem !important;
+            margin: 0.125rem 0 !important;
+            border-radius: 8px !important;
+            color: #374151 !important;
+            background: white !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            font-weight: 500 !important;
+            
+            &:not(.p-highlight):hover {
+                background: linear-gradient(135deg, rgba(99, 0, 255, 0.08), rgba(99, 0, 255, 0.05)) !important;
+                color: #6300FF !important;
+                transform: translateX(4px) !important;
+                border-left: 3px solid rgba(99, 0, 255, 0.3) !important;
+            }
+            
+            &.p-highlight {
+                background: linear-gradient(135deg, rgba(99, 0, 255, 0.15), rgba(99, 0, 255, 0.1)) !important;
+                color: #6300FF !important;
+                font-weight: 600 !important;
+                border-left: 3px solid #6300FF !important;
+            }
+        }
     }
 }
 
