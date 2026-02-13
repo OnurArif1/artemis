@@ -3,7 +3,7 @@
     flex-direction: column;
     min-height: 100vh;
     justify-content: space-between;
-    padding: 6rem 2rem 0 2rem;
+    padding: 6rem 2rem 90px 2rem; // Bottom navigation bar için alt padding eklendi (70px + 20px margin)
     margin-left: 0 !important; // Sidebar kaldırıldığı için margin-left sıfırlandı
     transition: margin-left var(--layout-section-transition-duration);
 }

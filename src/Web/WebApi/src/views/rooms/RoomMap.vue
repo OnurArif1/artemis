@@ -217,14 +217,6 @@ const visibilityOptions = [
 ];
 
 // Bottom navigation items - Sol menüden taşınan öğeler
-const bottomNavItems = computed(() => [
-    { name: t('common.map'), icon: 'pi pi-map-marker', route: 'room', active: true },
-    { name: t('room.addRoom'), icon: 'pi pi-home', route: 'createRoom', active: false },
-    { name: t('common.topics'), icon: 'pi pi-book', route: 'topic', active: false },
-    { name: t('topic.addTopic'), icon: 'pi pi-plus', route: 'createTopic', active: false },
-    { name: t('common.categories'), icon: 'pi pi-th-large', route: 'category', active: false },
-    { name: t('common.profile'), icon: 'pi pi-user', route: 'profile', active: false }
-]);
 
 function updateTileLayer() {
     if (!map) return;
@@ -1007,12 +999,6 @@ function setFutureLocation() {
     }
 }
 
-function navigateTo(routeName) {
-    if (routeName === 'room') {
-        return; // Zaten bu sayfadayız
-    }
-    router.push({ name: routeName });
-}
 
 // Kullanıcı konumunun 40km etrafındaki odalar ve topiclere zoom yap
 function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
@@ -1196,20 +1182,6 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
             </div>
         </div>
 
-        <!-- Bottom Navigation -->
-        <div class="bottom-nav-bar">
-            <button 
-                v-for="item in bottomNavItems" 
-                :key="item.name"
-                class="bottom-nav-item"
-                :class="{ active: item.active || route.name === item.route }"
-                @click="navigateTo(item.route)"
-            >
-                <i :class="item.icon"></i>
-                <span>{{ item.name }}</span>
-            </button>
-        </div>
-
         <!-- Dialogs -->
         <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${selectedRoom?.title || t('common.rooms')}`" :style="{ width: '1200px', height: '800px', backgroundColor: 'white' }" :maximizable="true" class="chat-dialog">
             <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
@@ -1327,62 +1299,6 @@ function zoomToUserLocationWithRadius(L, allRooms, allTopics, userLoc) {
     border: 1px solid #e0e0e0;
 }
 
-// Bottom Navigation Bar
-.bottom-nav-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 70px;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    padding: 0 10px;
-    z-index: 1000;
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.bottom-nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 12px;
-    border: none;
-    background: transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: #666;
-    border-radius: 12px;
-    min-width: 60px;
-    flex: 1;
-    max-width: 100px;
-    
-    i {
-        font-size: 18px;
-    }
-    
-    span {
-        font-size: 10px;
-        font-weight: 500;
-        text-align: center;
-        line-height: 1.2;
-    }
-    
-    &.active {
-        color: #9333ea;
-        background: rgba(147, 51, 234, 0.1);
-        
-        i {
-            color: #9333ea;
-        }
-    }
-    
-    &:hover {
-        background: rgba(0, 0, 0, 0.05);
-    }
-}
 
 .room-map-wrapper {
     position: relative;
