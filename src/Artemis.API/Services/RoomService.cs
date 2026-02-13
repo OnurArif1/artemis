@@ -4,6 +4,7 @@ using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
 using Artemis.API.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Artemis.API.Services;
 
@@ -66,14 +67,49 @@ public class RoomService : IRoomService
     {
         var query = _artemisDbContext.Rooms.AsQueryable();
         var room = await query.FirstOrDefaultAsync(i => i.Id == viewModel.RoomId);
-        if (room is not null)
+        if (room is null)
         {
-            var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId);  
-            if (party is not null)
+            throw new InvalidOperationException($"Room with ID {viewModel.RoomId} not found.");
+        }
+
+        var partiesToAdd = new List<Party>();
+
+        // Çoklu davet desteği - PartyIds varsa onu kullan
+        if (viewModel.PartyIds != null && viewModel.PartyIds.Any())
+        {
+            var existingPartyIds = room.Parties.Select(p => p.Id).ToHashSet();
+            var newPartyIds = viewModel.PartyIds.Where(id => !existingPartyIds.Contains(id)).ToList();
+
+            if (newPartyIds.Any())
+            {
+                var parties = await _artemisDbContext.Parties
+                    .Where(p => newPartyIds.Contains(p.Id))
+                    .ToListAsync();
+
+                partiesToAdd.AddRange(parties);
+            }
+        }
+        // Backward compatibility - tek party ID varsa onu kullan
+        else if (viewModel.PartyId > 0)
+        {
+            var existingPartyIds = room.Parties.Select(p => p.Id).ToHashSet();
+            if (!existingPartyIds.Contains(viewModel.PartyId))
+            {
+                var party = await _artemisDbContext.Parties.FindAsync(viewModel.PartyId);
+                if (party is not null)
+                {
+                    partiesToAdd.Add(party);
+                }
+            }
+        }
+
+        if (partiesToAdd.Any())
+        {
+            foreach (var party in partiesToAdd)
             {
                 ((List<Party>)room.Parties).Add(party);
-                await  _artemisDbContext.SaveChangesAsync();
             }
+            await _artemisDbContext.SaveChangesAsync();
         }
     }
 

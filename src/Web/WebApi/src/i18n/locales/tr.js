@@ -110,9 +110,11 @@ export default {
         inviteParty: 'Bu odaya kişi davet et?',
         invitePartyTitle: 'Kişi Davet Et',
         selectParty: 'Seçili Kişi',
+        selectedParties: 'Seçili Kişiler',
         searchParty: 'Kişi ara...',
         addParty: 'Ekle',
         partyAdded: 'Kişi başarıyla eklendi',
+        partiesAdded: 'kişi davet edildi',
         partyAddError: 'Kişi eklenirken hata oluştu',
         partySearchError: 'Kişi aranırken hata oluştu',
         noPartySelected: 'Lütfen bir kişi seçin'

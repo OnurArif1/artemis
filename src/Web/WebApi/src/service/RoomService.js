@@ -28,6 +28,17 @@ export default class RoomService {
         });
     }
 
+    async addPartiesToRoom(roomId, partyIds) {
+        await this.request({
+            method: 'post',
+            url: '/room/addParty',
+            data: {
+                roomId: roomId,
+                partyIds: partyIds
+            }
+        });
+    }
+
     async update(payload) {
         await this.request({
             method: 'post',

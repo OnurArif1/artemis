@@ -25,7 +25,8 @@ const topics = ref([]);
 const loading = ref(false);
 const showInviteSection = ref(false);
 const createdRoomId = ref(null);
-const selectedParty = ref(null);
+const selectedParty = ref(null); // Backward compatibility için
+const selectedParties = ref([]); // Çoklu davet için
 const partySearchValue = ref('');
 const parties = ref([]);
 const loadingParties = ref(false);
@@ -105,9 +106,17 @@ function onPartySearchInput(event) {
 }
 
 function selectParty(party) {
-    selectedParty.value = party;
-    partySearchValue.value = party.partyName;
+    // Eğer zaten seçili değilse ekle
+    const isAlreadySelected = selectedParties.value.some(p => p.id === party.id);
+    if (!isAlreadySelected) {
+        selectedParties.value.push(party);
+    }
+    partySearchValue.value = '';
     parties.value = [];
+}
+
+function removeParty(partyId) {
+    selectedParties.value = selectedParties.value.filter(p => p.id !== partyId);
 }
 
 async function searchParties(searchText) {
@@ -222,6 +231,7 @@ function resetForm() {
     showInviteSection.value = false;
     createdRoomId.value = null;
     selectedParty.value = null;
+    selectedParties.value = [];
     partySearchValue.value = '';
     parties.value = [];
     formData.value = {
@@ -234,7 +244,7 @@ function resetForm() {
 }
 
 async function addPartyToRoom() {
-    if (!selectedParty.value) {
+    if (selectedParties.value.length === 0) {
         toast.add({
             severity: 'warn',
             summary: t('common.warning'),
@@ -255,19 +265,22 @@ async function addPartyToRoom() {
     }
 
     try {
-        await roomService.addPartyToRoom({
-            roomId: createdRoomId.value,
-            partyId: selectedParty.value.id
-        });
+        const partyIds = selectedParties.value.map(p => p.id);
+        
+        await roomService.addPartiesToRoom(createdRoomId.value, partyIds);
 
+        const partyCount = selectedParties.value.length;
         toast.add({
             severity: 'success',
             summary: t('common.success'),
-            detail: t('room.partyAdded'),
+            detail: partyCount === 1 
+                ? t('room.partyAdded')
+                : `${partyCount} ${t('room.partiesAdded') || 'kişi davet edildi'}`,
             life: 3000
         });
 
-        // Seçimi temizle ama dialog açık kalsın
+        // Seçimleri temizle ama dialog açık kalsın
+        selectedParties.value = [];
         selectedParty.value = null;
         partySearchValue.value = '';
         parties.value = [];
@@ -375,24 +388,27 @@ onMounted(() => {
                 </div>
 
                 <div class="party-select-section">
-                    <label for="partySearch">{{ t('room.selectParty') }}</label>
+                    <label for="partySearch">{{ t('room.selectParty') || 'Kişi Seç' }}</label>
                     <div class="party-search-wrapper">
                         <InputText
                             id="partySearch"
                             v-model="partySearchValue"
-                            :placeholder="t('room.searchParty')"
+                            :placeholder="t('room.searchParty') || 'Kişi ara...'"
                             class="w-full"
                             @input="onPartySearchInput"
                             autocomplete="off"
+                            @keydown.enter.prevent="() => {}"
                         />
                         <div v-if="parties.length > 0 && partySearchValue && partySearchValue.length >= 2" class="party-dropdown">
                             <div
                                 v-for="party in parties"
                                 :key="party.id"
                                 class="party-option"
+                                :class="{ 'disabled': selectedParties.some(p => p.id === party.id) }"
                                 @click="selectParty(party)"
                             >
-                                {{ party.partyName }}
+                                <span>{{ party.partyName }}</span>
+                                <i v-if="selectedParties.some(p => p.id === party.id)" class="pi pi-check" style="color: #6300FF; margin-left: auto;"></i>
                             </div>
                         </div>
                         <div v-if="loadingParties" class="party-loading">
@@ -400,23 +416,35 @@ onMounted(() => {
                         </div>
                     </div>
 
-                    <div v-if="selectedParty" class="selected-party">
-                        <span>{{ t('room.selectParty') }}: <strong>{{ selectedParty.partyName }}</strong></span>
-                        <Button
-                            icon="pi pi-times"
-                            severity="secondary"
-                            text
-                            rounded
-                            @click="selectedParty = null; partySearchValue = ''"
-                        />
+                    <!-- Seçili kişiler listesi -->
+                    <div v-if="selectedParties.length > 0" class="selected-parties-container">
+                        <label class="selected-parties-label">{{ t('room.selectedParties') || 'Seçili Kişiler' }} ({{ selectedParties.length }})</label>
+                        <div class="selected-parties-list">
+                            <div
+                                v-for="party in selectedParties"
+                                :key="party.id"
+                                class="selected-party-tag"
+                            >
+                                <span class="party-tag-name">{{ party.partyName }}</span>
+                                <Button
+                                    icon="pi pi-times"
+                                    severity="secondary"
+                                    text
+                                    rounded
+                                    size="small"
+                                    @click="removeParty(party.id)"
+                                    class="party-tag-remove"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div class="invite-actions">
                         <Button
-                            :label="t('room.addParty')"
+                            :label="t('room.addParty') || 'Ekle'"
                             icon="pi pi-plus"
                             @click="addPartyToRoom"
-                            :disabled="!selectedParty"
+                            :disabled="selectedParties.length === 0"
                             class="add-party-button"
                         />
                         <Button
@@ -798,6 +826,9 @@ onMounted(() => {
     font-weight: 500;
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 
     &::before {
         content: '';
@@ -818,7 +849,13 @@ onMounted(() => {
         border-bottom: none;
     }
 
-    &:hover {
+    &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: rgba(99, 0, 255, 0.05);
+    }
+
+    &:not(.disabled):hover {
         background: linear-gradient(
             135deg,
             color-mix(in srgb, var(--primary-color) 15%, var(--surface-0)) 0%,
@@ -828,7 +865,7 @@ onMounted(() => {
         box-shadow: 0 2px 8px color-mix(in srgb, var(--primary-color) 15%, rgba(0, 0, 0, 0.1));
     }
 
-    &:hover::before {
+    &:not(.disabled):hover::before {
         width: 4px;
     }
 }
@@ -842,6 +879,70 @@ onMounted(() => {
     z-index: 10;
 }
 
+.selected-parties-container {
+    margin-top: 1rem;
+    animation: selectedPartySlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.selected-parties-label {
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.selected-parties-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.selected-party-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--primary-color) 12%, var(--surface-0)) 0%,
+        color-mix(in srgb, var(--primary-color) 8%, var(--surface-0)) 100%
+    );
+    border-radius: 20px;
+    border: 1.5px solid color-mix(in srgb, var(--primary-color) 25%, transparent);
+    box-shadow:
+        0 2px 8px color-mix(in srgb, var(--primary-color) 15%, rgba(0, 0, 0, 0.08)),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 4px 12px color-mix(in srgb, var(--primary-color) 20%, rgba(0, 0, 0, 0.12)),
+            inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+}
+
+.party-tag-name {
+    color: var(--text-color);
+    font-weight: 600;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.party-tag-remove {
+    padding: 0.25rem !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+        transform: scale(1.15) rotate(90deg);
+        color: #ef4444 !important;
+    }
+}
+
+// Backward compatibility için eski stil
 .selected-party {
     display: flex;
     align-items: center;
