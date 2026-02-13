@@ -4,7 +4,7 @@ const layoutConfig = reactive({
     preset: 'Aura',
     primary: 'emerald',
     surface: null,
-    darkTheme: true,
+    darkTheme: false,
     menuMode: 'static'
 });
 
@@ -23,18 +23,7 @@ export function useLayout() {
         layoutState.activeMenuItem = item.value || item;
     };
 
-    const toggleDarkMode = () => {
-        if (!document.startViewTransition) {
-            executeDarkModeToggle();
-            return;
-        }
-        document.startViewTransition(() => executeDarkModeToggle());
-    };
-
-    const executeDarkModeToggle = () => {
-        layoutConfig.darkTheme = !layoutConfig.darkTheme;
-        document.documentElement.classList.toggle('app-dark');
-    };
+    // Dark mode kaldırıldı - her zaman açık mod kullanılıyor
 
     const toggleMenu = () => {
         if (layoutConfig.menuMode === 'overlay') {
@@ -57,10 +46,9 @@ export function useLayout() {
         layoutState,
         toggleMenu,
         isSidebarActive,
-        isDarkTheme,
+        isDarkTheme: computed(() => false), // Her zaman false döndür
         getPrimary,
         getSurface,
-        setActiveMenuItem,
-        toggleDarkMode
+        setActiveMenuItem
     };
 }

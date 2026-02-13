@@ -9,7 +9,7 @@ import request from '@/service/request';
 import TopicService from '@/service/TopicService';
 
 const router = useRouter();
-const { toggleDarkMode, isDarkTheme, toggleMenu } = useLayout();
+const { toggleMenu } = useLayout();
 const { t } = useI18n();
 const authStore = useAuthStore();
 
@@ -111,9 +111,6 @@ const profileMenuItems = computed(() => [
             </div>
         </div>
         <div class="layout-topbar-actions">
-            <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
-                <i :class="['pi', isDarkTheme ? 'pi-moon' : 'pi-sun']"></i>
-            </button>
             <div v-if="userEmail" class="profile-menu-container">
                 <button type="button" class="profile-button" @click="toggleProfileMenu" ref="profileMenuRef">
                     <i class="pi pi-user"></i>

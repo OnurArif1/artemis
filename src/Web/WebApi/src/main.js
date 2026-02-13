@@ -93,9 +93,7 @@ updatePreset(customAuraTheme);
 const auth = useAuthStore();
 auth.hydrateFromStorage();
 
-const { layoutConfig } = useLayout();
-if (layoutConfig.darkTheme) {
-    document.documentElement.classList.add('app-dark');
-}
+// Dark mode kaldırıldı - app-dark class'ını kaldır ve her zaman açık mod kullan
+document.documentElement.classList.remove('app-dark');
 
 app.mount('#app');
