@@ -1,62 +1,52 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: artemis-postgres
-    environment:
-      POSTGRES_DB: artemisdb
-      POSTGRES_USER: artemisuser
-      POSTGRES_PASSWORD: 123456
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: unless-stopped
-    networks:
-      - artemis-network
+  # postgres:
+  #   image: postgres:15
+  #   container_name: artemis-postgres
+  #   environment:
+  #     POSTGRES_DB: artemisdb
+  #     POSTGRES_USER: artemisuser
+  #     POSTGRES_PASSWORD: 123456
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - artemis-network
 
   identity-api:
-    build:
-      context: .
-      dockerfile: src/Identity.Api/Dockerfile
+    image: artemis/artemis-identityserver:latest
     container_name: artemis-identity-api
     ports:
       - "5095:5095"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5095
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=ArtemisIdentity;Username=artemisuser;Password=123456
-      - ConnectionStrings__ArtemisConnection=Host=postgres;Port=5432;Database=artemisdb;Username=artemisuser;Password=123456
-    depends_on:
-      - postgres
+      - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=ArtemisIdentity;Username=postgres;Password=xct41troamber65
+      - ConnectionStrings__ArtemisConnection=Host=host.docker.internal;Port=5432;Database=artemisdb;Username=postgres;Password=xct41troamber65
     restart: unless-stopped
     networks:
       - artemis-network
 
   artemis-api:
-    build:
-      context: .
-      dockerfile: src/Artemis.API/Dockerfile
+    image: artemis/artemis-api:latest
     container_name: artemis-api
     ports:
       - "5094:5094"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5094
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=artemisdb;Username=artemisuser;Password=123456
-      - IdentityAuthority=http://identity-api:5095
+      - ConnectionStrings__DefaultConnection=Host=host.docker.internal;Port=5432;Database=artemisdb;Username=postgres;Password=xct41troamber65
     depends_on:
-      - postgres
       - identity-api
     restart: unless-stopped
     networks:
       - artemis-network
 
   gateway-api:
-    build:
-      context: .
-      dockerfile: src/Artemis.Gateway/Dockerfile
+    image: artemis/artemis-gateway:latest
     container_name: artemis-gateway-api
     ports:
       - "5091:5091"
@@ -71,24 +61,20 @@ services:
       - artemis-network
 
   web-webapi:
-    build:
-      context: .
-      dockerfile: src/Web/WebApi/Dockerfile
-      args:
-        VITE_SIGNALR_HUB_URL: ${VITE_SIGNALR_HUB_URL:-http://localhost:5094/hubs/chat}
-        VITE_IDENTITY_TOKEN_URL: ${VITE_IDENTITY_TOKEN_URL:-http://localhost:5091/identity/connect/token}
+    image: artemis/artemis-web-api:latest
     container_name: artemis-web-webapi
     ports:
       - "5175:5175"
+    environment:
+      - VITE_IDENTITY_TOKEN_URL=https://artemisgw.ghossip.app/identity/connect/token
     depends_on:
       - gateway-api
-      - artemis-api
     restart: unless-stopped
     networks:
       - artemis-network
 
-volumes:
-  postgres_data:
+# volumes:
+#   postgres_data:
 
 networks:
   artemis-network:

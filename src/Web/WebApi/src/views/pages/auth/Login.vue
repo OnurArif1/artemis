@@ -86,6 +86,7 @@ async function onLogin() {
         form.append('scope', 'openid profile email roles artemis.api');
 
         const tokenUrl = import.meta.env.VITE_IDENTITY_TOKEN_URL;
+        console.log('token', tokenUrl);
         const resp = await axios.post(tokenUrl, form, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
