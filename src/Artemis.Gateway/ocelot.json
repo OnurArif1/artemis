@@ -51,6 +51,6 @@
     }
   ],
   "GlobalConfiguration": {
-    "BaseUrl": "http://artemisgw.ghossip.app:5091"
+    "BaseUrl": "https://artemisgw.ghossip.app:5091"
   }
 }
