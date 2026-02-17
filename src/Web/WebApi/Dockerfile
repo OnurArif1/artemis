@@ -2,7 +2,7 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 ARG VITE_SIGNALR_HUB_URL=http://localhost:5094/hubs/chat
-ARG VITE_IDENTITY_TOKEN_URL=http://localhost:5091/identity/connect/token
+ARG VITE_IDENTITY_TOKEN_URL=http://localhost:50916/identity/connect/token
 
 ENV VITE_SIGNALR_HUB_URL=$VITE_SIGNALR_HUB_URL
 ENV VITE_IDENTITY_TOKEN_URL=$VITE_IDENTITY_TOKEN_URL

@@ -13,11 +13,11 @@ export default defineConfig({
     server: {
         proxy: {
             '/api': {
-                target: 'http://localhost:5091', // Artemis.Gateway
+                target: 'http://localhost:50914', // Artemis.Gateway
                 changeOrigin: true
             },
             '/identity': {
-                target: 'http://localhost:5091', // Artemis.Gateway
+                target: 'http://localhost:50914', // Artemis.Gateway
                 changeOrigin: true
             }
         }
