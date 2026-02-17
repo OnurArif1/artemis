@@ -79,7 +79,8 @@ public class ArtemisDbContext : DbContext
             if (entity is IChangingDate)
             {
                 var track = entity as IChangingDate;
-                track.CreateDate = DateTime.UtcNow;
+                if (track != null)
+                    track.CreateDate = DateTime.UtcNow;
             }
         }
 

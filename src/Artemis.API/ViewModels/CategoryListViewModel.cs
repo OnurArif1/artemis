@@ -9,7 +9,7 @@ public class CategoryListViewModel
 public class CategoryResultViewModel
 {
     public int Id { get; set; }
-    public string Title { get; set; }
+    public string Title { get; set; } = string.Empty;
     public DateTime CreateDate { get; set; }
 }
 
