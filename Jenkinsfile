@@ -7,6 +7,7 @@ pipeline {
   }
 
   stages {
+
     stage('Checkout') {
       steps {
         checkout scm
@@ -58,31 +59,32 @@ pipeline {
         }
       }
     }
-  }
 
     stage('Deploy (remote docker compose)') {
-    when { branch 'main' }
-    environment {
-      REMOTE_HOST = '65.21.157.56'
-      REMOTE_USER = 'root'
-      REMOTE_APP_DIR = '/opt/artemis'
-    }
-    steps {
-      sshagent(credentials: ['ssh-remote-deploy']) {
-        sh '''
-          set -e
-          ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+      when { branch 'main' }
+      environment {
+        REMOTE_HOST = '65.21.157.56'
+        REMOTE_USER = 'root'
+        REMOTE_APP_DIR = '/opt/artemis'
+      }
+      steps {
+        sshagent(credentials: ['ssh-remote-deploy']) {
+          sh '''
             set -e
-            cd ${REMOTE_APP_DIR}
-            docker compose down
-            docker compose pull || true
-            docker compose up -d --remove-orphans
-          '
-        '''
+            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
+              set -e
+              cd ${REMOTE_APP_DIR}
+              docker compose down
+              docker compose pull || true
+              docker compose up -d --remove-orphans
+            "
+          '''
+        }
       }
     }
+
   }
-  
+
   post {
     always {
       sh 'docker image prune -f || true'
