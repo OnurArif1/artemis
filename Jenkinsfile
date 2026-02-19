@@ -74,9 +74,9 @@ pipeline {
             ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} "
               set -e
               cd ${REMOTE_APP_DIR}
-              docker compose down
-              docker compose pull || true
-              docker compose up -d --remove-orphans
+              docker-compose down
+              docker-compose pull || true
+              docker-compose up -d --remove-orphans
             "
           '''
         }
