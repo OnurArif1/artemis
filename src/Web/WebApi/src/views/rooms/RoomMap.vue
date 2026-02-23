@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from '@/composables/useI18n';
 import { useAuthStore } from '@/stores/auth';
 import { useToast } from 'primevue/usetoast';
+import { getEmailFromToken } from '@/utils/jwt';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import TopicService from '@/service/TopicService';
@@ -280,10 +281,16 @@ onMounted(async () => {
             userLocation = [position.coords.latitude, position.coords.longitude];
             
             try {
+                const token = authStore.token || localStorage.getItem('auth.token');
+                const userEmail = token ? getEmailFromToken(token) : null;
+                
                 const roomFilter = { pageIndex: 1, pageSize: 1000 };
                 if (userLocation && userLocation.length === 2) {
                     roomFilter.userLatitude = userLocation[0];
                     roomFilter.userLongitude = userLocation[1];
+                }
+                if (userEmail) {
+                    roomFilter.userEmail = userEmail;
                 }
                 
                 const [roomRes, topicRes] = await Promise.all([
@@ -324,6 +331,19 @@ onMounted(async () => {
                             // Erişim kontrolü
                             const canAccess = targetRoom.canAccess !== false;
                             const roomRange = targetRoom.roomRange ?? targetRoom.RoomRange;
+                            const subscriptionAccessDenied = targetRoom.subscriptionAccessDenied ?? targetRoom.SubscriptionAccessDenied ?? false;
+                            
+                            // SubscriptionType kontrolü
+                            if (subscriptionAccessDenied) {
+                                toast.add({
+                                    severity: 'warn',
+                                    summary: t('room.accessDenied') || 'Erişim Reddedildi',
+                                    detail: t('room.subscriptionAccessDenied') || 'Bu odaya giremezsiniz çünkü almış olduğunuz paketin bu odaya katılma yetkisi yok.',
+                                    life: 5000
+                                });
+                                loading.value = false;
+                                return;
+                            }
                             
                             if (roomRange != null && !canAccess) {
                                 const distance = targetRoom.distance ?? targetRoom.Distance;
@@ -384,10 +404,16 @@ onMounted(async () => {
 // Normal harita yükleme fonksiyonu (konum izni yoksa veya reddedilirse)
 async function loadMapData(L) {
     try {
+        const token = authStore.token || localStorage.getItem('auth.token');
+        const userEmail = token ? getEmailFromToken(token) : null;
+        
         const roomFilter = { pageIndex: 1, pageSize: 1000 };
         if (userLocation && userLocation.length === 2) {
             roomFilter.userLatitude = userLocation[0];
             roomFilter.userLongitude = userLocation[1];
+        }
+        if (userEmail) {
+            roomFilter.userEmail = userEmail;
         }
         
         const [roomRes, topicRes] = await Promise.all([
@@ -473,6 +499,19 @@ async function loadMapData(L) {
                     // Erişim kontrolü
                     const canAccess = targetRoom.canAccess !== false;
                     const roomRange = targetRoom.roomRange ?? targetRoom.RoomRange;
+                    const subscriptionAccessDenied = targetRoom.subscriptionAccessDenied ?? targetRoom.SubscriptionAccessDenied ?? false;
+                    
+                    // SubscriptionType kontrolü
+                    if (subscriptionAccessDenied) {
+                        toast.add({
+                            severity: 'warn',
+                            summary: t('room.accessDenied') || 'Erişim Reddedildi',
+                            detail: t('room.subscriptionAccessDenied') || 'Bu odaya giremezsiniz çünkü almış olduğunuz paketin bu odaya katılma yetkisi yok.',
+                            life: 5000
+                        });
+                        loading.value = false;
+                        return;
+                    }
                     
                     if (roomRange != null && !canAccess) {
                         const distance = targetRoom.distance ?? targetRoom.Distance;
@@ -911,6 +950,18 @@ function createDetailedRoomMarker(room, lat, lng, L) {
             const canAccess = roomData.canAccess !== false; // Backend'den gelen değer, default true
             const roomRange = roomData.roomRange ?? roomData.RoomRange;
             const distance = roomData.distance ?? roomData.Distance;
+            const subscriptionAccessDenied = roomData.subscriptionAccessDenied ?? roomData.SubscriptionAccessDenied ?? false;
+            
+            // SubscriptionType kontrolü
+            if (subscriptionAccessDenied) {
+                toast.add({
+                    severity: 'warn',
+                    summary: t('room.accessDenied') || 'Erişim Reddedildi',
+                    detail: t('room.subscriptionAccessDenied') || 'Bu odaya giremezsiniz çünkü almış olduğunuz paketin bu odaya katılma yetkisi yok.',
+                    life: 5000
+                });
+                return;
+            }
             
             if (roomRange != null && !canAccess) {
                 // RoomRange var ve erişim yoksa uyarı göster

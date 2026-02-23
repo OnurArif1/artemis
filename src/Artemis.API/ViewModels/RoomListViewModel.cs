@@ -30,6 +30,7 @@ public class RoomResultViewModel
     public double? RoomRange { get; set; }
     public bool CanAccess { get; set; } = true;
     public double? Distance { get; set; }
+    public bool SubscriptionAccessDenied { get; set; } = false;
 }
 
 public class PartyInfo

@@ -140,10 +140,19 @@ public class RoomService : IRoomService
             .AsSplitQuery() 
             .ToListAsync();  
 
+        // Kullanıcının Party'sini ve SubscriptionType'ını al (eğer email verilmişse)
+        Party? userParty = null;
+        if (!string.IsNullOrWhiteSpace(filterViewModel.UserEmail))
+        {
+            userParty = await _artemisDbContext.Parties
+                .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == filterViewModel.UserEmail.ToLower());
+        }
+
         var roomViewModels = rooms.Select(r =>
         {
             double? distance = null;
             bool canAccess = true;
+            bool subscriptionAccessDenied = false;
 
             // Kullanıcı konumu verilmişse mesafe hesapla ve erişim kontrolü yap
             if (filterViewModel.UserLatitude.HasValue && filterViewModel.UserLongitude.HasValue)
@@ -161,6 +170,20 @@ public class RoomService : IRoomService
                     canAccess = distance <= r.RoomRange.Value;
                 }
                 // RoomRange null ise herhangi bir mesafe kısıtlaması yok
+            }
+
+            // SubscriptionType kontrolü
+            if (r.SubscriptionType.HasValue && userParty != null)
+            {
+                var roomSubscriptionType = r.SubscriptionType.Value;
+                var userSubscriptionType = userParty.SubscriptionType ?? SubscriptionType.None;
+
+                // Kullanıcının SubscriptionType'ı room'dan düşükse erişim yok
+                if ((int)userSubscriptionType < (int)roomSubscriptionType)
+                {
+                    subscriptionAccessDenied = true;
+                    canAccess = false; // Subscription kontrolü başarısızsa erişim yok
+                }
             }
 
             return new RoomResultViewModel
@@ -188,7 +211,8 @@ public class RoomService : IRoomService
                 SubscriptionType = r.SubscriptionType,
                 RoomRange = r.RoomRange,
                 CanAccess = canAccess,
-                Distance = distance
+                Distance = distance,
+                SubscriptionAccessDenied = subscriptionAccessDenied
             };
         }).ToList();
 

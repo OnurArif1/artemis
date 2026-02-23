@@ -8,4 +8,5 @@ public class RoomFilterViewModel
     public int? TopicId { get; set; }
     public double? UserLatitude { get; set; }
     public double? UserLongitude { get; set; }
+    public string? UserEmail { get; set; }
 }
