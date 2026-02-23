@@ -6,7 +6,6 @@ public class Room : BaseEntity, IChangingDate
     public int? TopicId { get; set; }
     public Topic? Topic { get; set; }
     public int? PartyId { get; set; }
-    public ICollection<Party> Parties { get; set; } = [];
     public int? CategoryId { get; set; }
     public Category? Category { get; set; }
     public string Title { get; set; } = string.Empty;
@@ -19,8 +18,11 @@ public class Room : BaseEntity, IChangingDate
     public int Upvote { get; set; }
     public int Downvote { get; set; }
     public DateTime CreateDate { get; set; }
+    public double? RoomRange { get; set; }
+    public SubscriptionType? SubscriptionType { get; set; }
 
     public ICollection<RoomHashtagMap> RoomHashtagMaps { get; set; } = [];
     public ICollection<Message> Messages { get; set; } = new List<Message>();
+    public ICollection<Party> Parties { get; set; } = [];
 
 }

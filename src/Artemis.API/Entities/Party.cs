@@ -12,11 +12,12 @@ public class Party : BaseEntity, IChangingDate
     public int DeviceId { get; set; }
     public DateTime CreateDate { get; set; }
     public int? RoomId { get; set; }
-    public ICollection<Room> Rooms { get; set; } = new List<Room>();
+    public SubscriptionType? SubscriptionType { get; set; }
+    public ICollection<Room> Rooms { get; set; } = [];
     
-    public ICollection<MentionPartyMap> MentionPartyMaps { get; set; } = new List<MentionPartyMap>();
-    public ICollection<Subscribe> CreatedSubscribes { get; set; } = new List<Subscribe>();
-    public ICollection<Subscribe> SubscribedTo { get; set; } = new List<Subscribe>();
-    public ICollection<PartyInterest> PartyInterests { get; set; } = new List<PartyInterest>();
-    public ICollection<PartyPurpose> PartyPurposes { get; set; } = new List<PartyPurpose>();
+    public ICollection<MentionPartyMap> MentionPartyMaps { get; set; } = [];
+    public ICollection<Subscribe> CreatedSubscribes { get; set; } = [];
+    public ICollection<Subscribe> SubscribedTo { get; set; } = [];
+    public ICollection<PartyInterest> PartyInterests { get; set; } = [];
+    public ICollection<PartyPurpose> PartyPurposes { get; set; } = [];
 }

@@ -29,6 +29,8 @@ public class ArtemisDbContext : DbContext
     public DbSet<Interest> Interests { get; set; }
     public DbSet<PartyInterest> PartyInterests { get; set; }
     public DbSet<PartyPurpose> PartyPurposes { get; set; }
+    public DbSet<AppSubscription> AppSubscriptions { get; set; }
+    public DbSet<AppSubscriptionTypePrices> AppSubscriptionTypePrices { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,6 +55,8 @@ public class ArtemisDbContext : DbContext
         modelBuilder.ApplyConfiguration(new InterestEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PartyInterestEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PartyPurposeEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new AppSubscriptionEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new AppSubscriptionTypePricesEntityTypeConfiguration());
     }
 
     public override int SaveChanges()
