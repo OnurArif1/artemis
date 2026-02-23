@@ -121,6 +121,8 @@ export default {
         selectSubscriptionType: 'Abonelik tipi seçin',
         roomRange: 'Oda Menzili',
         roomRangePlaceholder: 'Oda menzili (km)',
+        accessDenied: 'Erişim Reddedildi',
+        outOfRange: 'Bu odaya giremezsiniz çünkü bu odanın sınırları dışındasınız.',
         noPartySelected: 'Lütfen bir kişi seçin'
     },
     dashboard: {

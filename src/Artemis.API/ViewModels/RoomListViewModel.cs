@@ -26,6 +26,10 @@ public class RoomResultViewModel
     public string? PartyName { get; set; }
     public List<PartyInfo> Parties { get; set; } = new List<PartyInfo>();
     public string? CategoryTitle { get; set; }
+    public SubscriptionType? SubscriptionType { get; set; }
+    public double? RoomRange { get; set; }
+    public bool CanAccess { get; set; } = true;
+    public double? Distance { get; set; }
 }
 
 public class PartyInfo

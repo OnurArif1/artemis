@@ -140,28 +140,56 @@ public class RoomService : IRoomService
             .AsSplitQuery() 
             .ToListAsync();  
 
-        var roomViewModels = rooms.Select(r => new RoomResultViewModel
+        var roomViewModels = rooms.Select(r =>
         {
-            Id = r.Id,
-            TopicId = r.TopicId,
-            TopicTitle = r.Topic?.Title,
-            Title = r.Title,
-            LocationX = r.LocationX,
-            LocationY = r.LocationY,
-            RoomType = r.RoomType,
-            LifeCycle = r.LifeCycle,
-            ChannelId = r.ChannelId,
-            Upvote = r.Upvote,
-            Downvote = r.Downvote,
-            CreateDate = r.CreateDate,
-            PartyId = r.PartyId,
-            PartyName = r.Parties.FirstOrDefault(i => i.Id == r.PartyId)?.PartyName,
-            Parties = r.Parties.Select(p => new PartyInfo
+            double? distance = null;
+            bool canAccess = true;
+
+            // Kullanıcı konumu verilmişse mesafe hesapla ve erişim kontrolü yap
+            if (filterViewModel.UserLatitude.HasValue && filterViewModel.UserLongitude.HasValue)
             {
-                Id = p.Id,
-                PartyName = p.PartyName
-            }).ToList(),
-            CategoryTitle = r.Category?.Title
+                distance = CalculateDistance(
+                    filterViewModel.UserLatitude.Value,
+                    filterViewModel.UserLongitude.Value,
+                    r.LocationY,
+                    r.LocationX
+                );
+
+                // RoomRange değeri varsa kontrol et
+                if (r.RoomRange.HasValue)
+                {
+                    canAccess = distance <= r.RoomRange.Value;
+                }
+                // RoomRange null ise herhangi bir mesafe kısıtlaması yok
+            }
+
+            return new RoomResultViewModel
+            {
+                Id = r.Id,
+                TopicId = r.TopicId,
+                TopicTitle = r.Topic?.Title,
+                Title = r.Title,
+                LocationX = r.LocationX,
+                LocationY = r.LocationY,
+                RoomType = r.RoomType,
+                LifeCycle = r.LifeCycle,
+                ChannelId = r.ChannelId,
+                Upvote = r.Upvote,
+                Downvote = r.Downvote,
+                CreateDate = r.CreateDate,
+                PartyId = r.PartyId,
+                PartyName = r.Parties.FirstOrDefault(i => i.Id == r.PartyId)?.PartyName,
+                Parties = r.Parties.Select(p => new PartyInfo
+                {
+                    Id = p.Id,
+                    PartyName = p.PartyName
+                }).ToList(),
+                CategoryTitle = r.Category?.Title,
+                SubscriptionType = r.SubscriptionType,
+                RoomRange = r.RoomRange,
+                CanAccess = canAccess,
+                Distance = distance
+            };
         }).ToList();
 
         return new RoomListViewModel
@@ -227,5 +255,25 @@ public class RoomService : IRoomService
             _artemisDbContext.Rooms.Remove(room);
             await _artemisDbContext.SaveChangesAsync();
         }
+    }
+
+    /// <summary>
+    /// İki koordinat arasındaki mesafeyi kilometre cinsinden hesaplar (Haversine formülü)
+    /// </summary>
+    private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double R = 6371; // Dünya'nın yarıçapı (km)
+        var dLat = ToRadians(lat2 - lat1);
+        var dLon = ToRadians(lon2 - lon1);
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(ToRadians(lat1)) * Math.Cos(ToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        return R * c;
+    }
+
+    private static double ToRadians(double degrees)
+    {
+        return degrees * Math.PI / 180.0;
     }
 }

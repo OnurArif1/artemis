@@ -118,7 +118,9 @@ export default {
         subscriptionType: 'Subscription Type',
         selectSubscriptionType: 'Select subscription type',
         roomRange: 'Room Range',
-        roomRangePlaceholder: 'Room range (km)'
+        roomRangePlaceholder: 'Room range (km)',
+        accessDenied: 'Access Denied',
+        outOfRange: 'You cannot enter this room because you are outside its boundaries.'
     },
     dashboard: {
         description: 'Artemis WebApi – Dashboard. Future features will be added here.'

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import signalRService from '@/service/SignalRService';
 import PartyService from '@/service/PartyService';
 import MessageService from '@/service/MessageService';
@@ -19,6 +19,7 @@ const props = defineProps({
 });
 
 const route = useRoute();
+const router = useRouter();
 const { t, locale } = useI18n();
 const toast = useToast();
 const authStore = useAuthStore();
@@ -167,6 +168,25 @@ const getCurrentUserPartyId = async () => {
     }
 };
 
+const getUserLocation = () => {
+    return new Promise((resolve) => {
+        if (!navigator.geolocation) {
+            resolve(null);
+            return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                resolve([position.coords.latitude, position.coords.longitude]);
+            },
+            () => {
+                resolve(null);
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+    });
+};
+
 const ensureUserInRoom = async () => {
     if (!roomId.value) {
         return false;
@@ -178,14 +198,34 @@ const ensureUserInRoom = async () => {
             return false;
         }
 
-        const result = await roomService.getList({
-            pageIndex: 1,
-            pageSize: 1000
-        });
+        // Kullanıcı konumunu al
+        const userLocation = await getUserLocation();
+        const roomFilter = { pageIndex: 1, pageSize: 1000 };
+        if (userLocation && userLocation.length === 2) {
+            roomFilter.userLatitude = userLocation[0];
+            roomFilter.userLongitude = userLocation[1];
+        }
+
+        const result = await roomService.getList(roomFilter);
 
         if (result && result.resultViewModels) {
             const room = result.resultViewModels.find((r) => r.id === roomId.value);
             if (room) {
+                // Erişim kontrolü
+                const canAccess = room.canAccess !== false;
+                const roomRange = room.roomRange ?? room.RoomRange;
+                
+                if (roomRange != null && !canAccess) {
+                    const distance = room.distance ?? room.Distance;
+                    toast.add({
+                        severity: 'warn',
+                        summary: t('room.accessDenied') || 'Erişim Reddedildi',
+                        detail: t('room.outOfRange') || `Bu odaya giremezsiniz çünkü bu odanın sınırları dışındasınız. Mesafe: ${distance ? distance.toFixed(2) : 'N/A'} km, Oda Menzili: ${roomRange} km`,
+                        life: 5000
+                    });
+                    return false;
+                }
+                
                 const isUserInRoom = room.parties && room.parties.some((p) => p.id === userPartyId);
                 if (!isUserInRoom) {
                     try {
@@ -213,14 +253,36 @@ const loadRoomInfo = async () => {
     }
 
     try {
-        const result = await roomService.getList({
-            pageIndex: 1,
-            pageSize: 1000
-        });
+        // Kullanıcı konumunu al
+        const userLocation = await getUserLocation();
+        const roomFilter = { pageIndex: 1, pageSize: 1000 };
+        if (userLocation && userLocation.length === 2) {
+            roomFilter.userLatitude = userLocation[0];
+            roomFilter.userLongitude = userLocation[1];
+        }
+        
+        const result = await roomService.getList(roomFilter);
 
         if (result && result.resultViewModels) {
             const room = result.resultViewModels.find((r) => r.id === roomId.value);
             if (room) {
+                // Erişim kontrolü
+                const canAccess = room.canAccess !== false;
+                const roomRange = room.roomRange ?? room.RoomRange;
+                
+                if (roomRange != null && !canAccess) {
+                    const distance = room.distance ?? room.Distance;
+                    toast.add({
+                        severity: 'warn',
+                        summary: t('room.accessDenied') || 'Erişim Reddedildi',
+                        detail: t('room.outOfRange') || `Bu odaya giremezsiniz çünkü bu odanın sınırları dışındasınız. Mesafe: ${distance ? distance.toFixed(2) : 'N/A'} km, Oda Menzili: ${roomRange} km`,
+                        life: 5000
+                    });
+                    // Router ile geri yönlendir
+                    router.push('/rooms');
+                    return;
+                }
+                
                 roomTitle.value = room.title || `Room ${roomId.value}`;
 
                 const userPartyId = await getCurrentUserPartyId();
@@ -259,12 +321,13 @@ onMounted(async () => {
     }
 
     const userAdded = await ensureUserInRoom();
-    if (userAdded) {
-        await loadRoomInfo();
-    } else {
-        await loadRoomInfo();
+    if (!userAdded) {
+        // Erişim yoksa Chat'i kapat ve geri yönlendir
+        router.push('/rooms');
+        return;
     }
-
+    
+    await loadRoomInfo();
     await loadMessages();
 
     try {
