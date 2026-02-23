@@ -143,37 +143,37 @@
     .p-toast-message.p-toast-message-success {
         background: linear-gradient(
             135deg,
-            color-mix(in srgb, #10b981 8%, var(--surface-0)) 0%,
-            color-mix(in srgb, #10b981 5%, var(--surface-0)) 50%,
+            color-mix(in srgb, #6300FF 8%, var(--surface-0)) 0%,
+            color-mix(in srgb, #6300FF 5%, var(--surface-0)) 50%,
             var(--surface-0) 100%
         );
-        border: 1.5px solid color-mix(in srgb, #10b981 25%, transparent);
+        border: 1.5px solid color-mix(in srgb, #6300FF 25%, transparent);
         box-shadow:
-            0 8px 32px color-mix(in srgb, #10b981 20%, rgba(0, 0, 0, 0.15)),
+            0 8px 32px color-mix(in srgb, #6300FF 20%, rgba(0, 0, 0, 0.15)),
             0 2px 8px rgba(0, 0, 0, 0.08),
             inset 0 1px 0 rgba(255, 255, 255, 0.5);
-        color: #10b981;
+        color: #6300FF;
 
         &::before {
             background: linear-gradient(
                 90deg,
                 transparent 0%,
-                #10b981 20%,
-                color-mix(in srgb, #10b981 90%, #34d399) 50%,
-                #10b981 80%,
+                #6300FF 20%,
+                color-mix(in srgb, #6300FF 90%, #a670ff) 50%,
+                #6300FF 80%,
                 transparent 100%
             );
         }
 
         &:hover {
             box-shadow:
-                0 12px 40px color-mix(in srgb, #10b981 30%, rgba(0, 0, 0, 0.25)),
+                0 12px 40px color-mix(in srgb, #6300FF 30%, rgba(0, 0, 0, 0.25)),
                 0 4px 16px rgba(0, 0, 0, 0.15),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .p-toast-icon {
-            color: #10b981;
+            color: #6300FF;
         }
     }
 

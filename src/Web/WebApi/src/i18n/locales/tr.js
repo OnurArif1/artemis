@@ -117,6 +117,10 @@ export default {
         partiesAdded: 'kişi davet edildi',
         partyAddError: 'Kişi eklenirken hata oluştu',
         partySearchError: 'Kişi aranırken hata oluştu',
+        subscriptionType: 'Abonelik Tipi',
+        selectSubscriptionType: 'Abonelik tipi seçin',
+        roomRange: 'Oda Menzili',
+        roomRangePlaceholder: 'Oda menzili (km)',
         noPartySelected: 'Lütfen bir kişi seçin'
     },
     dashboard: {
@@ -246,5 +250,11 @@ export default {
         Nature: 'Doğa',
         Animals: 'Hayvanlar',
         Outdoor: 'Açık Hava'
+    },
+    subscription: {
+        none: 'Yok',
+        silver: 'Silver',
+        gold: 'Gold',
+        platinum: 'Platinum'
     }
 };

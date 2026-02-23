@@ -114,7 +114,11 @@ export default {
         partyAdded: 'Person added successfully',
         partyAddError: 'Error occurred while adding person',
         partySearchError: 'Error occurred while searching for person',
-        noPartySelected: 'Please select a person'
+        noPartySelected: 'Please select a person',
+        subscriptionType: 'Subscription Type',
+        selectSubscriptionType: 'Select subscription type',
+        roomRange: 'Room Range',
+        roomRangePlaceholder: 'Room range (km)'
     },
     dashboard: {
         description: 'Artemis WebApi – Dashboard. Future features will be added here.'
@@ -234,5 +238,11 @@ export default {
         Nature: 'Nature',
         Animals: 'Animals',
         Outdoor: 'Outdoor'
+    },
+    subscription: {
+        none: 'None',
+        silver: 'Silver',
+        gold: 'Gold',
+        platinum: 'Platinum'
     }
 };

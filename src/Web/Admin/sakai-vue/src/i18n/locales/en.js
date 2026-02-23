@@ -90,7 +90,10 @@ export default {
         selectCategory: 'Select a Category',
         channelId: 'Channel ID (SignalR Connection ID)',
         channelIdPlaceholder: 'SignalR ConnectionId will be added automatically',
-        channelIdDescription: 'SignalR connection ID. Automatically added when creating a new room.'
+        channelIdDescription: 'SignalR connection ID. Automatically added when creating a new room.',
+        subscriptionType: 'Subscription Type',
+        selectSubscriptionType: 'Select subscription type',
+        roomRange: 'Room Range'
     },
     party: {
         title: 'Parties',
@@ -234,5 +237,11 @@ export default {
     addPartyToRoom: {
         addPartyToRoom: 'Add Party To Room',
         selectParty: 'Select a Party'
+    },
+    subscription: {
+        none: 'None',
+        silver: 'Silver',
+        gold: 'Gold',
+        platinum: 'Platinum'
     }
 };

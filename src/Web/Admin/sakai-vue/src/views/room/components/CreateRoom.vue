@@ -37,7 +37,9 @@ const initial = {
     channelId: null,
     referenceId: null,
     upvote: null,
-    downvote: null
+    downvote: null,
+    subscriptionType: null,
+    roomRange: null
 };
 
 const form = ref({ ...initial });
@@ -53,6 +55,13 @@ const topicLoading = ref(false);
 const roomTypeOptions = ref([
     { label: t('common.public'), value: 1 },
     { label: t('common.private'), value: 2 }
+]);
+
+const subscriptionTypeOptions = ref([
+    { label: t('subscription.none') || 'None', value: 0 },
+    { label: t('subscription.silver') || 'Silver', value: 1 },
+    { label: t('subscription.gold') || 'Gold', value: 2 },
+    { label: t('subscription.platinum') || 'Platinum', value: 3 }
 ]);
 
 const isEditMode = computed(() => !!props.room?.id);
@@ -276,6 +285,16 @@ function cancel() {
                 <label for="channelId">{{ t('room.channelId') }}</label>
                 <InputText id="channelId" v-model="form.channelId" type="text" :placeholder="t('room.channelIdPlaceholder')" />
                 <small class="text-500">{{ t('room.channelIdDescription') }}</small>
+            </div>
+
+            <div class="flex flex-col gap-2 mb-3">
+                <label for="subscriptionType">{{ t('room.subscriptionType') || 'Subscription Type' }}</label>
+                <Dropdown id="subscriptionType" v-model="form.subscriptionType" :options="subscriptionTypeOptions" option-label="label" option-value="value" :placeholder="t('room.selectSubscriptionType') || 'Select subscription type'" />
+            </div>
+
+            <div class="flex flex-col gap-2 mb-3">
+                <label for="roomRange">{{ t('room.roomRange') || 'Room Range' }}</label>
+                <InputNumber id="roomRange" v-model="form.roomRange" :min="0" :minFractionDigits="0" :maxFractionDigits="2" />
             </div>
 
             <div class="flex gap-2 justify-end mt-4">

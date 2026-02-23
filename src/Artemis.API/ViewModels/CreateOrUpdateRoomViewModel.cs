@@ -17,4 +17,6 @@ public class CreateOrUpdateRoomViewModel
     public string? ReferenceId { get; set; }
     public int? Upvote { get; set; }
     public int? Downvote { get; set; }
+    public SubscriptionType? SubscriptionType { get; set; }
+    public double? RoomRange { get; set; }
 }

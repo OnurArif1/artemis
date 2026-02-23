@@ -18,7 +18,9 @@ const formData = ref({
     topicId: null,
     locationX: null,
     locationY: null,
-    roomType: 1 // Public
+    roomType: 1, // Public
+    subscriptionType: null,
+    roomRange: null
 });
 
 const topics = ref([]);
@@ -34,6 +36,13 @@ const loadingParties = ref(false);
 const roomTypeOptions = [
     { label: t('room.public'), value: 1 },
     { label: t('room.private'), value: 2 }
+];
+
+const subscriptionTypeOptions = [
+    { label: t('subscription.none') || 'Yok', value: 0 },
+    { label: t('subscription.silver') || 'Silver', value: 1 },
+    { label: t('subscription.gold') || 'Gold', value: 2 },
+    { label: t('subscription.platinum') || 'Platinum', value: 3 }
 ];
 
 async function loadTopics() {
@@ -179,7 +188,9 @@ async function createRoom() {
             topicId: formData.value.topicId,
             locationX: formData.value.locationX || 0,
             locationY: formData.value.locationY || 0,
-            roomType: formData.value.roomType
+            roomType: formData.value.roomType,
+            subscriptionType: formData.value.subscriptionType,
+            roomRange: formData.value.roomRange
         });
 
         // Oluşturulan room'un ID'sini bul
@@ -210,7 +221,9 @@ async function createRoom() {
             topicId: null,
             locationX: null,
             locationY: null,
-            roomType: 1
+            roomType: 1,
+            subscriptionType: null,
+            roomRange: null
         };
 
         // Kişi davet etme bölümünü göster
@@ -239,7 +252,9 @@ function resetForm() {
         topicId: null,
         locationX: null,
         locationY: null,
-        roomType: 1
+        roomType: 1,
+        subscriptionType: null,
+        roomRange: null
     };
 }
 
@@ -366,6 +381,32 @@ onMounted(() => {
                         optionLabel="label"
                         optionValue="value"
                         class="w-full"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="subscriptionType">{{ t('room.subscriptionType') || 'Abonelik Tipi' }}</label>
+                    <Dropdown
+                        id="subscriptionType"
+                        v-model="formData.subscriptionType"
+                        :options="subscriptionTypeOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        :placeholder="t('room.selectSubscriptionType') || 'Abonelik tipi seçin'"
+                        class="w-full"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="roomRange">{{ t('room.roomRange') || 'Oda Menzili' }}</label>
+                    <InputNumber
+                        id="roomRange"
+                        v-model="formData.roomRange"
+                        :placeholder="t('room.roomRangePlaceholder') || 'Oda menzili (km)'"
+                        class="w-full"
+                        :minFractionDigits="0"
+                        :maxFractionDigits="2"
+                        :min="0"
                     />
                 </div>
             </div>

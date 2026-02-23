@@ -47,7 +47,9 @@ public class RoomService : IRoomService
             ChannelId = viewModel.ChannelId ?? string.Empty,
             ReferenceId = viewModel.ReferenceId ?? string.Empty,
             Upvote = viewModel.Upvote ?? 0,
-            Downvote = viewModel.Downvote ?? 0
+            Downvote = viewModel.Downvote ?? 0,
+            SubscriptionType = viewModel.SubscriptionType,
+            RoomRange = viewModel.RoomRange
         };
 
         if (viewModel.PartyId.HasValue && viewModel.PartyId.Value > 0)
@@ -202,6 +204,8 @@ public class RoomService : IRoomService
             room.ReferenceId = viewModel.ReferenceId ?? room.ReferenceId;
             room.Upvote = viewModel.Upvote ?? room.Upvote;
             room.Downvote = viewModel.Downvote ?? room.Downvote;
+            room.SubscriptionType = viewModel.SubscriptionType ?? room.SubscriptionType;
+            room.RoomRange = viewModel.RoomRange ?? room.RoomRange;
 
             if (viewModel.PartyId.HasValue && viewModel.PartyId.Value > 0)
             {

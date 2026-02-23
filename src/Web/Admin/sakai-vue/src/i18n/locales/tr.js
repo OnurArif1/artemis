@@ -95,7 +95,10 @@ export default {
         selectCategory: 'Bir Kategori Seçin',
         channelId: 'Kanal No (SignalR Bağlantı No)',
         channelIdPlaceholder: 'Otomatik olarak SignalR ConnectionId eklenecek',
-        channelIdDescription: 'SignalR bağlantı No\'si. Yeni room oluştururken otomatik olarak eklenir.'
+        channelIdDescription: 'SignalR bağlantı No\'si. Yeni room oluştururken otomatik olarak eklenir.',
+        subscriptionType: 'Abonelik Tipi',
+        selectSubscriptionType: 'Abonelik tipi seçin',
+        roomRange: 'Oda Menzili'
     },
     party: {
         title: 'Partiler',
@@ -241,5 +244,11 @@ export default {
     addPartyToRoom: {
         addPartyToRoom: 'Odaya Party Ekle',
         selectParty: 'Bir Party Seçin'
+    },
+    subscription: {
+        none: 'Yok',
+        silver: 'Silver',
+        gold: 'Gold',
+        platinum: 'Platinum'
     }
 };
