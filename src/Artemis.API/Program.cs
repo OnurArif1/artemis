@@ -24,6 +24,7 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IInterestService, InterestService>();
 builder.Services.AddScoped<IPartyInterestService, PartyInterestService>();
 builder.Services.AddScoped<IPartyPurposeService, PartyPurposeService>();
+builder.Services.AddScoped<IAppSubscriptionTypePricesService, AppSubscriptionTypePricesService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 

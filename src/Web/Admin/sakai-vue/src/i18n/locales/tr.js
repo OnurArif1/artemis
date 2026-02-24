@@ -53,6 +53,7 @@ export default {
         categoryHashtagMaps: 'Kategori-Hashtag Haritaları',
         topicHashtagMaps: 'Konu-Hashtag Haritaları',
         chat: 'Sohbet',
+        appSubscriptionTypePrices: 'Abonelik Tipi Fiyatları',
         home: 'Ana Sayfa',
         account: 'Hesap',
         logout: 'Çıkış Yap'
@@ -250,5 +251,46 @@ export default {
         silver: 'Silver',
         gold: 'Gold',
         platinum: 'Platinum'
+    },
+    appSubscriptionTypePrices: {
+        title: 'Abonelik Tipi Fiyatları',
+        create: 'Yeni Abonelik Tipi Fiyatı Oluştur',
+        createAppSubscriptionTypePrices: 'Abonelik Tipi Fiyatı Oluştur',
+        updateAppSubscriptionTypePrices: 'Abonelik Tipi Fiyatı Güncelle',
+        deleteAppSubscriptionTypePrices: 'Abonelik Tipi Fiyatı Sil',
+        id: 'No',
+        subscriptionType: 'Abonelik Tipi',
+        selectSubscriptionType: 'Abonelik tipi seçin',
+        subscriptionTypeRequired: 'Abonelik tipi zorunludur',
+        price: 'Fiyat',
+        pricePlaceholder: 'Fiyat girin',
+        priceRequired: 'Fiyat zorunludur ve 0\'dan büyük olmalıdır',
+        priceCurrencyType: 'Para Birimi',
+        selectCurrencyType: 'Para birimi seçin',
+        currencyTypeRequired: 'Para birimi zorunludur',
+        appSubscriptionPeriodType: 'Dönem Tipi',
+        selectPeriodType: 'Dönem tipi seçin',
+        thruDate: 'Bitiş Tarihi',
+        thruDatePlaceholder: 'Bitiş tarihi seçin (opsiyonel)',
+        createDate: 'Oluşturma Tarihi',
+        created: 'Abonelik tipi fiyatı oluşturuldu',
+        updated: 'Abonelik tipi fiyatı güncellendi',
+        deleted: 'Abonelik tipi fiyatı silindi',
+        createFailed: 'Abonelik tipi fiyatı oluşturma başarısız',
+        updateFailed: 'Abonelik tipi fiyatı güncelleme başarısız',
+        deleteFailed: 'Abonelik tipi fiyatı silme başarısız',
+        noDataFound: 'Abonelik tipi fiyatı bulunamadı.',
+        loadingData: 'Abonelik tipi fiyatları yükleniyor. Lütfen bekleyin.'
+    },
+    currency: {
+        none: 'Yok',
+        tl: 'TL',
+        eur: 'EUR',
+        dollar: 'DOLLAR'
+    },
+    period: {
+        none: 'Yok',
+        monthly: 'Aylık',
+        yearly: 'Yıllık'
     }
 };

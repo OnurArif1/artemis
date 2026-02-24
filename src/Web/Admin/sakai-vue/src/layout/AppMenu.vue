@@ -53,7 +53,8 @@ const model = ref([
             { label: t('common.topicHashtagMaps'), icon: 'pi pi-fw pi-bookmark', to: '/topichashtagmap/list' },
             { label: t('common.mentions'), icon: 'pi pi-fw pi-at', to: '/mention/list' },
             { label: t('common.messages'), icon: 'pi pi-fw pi-comments', to: '/message/list' },
-            { label: t('common.chat'), icon: 'pi pi-fw pi-comment', to: '/chat' }
+            { label: t('common.chat'), icon: 'pi pi-fw pi-comment', to: '/chat' },
+            { label: t('common.appSubscriptionTypePrices'), icon: 'pi pi-fw pi-dollar', to: '/appSubscriptionTypePrices/list' }
         ]
     },
     {

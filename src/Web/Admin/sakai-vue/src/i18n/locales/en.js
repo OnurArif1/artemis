@@ -243,5 +243,46 @@ export default {
         silver: 'Silver',
         gold: 'Gold',
         platinum: 'Platinum'
+    },
+    appSubscriptionTypePrices: {
+        title: 'Subscription Type Prices',
+        create: 'Create New Subscription Type Price',
+        createAppSubscriptionTypePrices: 'Create Subscription Type Price',
+        updateAppSubscriptionTypePrices: 'Update Subscription Type Price',
+        deleteAppSubscriptionTypePrices: 'Delete Subscription Type Price',
+        id: 'Id',
+        subscriptionType: 'Subscription Type',
+        selectSubscriptionType: 'Select subscription type',
+        subscriptionTypeRequired: 'Subscription type is required',
+        price: 'Price',
+        pricePlaceholder: 'Enter price',
+        priceRequired: 'Price is required and must be greater than 0',
+        priceCurrencyType: 'Currency Type',
+        selectCurrencyType: 'Select currency type',
+        currencyTypeRequired: 'Currency type is required',
+        appSubscriptionPeriodType: 'Period Type',
+        selectPeriodType: 'Select period type',
+        thruDate: 'Thru Date',
+        thruDatePlaceholder: 'Select end date (optional)',
+        createDate: 'Create Date',
+        created: 'Subscription type price created',
+        updated: 'Subscription type price updated',
+        deleted: 'Subscription type price deleted',
+        createFailed: 'Failed to create subscription type price',
+        updateFailed: 'Failed to update subscription type price',
+        deleteFailed: 'Failed to delete subscription type price',
+        noDataFound: 'No subscription type prices found.',
+        loadingData: 'Loading subscription type prices data. Please wait.'
+    },
+    currency: {
+        none: 'None',
+        tl: 'TL',
+        eur: 'EUR',
+        dollar: 'DOLLAR'
+    },
+    period: {
+        none: 'None',
+        monthly: 'Monthly',
+        yearly: 'Yearly'
     }
 };

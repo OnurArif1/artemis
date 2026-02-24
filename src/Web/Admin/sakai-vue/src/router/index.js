@@ -69,6 +69,11 @@ const router = createRouter({
                     path: '/chat',
                     name: 'chat',
                     component: () => import('@/views/chat/Chat.vue')
+                },
+                {
+                    path: '/appSubscriptionTypePrices/list',
+                    name: 'appSubscriptionTypePrices-list',
+                    component: () => import('@/views/appSubscriptionTypePrices/AppSubscriptionTypePricesList.vue')
                 }
             ]
         },
