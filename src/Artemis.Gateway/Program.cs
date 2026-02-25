@@ -3,8 +3,8 @@ using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Development ortamında ocelot.Development.json, diğer ortamlarda ocelot.json kullan
-var ocelotFile = builder.Environment.IsDevelopment() 
+var useOcelotJson = builder.Configuration.GetValue<bool>("USE_OCELOT_JSON", false);
+var ocelotFile = (builder.Environment.IsDevelopment() && !useOcelotJson)
     ? "ocelot.Development.json" 
     : "ocelot.json";
 
