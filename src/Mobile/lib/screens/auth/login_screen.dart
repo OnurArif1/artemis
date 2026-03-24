@@ -129,12 +129,13 @@ class _LoginScreenState extends State<LoginScreen> {
         child: ResponsiveCenter(
           maxWidth: 440,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
               const Align(alignment: Alignment.centerLeft, child: GossipBrand()),
               const SizedBox(height: 28),
-              Expanded(child: form),
+              form,
             ],
           ),
         ),
@@ -160,7 +161,10 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 28),
           TextFormField(
             controller: _email,
-            keyboardType: TextInputType.emailAddress,
+            keyboardType: TextInputType.text,
+            textCapitalization: TextCapitalization.none,
+            autocorrect: false,
+            enableSuggestions: false,
             autofillHints: const [AutofillHints.email],
             decoration: const InputDecoration(
               labelText: 'E-posta',
@@ -176,6 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _password,
+            keyboardType: TextInputType.text,
             obscureText: _obscure,
             autofillHints: const [AutofillHints.password],
             decoration: InputDecoration(
@@ -250,7 +255,10 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 24),
           TextFormField(
             controller: _regEmail,
-            keyboardType: TextInputType.emailAddress,
+            keyboardType: TextInputType.text,
+            textCapitalization: TextCapitalization.none,
+            autocorrect: false,
+            enableSuggestions: false,
             decoration: const InputDecoration(
               labelText: 'E-posta',
               prefixIcon: Icon(Icons.mail_outline_rounded),
@@ -264,6 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _regPassword,
+            keyboardType: TextInputType.text,
             obscureText: _obscureReg,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
@@ -282,6 +291,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _regPassword2,
+            keyboardType: TextInputType.text,
             obscureText: _obscureReg2,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
