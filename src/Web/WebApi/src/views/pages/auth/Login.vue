@@ -87,6 +87,8 @@ async function onLogin() {
 
         const tokenUrl = import.meta.env.VITE_IDENTITY_TOKEN_URL;
         console.log('token', tokenUrl);
+        console.log('onur');
+
         const resp = await axios.post(tokenUrl, form, {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         });
