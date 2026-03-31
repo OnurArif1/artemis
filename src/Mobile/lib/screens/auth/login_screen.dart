@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -40,6 +41,14 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void _setMode(bool register) {
+    if (_loading) return;
+    setState(() {
+      _registerMode = register;
+      _formKey.currentState?.reset();
+    });
+  }
+
   bool _passwordRulesOk(String p) {
     if (p.length < 6) return false;
     if (!RegExp(r'[A-Z]').hasMatch(p)) return false;
@@ -56,9 +65,6 @@ class _LoginScreenState extends State<LoginScreen> {
             email: _email.text,
             password: _password.text,
           );
-      if (mounted) {
-        // go_router redirect
-      }
     } on AuthException catch (e) {
       if (mounted) showAppSnackBar(context, e.message, error: true);
     } catch (e) {
@@ -103,18 +109,23 @@ class _LoginScreenState extends State<LoginScreen> {
       return Scaffold(
         body: Row(
           children: [
-            Expanded(
-              flex: 11,
-              child: _AuthHero(),
-            ),
+            const Expanded(flex: 11, child: _AuthHero()),
             Expanded(
               flex: 9,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(32),
-                    child: form,
+              child: ColoredBox(
+                color: AppColors.surfaceLight,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(32),
+                      child: _AuthChrome(
+                        registerMode: _registerMode,
+                        onModeChanged: _setMode,
+                        loading: _loading,
+                        child: form,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -125,51 +136,57 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     return Scaffold(
-      body: SafeArea(
-        child: ResponsiveCenter(
-          maxWidth: 440,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 8),
-              const Align(alignment: Alignment.centerLeft, child: GossipBrand()),
-              const SizedBox(height: 28),
-              form,
-            ],
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const _LoginBackdrop(),
+          SafeArea(
+            child: ResponsiveCenter(
+              maxWidth: 400,
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 8),
+                  const GossipBrand(),
+                  const SizedBox(height: 28),
+                  _AuthChrome(
+                    registerMode: _registerMode,
+                    onModeChanged: _setMode,
+                    loading: _loading,
+                    child: form,
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildLoginForm(BuildContext context) {
+    final theme = Theme.of(context);
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Tekrar hoş geldin',
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
           const SizedBox(height: 8),
-          Text(
-            'Hesabınla giriş yap ve sohbetlere katıl.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
           const SizedBox(height: 28),
           TextFormField(
             controller: _email,
-            keyboardType: TextInputType.text,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
             textCapitalization: TextCapitalization.none,
             autocorrect: false,
             enableSuggestions: false,
             autofillHints: const [AutofillHints.email],
+            inputFormatters: const [_EmailMacLayoutAtFixFormatter()],
             decoration: const InputDecoration(
               labelText: 'E-posta',
               hintText: 'ornek@eposta.com',
-              prefixIcon: Icon(Icons.mail_outline_rounded),
+              prefixIcon: Icon(Icons.alternate_email_rounded),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'E-posta gerekli';
@@ -177,10 +194,11 @@ class _LoginScreenState extends State<LoginScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           TextFormField(
             controller: _password,
-            keyboardType: TextInputType.text,
+            keyboardType: TextInputType.visiblePassword,
+            textInputAction: TextInputAction.done,
             obscureText: _obscure,
             autofillHints: const [AutofillHints.password],
             decoration: InputDecoration(
@@ -188,9 +206,14 @@ class _LoginScreenState extends State<LoginScreen> {
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
                 onPressed: () => setState(() => _obscure = !_obscure),
-                icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                icon: Icon(
+                  _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                ),
               ),
             ),
+            onFieldSubmitted: (_) {
+              if (!_loading) _submitLogin();
+            },
             validator: (v) {
               if (v == null || v.isEmpty) return 'Şifre gerekli';
               return null;
@@ -199,29 +222,51 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 28),
           FilledButton(
             onPressed: _loading ? null : _submitLogin,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
             child: _loading
                 ? const SizedBox(
                     height: 22,
                     width: 22,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Giriş yap'),
+                : const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Giriş yap'),
+                      SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_rounded, size: 20),
+                    ],
+                  ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('Hesabın yok mu?', style: Theme.of(context).textTheme.bodyMedium),
-              TextButton(
-                onPressed: _loading
-                    ? null
-                    : () => setState(() {
-                          _registerMode = true;
-                          _formKey.currentState?.reset();
-                        }),
-                child: const Text('Kayıt ol'),
+          const SizedBox(height: 20),
+          Center(
+            child: Text.rich(
+              TextSpan(
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                children: [
+                  const TextSpan(text: 'Hesabın yok mu? '),
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.baseline,
+                    baseline: TextBaseline.alphabetic,
+                    child: GestureDetector(
+                      onTap: _loading ? null : () => _setMode(true),
+                      child: Text(
+                        'Kayıt ol',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),
@@ -229,14 +274,16 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildRegisterForm(BuildContext context) {
+    final theme = Theme.of(context);
     final p = _regPassword.text;
-    final rules = {
-      'En az 6 karakter': p.length >= 6,
-      'Bir büyük harf': RegExp(r'[A-Z]').hasMatch(p),
-      'Bir küçük harf': RegExp(r'[a-z]').hasMatch(p),
-      'Bir rakam': RegExp(r'[0-9]').hasMatch(p),
-      'Şifreler eşleşiyor': p.isNotEmpty && p == _regPassword2.text,
-    };
+    final rules = <_PwdRule>[
+      _PwdRule('En az 6 karakter', p.length >= 6),
+      _PwdRule('Bir büyük harf', RegExp(r'[A-Z]').hasMatch(p)),
+      _PwdRule('Bir küçük harf', RegExp(r'[a-z]').hasMatch(p)),
+      _PwdRule('Bir rakam', RegExp(r'[0-9]').hasMatch(p)),
+      _PwdRule('Şifreler eşleşiyor', p.isNotEmpty && p == _regPassword2.text),
+    ];
+    final doneCount = rules.where((r) => r.ok).length;
 
     return Form(
       key: _formKey,
@@ -244,24 +291,34 @@ class _LoginScreenState extends State<LoginScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Hesap oluştur',
-            style: Theme.of(context).textTheme.headlineMedium,
+            'Aramıza katıl',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.6,
+              height: 1.15,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Dakikalar içinde topluluğa katıl.',
-            style: Theme.of(context).textTheme.bodyMedium,
+            'Birkaç alan — sonra konular ve yakınındaki odalar.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 24),
           TextFormField(
             controller: _regEmail,
-            keyboardType: TextInputType.text,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
             textCapitalization: TextCapitalization.none,
             autocorrect: false,
             enableSuggestions: false,
+            inputFormatters: const [_EmailMacLayoutAtFixFormatter()],
             decoration: const InputDecoration(
               labelText: 'E-posta',
-              prefixIcon: Icon(Icons.mail_outline_rounded),
+              hintText: 'ornek@eposta.com',
+              prefixIcon: Icon(Icons.alternate_email_rounded),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'E-posta gerekli';
@@ -269,10 +326,11 @@ class _LoginScreenState extends State<LoginScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           TextFormField(
             controller: _regPassword,
-            keyboardType: TextInputType.text,
+            keyboardType: TextInputType.visiblePassword,
+            textInputAction: TextInputAction.next,
             obscureText: _obscureReg,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
@@ -280,7 +338,9 @@ class _LoginScreenState extends State<LoginScreen> {
               prefixIcon: const Icon(Icons.lock_outline_rounded),
               suffixIcon: IconButton(
                 onPressed: () => setState(() => _obscureReg = !_obscureReg),
-                icon: Icon(_obscureReg ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                icon: Icon(
+                  _obscureReg ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                ),
               ),
             ),
             validator: (v) {
@@ -288,18 +348,21 @@ class _LoginScreenState extends State<LoginScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           TextFormField(
             controller: _regPassword2,
-            keyboardType: TextInputType.text,
+            keyboardType: TextInputType.visiblePassword,
+            textInputAction: TextInputAction.done,
             obscureText: _obscureReg2,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               labelText: 'Şifre tekrar',
-              prefixIcon: const Icon(Icons.lock_outline_rounded),
+              prefixIcon: const Icon(Icons.lock_reset_rounded),
               suffixIcon: IconButton(
                 onPressed: () => setState(() => _obscureReg2 = !_obscureReg2),
-                icon: Icon(_obscureReg2 ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                icon: Icon(
+                  _obscureReg2 ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                ),
               ),
             ),
             validator: (v) {
@@ -307,45 +370,54 @@ class _LoginScreenState extends State<LoginScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: rules.entries.map((e) {
-              final ok = e.value;
-              return Chip(
-                avatar: Icon(
-                  ok ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
-                  size: 18,
-                  color: ok ? AppColors.purple600 : Colors.grey,
-                ),
-                label: Text(e.key, style: const TextStyle(fontSize: 12)),
-                backgroundColor: ok ? AppColors.purple50 : Colors.grey.shade100,
-                side: BorderSide(color: ok ? AppColors.purple200 : Colors.grey.shade300),
-                visualDensity: VisualDensity.compact,
-              );
-            }).toList(),
+          const SizedBox(height: 18),
+          Text(
+            'Şifre gücü',
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: rules.isEmpty ? 0 : doneCount / rules.length,
+              minHeight: 6,
+              backgroundColor: AppColors.outlineMuted.withValues(alpha: 0.45),
+              color: doneCount == rules.length ? AppColors.purple500 : AppColors.purple300,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ...rules.map((r) => _PasswordRuleTile(rule: r)),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: _loading ? null : _submitRegister,
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
+              textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            ),
             child: _loading
                 ? const SizedBox(
                     height: 22,
                     width: 22,
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
-                : const Text('Kayıt ol'),
+                : const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.person_add_rounded, size: 20),
+                      SizedBox(width: 8),
+                      Text('Hesap oluştur'),
+                    ],
+                  ),
           ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: _loading
-                ? null
-                : () => setState(() {
-                      _registerMode = false;
-                      _formKey.currentState?.reset();
-                    }),
-            child: const Text('Zaten hesabım var'),
+          const SizedBox(height: 16),
+          Center(
+            child: TextButton(
+              onPressed: _loading ? null : () => _setMode(false),
+              child: const Text('Zaten hesabım var, giriş yap'),
+            ),
           ),
         ],
       ),
@@ -353,7 +425,271 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 }
 
+class _PwdRule {
+  const _PwdRule(this.label, this.ok);
+  final String label;
+  final bool ok;
+}
+
+class _PasswordRuleTile extends StatelessWidget {
+  const _PasswordRuleTile({required this.rule});
+
+  final _PwdRule rule;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            rule.ok ? Icons.check_circle_rounded : Icons.circle_outlined,
+            size: 20,
+            color: rule.ok ? AppColors.purple600 : theme.colorScheme.outline,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              rule.label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: rule.ok ? AppColors.darkCharcoal : theme.colorScheme.onSurfaceVariant,
+                fontWeight: rule.ok ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Giriş / Kayıt anahtarı + beyaz kart.
+class _AuthChrome extends StatelessWidget {
+  const _AuthChrome({
+    required this.registerMode,
+    required this.onModeChanged,
+    required this.loading,
+    required this.child,
+  });
+
+  final bool registerMode;
+  final void Function(bool register) onModeChanged;
+  final bool loading;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      elevation: 3,
+      shadowColor: AppColors.purple900.withValues(alpha: 0.12),
+      color: AppColors.surfaceCard,
+      surfaceTintColor: AppColors.purple100,
+      borderRadius: BorderRadius.circular(28),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _AuthModeToggle(
+              registerMode: registerMode,
+              onChanged: onModeChanged,
+              enabled: !loading,
+            ),
+            const SizedBox(height: 22),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, anim) {
+                return FadeTransition(
+                  opacity: anim,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.04),
+                      end: Offset.zero,
+                    ).animate(anim),
+                    child: child,
+                  ),
+                );
+              },
+              child: KeyedSubtree(
+                key: ValueKey<bool>(registerMode),
+                child: child,
+              ),
+            ),
+            SizedBox(height: MediaQuery.paddingOf(context).bottom > 0 ? 4 : 0),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthModeToggle extends StatelessWidget {
+  const _AuthModeToggle({
+    required this.registerMode,
+    required this.onChanged,
+    required this.enabled,
+  });
+
+  final bool registerMode;
+  final void Function(bool register) onChanged;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Giriş veya kayıt modu',
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.purple50.withValues(alpha: 0.55),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.purple100),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: _TogglePill(
+                label: 'Giriş',
+                icon: Icons.login_rounded,
+                selected: !registerMode,
+                onTap: enabled ? () => onChanged(false) : null,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: _TogglePill(
+                label: 'Kayıt',
+                icon: Icons.person_add_alt_1_rounded,
+                selected: registerMode,
+                onTap: enabled ? () => onChanged(true) : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TogglePill extends StatelessWidget {
+  const _TogglePill({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(13),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.surfaceCard : Colors.transparent,
+            borderRadius: BorderRadius.circular(13),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: AppColors.purple900.withValues(alpha: 0.07),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 20,
+                color: selected ? AppColors.purple600 : theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  color: selected ? AppColors.purple600 : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginBackdrop extends StatelessWidget {
+  const _LoginBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _BackdropPainter(),
+      child: const SizedBox.expand(),
+    );
+  }
+}
+
+class _BackdropPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height * 0.55);
+    final rgradient = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(-0.2, -0.5),
+        radius: 1.15,
+        colors: [
+          AppColors.purple100.withValues(alpha: 0.95),
+          AppColors.purple50.withValues(alpha: 0.4),
+          AppColors.surfaceLight.withValues(alpha: 0),
+        ],
+        stops: const [0.0, 0.45, 1.0],
+      ).createShader(rect);
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), Paint()..color = AppColors.surfaceLight);
+
+    canvas.drawCircle(Offset(size.width * 0.85, size.height * 0.08), size.width * 0.42, rgradient);
+
+    final topGlow = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          AppColors.pureWhite.withValues(alpha: 0.9),
+          AppColors.surfaceLight,
+        ],
+        stops: const [0.0, 0.42],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.5));
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height * 0.5), topGlow);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _AuthHero extends StatelessWidget {
+  const _AuthHero();
+
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
@@ -407,6 +743,7 @@ class _AuthHero extends StatelessWidget {
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                           color: Colors.white,
                           height: 1.15,
+                          fontWeight: FontWeight.w800,
                         ),
                   ),
                   const SizedBox(height: 16),
@@ -423,6 +760,27 @@ class _AuthHero extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// iOS Simülatör + Mac fiziksel klavye bazen Option+Q → `œ` gönderir.
+class _EmailMacLayoutAtFixFormatter extends TextInputFormatter {
+  const _EmailMacLayoutAtFixFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (!newValue.text.contains('œ') && !newValue.text.contains('Œ')) {
+      return newValue;
+    }
+    final text = newValue.text.replaceAll('Œ', '@').replaceAll('œ', '@');
+    return TextEditingValue(
+      text: text,
+      selection: newValue.selection,
+      composing: TextRange.empty,
     );
   }
 }
