@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../providers/home_tab_controller.dart';
 import '../categories/category_list_screen.dart';
 import '../profile/profile_screen.dart';
-import '../rooms/room_list_screen.dart';
+import '../rooms/room_map_screen.dart';
 import '../topics/topic_list_screen.dart';
 
 /// Alt gezinme (telefon) veya yan şerit (tablet / geniş ekran).
@@ -15,8 +17,6 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
-
   static const _destinations = [
     NavigationDestination(
       icon: Icon(Icons.topic_outlined),
@@ -42,11 +42,14 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
-    const pages = <Widget>[
-      TopicListScreen(),
-      CategoryListScreen(),
-      RoomListScreen(),
-      ProfileScreen(),
+    final tab = context.watch<HomeTabController>();
+    final idx = tab.currentIndex;
+
+    final pages = <Widget>[
+      const TopicListScreen(),
+      const CategoryListScreen(),
+      const RoomMapScreen(),
+      const ProfileScreen(),
     ];
 
     final wide = MediaQuery.sizeOf(context).width >= 720;
@@ -57,8 +60,9 @@ class _HomeShellState extends State<HomeShell> {
           children: [
             NavigationRail(
               extended: MediaQuery.sizeOf(context).width >= 960,
-              selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
+              selectedIndex: idx,
+              onDestinationSelected: (i) =>
+                  context.read<HomeTabController>().setIndex(i),
               backgroundColor: AppColors.surfaceCard,
               indicatorColor: AppColors.purple100,
               selectedIconTheme: const IconThemeData(color: AppColors.purple600),
@@ -92,17 +96,26 @@ class _HomeShellState extends State<HomeShell> {
               ],
             ),
             const VerticalDivider(width: 1, thickness: 1),
-            Expanded(child: pages[_index]),
+            Expanded(
+              child: IndexedStack(
+                index: idx,
+                children: pages,
+              ),
+            ),
           ],
         ),
       );
     }
 
     return Scaffold(
-      body: pages[_index],
+      body: IndexedStack(
+        index: idx,
+        children: pages,
+      ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        selectedIndex: idx,
+        onDestinationSelected: (i) =>
+            context.read<HomeTabController>().setIndex(i),
         destinations: _destinations,
       ),
     );

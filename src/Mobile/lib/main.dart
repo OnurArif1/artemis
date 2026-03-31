@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/network/dio_client.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
+import 'providers/home_tab_controller.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_shell.dart';
 import 'services/app_services.dart';
@@ -23,6 +24,7 @@ Future<void> main() async {
     onUnauthorized: () => auth.logout(),
   );
   final appServices = AppServices(dioClient.dio);
+  final homeTab = HomeTabController();
 
   final router = GoRouter(
     initialLocation: auth.isAuthenticated ? '/app' : '/login',
@@ -54,6 +56,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthProvider>.value(value: auth),
+        ChangeNotifierProvider<HomeTabController>.value(value: homeTab),
         Provider<AuthService>.value(value: authService),
         Provider<AppServices>.value(value: appServices),
       ],

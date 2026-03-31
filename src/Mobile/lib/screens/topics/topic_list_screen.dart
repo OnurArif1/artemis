@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/entity_map.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
 import '../../services/app_services.dart';
-import '../../widgets/artemis_snackbar.dart';
+import 'create_topic_screen.dart';
+import 'topic_detail_screen.dart';
 
 class TopicListScreen extends StatefulWidget {
   const TopicListScreen({super.key});
@@ -109,6 +111,17 @@ class _TopicListScreenState extends State<TopicListScreen> {
           Expanded(child: _buildBody(context)),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => const CreateTopicScreen(),
+            ),
+          );
+          if (context.mounted) await _load();
+        },
+        child: const Icon(Icons.add_rounded),
+      ),
     );
   }
 
@@ -153,10 +166,19 @@ class _TopicListScreenState extends State<TopicListScreen> {
           final m = _items[i];
           final title = mapTitle(m);
           final sub = mapSubtitle(m);
+          final tid = entityId(m);
           return Card(
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: () => showAppSnackBar(context, 'Detay ekranı Web ile aynı akışta genişletilebilir.'),
+              onTap: tid == null
+                  ? null
+                  : () {
+                      Navigator.of(context).push<void>(
+                        MaterialPageRoute<void>(
+                          builder: (_) => TopicDetailScreen(topicId: tid),
+                        ),
+                      ).then((_) => _load());
+                    },
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(

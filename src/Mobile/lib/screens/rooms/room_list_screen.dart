@@ -2,11 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/location/location_service.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/util/jwt_email.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
 import '../../services/app_services.dart';
-import '../../widgets/artemis_snackbar.dart';
+import '../../services/auth_service.dart';
+import 'create_room_screen.dart';
+import 'room_detail_screen.dart';
 
 class RoomListScreen extends StatefulWidget {
   const RoomListScreen({super.key});
@@ -35,7 +39,18 @@ class _RoomListScreenState extends State<RoomListScreen> {
     });
     try {
       final svc = context.read<AppServices>().rooms;
-      final data = await svc.getList({'pageIndex': 1, 'pageSize': _pageSize});
+      final token = context.read<AuthService>().token;
+      final email = emailFromAccessToken(token);
+      final loc = LocationService.cached;
+      final data = await svc.getList({
+        'pageIndex': 1,
+        'pageSize': _pageSize,
+        if (loc != null) ...{
+          'userLatitude': loc.lat,
+          'userLongitude': loc.lng,
+        },
+        if (email != null) 'userEmail': email,
+      });
       if (!mounted) return;
       setState(() {
         _items = asMapList(data);
@@ -73,10 +88,14 @@ class _RoomListScreenState extends State<RoomListScreen> {
       ),
       body: _buildBody(context),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => showAppSnackBar(
-          context,
-          'Oda oluşturma akışı Web’deki CreateRoom ile hizalanabilir.',
-        ),
+        onPressed: () async {
+          await Navigator.of(context).push<void>(
+            MaterialPageRoute<void>(
+              builder: (_) => const CreateRoomScreen(),
+            ),
+          );
+          if (context.mounted) await _load();
+        },
         child: const Icon(Icons.add_rounded),
       ),
     );
@@ -141,7 +160,13 @@ class _RoomListScreenState extends State<RoomListScreen> {
                   ? Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis)
                   : null,
               trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => showAppSnackBar(context, 'Oda detayı ve harita entegrasyonu eklenebilir.'),
+              onTap: () {
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RoomDetailScreen(room: Map<String, dynamic>.from(m)),
+                  ),
+                );
+              },
             ),
           );
         },

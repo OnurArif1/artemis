@@ -6,7 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
 import '../../services/app_services.dart';
-import '../../widgets/artemis_snackbar.dart';
+import 'category_editor_screen.dart';
 
 class CategoryListScreen extends StatefulWidget {
   const CategoryListScreen({super.key});
@@ -109,6 +109,17 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           Expanded(child: _buildBody(context)),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final ok = await Navigator.of(context).push<bool>(
+            MaterialPageRoute<bool>(
+              builder: (_) => const CategoryEditorScreen(),
+            ),
+          );
+          if (context.mounted && ok == true) await _load();
+        },
+        child: const Icon(Icons.add_rounded),
+      ),
     );
   }
 
@@ -164,7 +175,16 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
               subtitle: sub != null
                   ? Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis)
                   : null,
-              onTap: () => showAppSnackBar(context, 'Kategori düzenleme WebApi ile genişletilebilir.'),
+              onTap: () async {
+                final ok = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute<bool>(
+                    builder: (_) => CategoryEditorScreen(
+                      category: Map<String, dynamic>.from(m),
+                    ),
+                  ),
+                );
+                if (context.mounted && ok == true) await _load();
+              },
             ),
           );
         },
