@@ -17,15 +17,17 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   final authService = AuthService(prefs);
-  final auth = AuthProvider(authService);
+  final homeTab = HomeTabController();
+  final auth = AuthProvider(
+    authService,
+    onAuthenticatedSessionStarted: () => homeTab.setIndex(2),
+  );
 
   final dioClient = DioClient(
     readToken: () => authService.token,
     onUnauthorized: () => auth.logout(),
   );
   final appServices = AppServices(dioClient.dio);
-  final homeTab = HomeTabController();
-
   final router = GoRouter(
     initialLocation: auth.isAuthenticated ? '/app' : '/login',
     refreshListenable: auth,
