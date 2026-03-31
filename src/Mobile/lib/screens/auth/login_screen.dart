@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -637,19 +639,73 @@ class _TogglePill extends StatelessWidget {
   }
 }
 
-class _LoginBackdrop extends StatelessWidget {
+class _LoginBackdrop extends StatefulWidget {
   const _LoginBackdrop();
 
   @override
+  State<_LoginBackdrop> createState() => _LoginBackdropState();
+}
+
+class _LoginBackdropState extends State<_LoginBackdrop> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 14),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _BackdropPainter(),
-      child: const SizedBox.expand(),
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final t = Curves.easeInOutSine.transform(_controller.value);
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            CustomPaint(
+              painter: _BackdropPainter(phase: t),
+              child: const SizedBox.expand(),
+            ),
+            // Formun üstünde kalmadan hafif "hareket" hissi verir.
+            Positioned(
+              top: 88 + 8 * math.sin(t * math.pi * 2),
+              right: 24,
+              child: const _FloatingBadge(
+                icon: Icons.bolt_rounded,
+                label: 'Canli sohbet',
+              ),
+            ),
+            Positioned(
+              top: 146 + 10 * math.cos(t * math.pi * 2),
+              left: 22,
+              child: const _FloatingBadge(
+                icon: Icons.near_me_rounded,
+                label: 'Yakindaki odalar',
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
 
 class _BackdropPainter extends CustomPainter {
+  const _BackdropPainter({required this.phase});
+
+  final double phase;
+
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Rect.fromLTWH(0, 0, size.width, size.height * 0.55);
@@ -667,7 +723,32 @@ class _BackdropPainter extends CustomPainter {
 
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), Paint()..color = AppColors.surfaceLight);
 
-    canvas.drawCircle(Offset(size.width * 0.85, size.height * 0.08), size.width * 0.42, rgradient);
+    final wobbleX = 14 * math.sin(phase * math.pi * 2);
+    final wobbleY = 9 * math.cos(phase * math.pi * 2);
+    canvas.drawCircle(
+      Offset(size.width * 0.84 + wobbleX, size.height * 0.09 + wobbleY),
+      size.width * 0.42,
+      rgradient,
+    );
+
+    final blob = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          AppColors.purple300.withValues(alpha: 0.28),
+          AppColors.purple100.withValues(alpha: 0.0),
+        ],
+      ).createShader(Rect.fromCircle(
+        center: Offset(size.width * 0.17, size.height * 0.2),
+        radius: size.width * 0.35,
+      ));
+    canvas.drawCircle(
+      Offset(
+        size.width * 0.17 - wobbleX * 0.6,
+        size.height * 0.2 - wobbleY * 0.6,
+      ),
+      size.width * 0.32,
+      blob,
+    );
 
     final topGlow = Paint()
       ..shader = LinearGradient(
@@ -681,10 +762,74 @@ class _BackdropPainter extends CustomPainter {
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.5));
 
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height * 0.5), topGlow);
+
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2
+      ..color = AppColors.purple200.withValues(alpha: 0.55);
+    final arcRect = Rect.fromCenter(
+      center: Offset(size.width * 0.5, size.height * 0.14),
+      width: size.width * 0.92,
+      height: size.height * 0.25,
+    );
+    canvas.drawArc(
+      arcRect,
+      math.pi * (0.12 + 0.06 * phase),
+      math.pi * 0.78,
+      false,
+      stroke,
+    );
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _BackdropPainter oldDelegate) => oldDelegate.phase != phase;
+}
+
+class _FloatingBadge extends StatelessWidget {
+  const _FloatingBadge({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.66),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.purple900.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: AppColors.purple600),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: AppColors.purple700,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _AuthHero extends StatelessWidget {
