@@ -25,6 +25,29 @@ const _userRadiusKm = 40.0;
 const _detailZoom = 12.0;
 const _zoomClusterThreshold = 10.0;
 
+/// Şehir modunda kamera çerçevesi: Türkiye’ye çok uzak aykırı kümeler (ör. emülatör seed’i,
+/// test odası) tüm haritayı SF’ye zoom’latmasın diye framing’den çıkarılır; marker’lar yine çizilir.
+List<LatLng> _cityCameraFrameCoords(List<LatLng> centers) {
+  if (centers.length <= 1) return centers;
+  const maxKmFromTr = 2400.0;
+  final near = centers
+      .where(
+        (c) =>
+            calculateDistanceKm(
+              _turkeyCenter.latitude,
+              _turkeyCenter.longitude,
+              c.latitude,
+              c.longitude,
+            ) <=
+            maxKmFromTr,
+      )
+      .toList();
+  if (near.isNotEmpty && near.length < centers.length) {
+    return near;
+  }
+  return centers;
+}
+
 enum _MapViewMode { city, nearby, detail }
 
 class RoomMapScreen extends StatefulWidget {
@@ -361,9 +384,14 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
       return;
     }
     final coords = regions.map((r) => r.center).toList();
+    final frame = _cityCameraFrameCoords(coords);
+    if (frame.length == 1) {
+      _mapController.move(frame.single, 9);
+      return;
+    }
     _mapController.fitCamera(
       CameraFit.coordinates(
-        coordinates: coords,
+        coordinates: frame,
         padding: const EdgeInsets.all(48),
         maxZoom: 10,
       ),

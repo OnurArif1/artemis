@@ -27,6 +27,11 @@ class LocationService {
   static const double _iosSimLat = 37.3349;
   static const double _iosSimLng = -122.0090;
 
+  /// Xcode Simülatör → Features → Location → **San Francisco** (ve çok yakın ön ayarlar).
+  /// Fiziksel olarak İstanbul’da olsanız bile simülatör bu koordinatları döndürür; gerçek GPS değildir.
+  static const double _iosSfPresetLat = 37.785834;
+  static const double _iosSfPresetLng = -122.406417;
+
   static bool _withinKm(
     double lat1,
     double lng1,
@@ -49,7 +54,8 @@ class LocationService {
   /// Geliştirici emülatör/simülatör fabrika konumu — gerçek GPS değil.
   static bool isLikelySimulatorDefault(double lat, double lng) {
     return _withinKm(lat, lng, _androidEmuLat, _androidEmuLng, 2.5) ||
-        _withinKm(lat, lng, _iosSimLat, _iosSimLng, 3.0);
+        _withinKm(lat, lng, _iosSimLat, _iosSimLng, 3.0) ||
+        _withinKm(lat, lng, _iosSfPresetLat, _iosSfPresetLng, 2.0);
   }
 
   static void _clearStored() {
