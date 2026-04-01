@@ -29,6 +29,7 @@ class ProfileScreen extends StatelessWidget {
     final rail = MediaQuery.sizeOf(context).width >= 720;
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: const Text('Profil'),
         automaticallyImplyLeading: !rail,
@@ -37,7 +38,21 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           Card(
-            child: Padding(
+            elevation: 0,
+            clipBehavior: Clip.antiAlias,
+            surfaceTintColor: AppColors.purple100,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.purple50,
+                    AppColors.surfaceCard,
+                  ],
+                ),
+              ),
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,6 +87,8 @@ class ProfileScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Card(
+            elevation: 0,
+            surfaceTintColor: AppColors.purple50,
             child: Column(
               children: [
                 ListTile(
@@ -100,8 +117,8 @@ class ProfileScreen extends StatelessWidget {
             icon: const Icon(Icons.logout_rounded),
             label: const Text('Çıkış yap'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.red.shade700,
-              side: BorderSide(color: Colors.red.shade200),
+              foregroundColor: AppColors.purple700,
+              side: const BorderSide(color: AppColors.purple300),
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),

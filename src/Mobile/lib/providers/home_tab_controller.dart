@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 /// Alt sekmeler + haritada belirli odaya odaklanma (Web `goToRoom` / `roomId` sorgusu).
 class HomeTabController extends ChangeNotifier {
-  HomeTabController({int initialIndex = 2}) : _index = initialIndex;
+  HomeTabController({int initialIndex = 0}) : _index = initialIndex;
 
   int _index;
   int? _roomIdToFocus;
@@ -17,7 +17,7 @@ class HomeTabController extends ChangeNotifier {
 
   void openRoomsTabWithRoom(int roomId) {
     _roomIdToFocus = roomId;
-    _index = 2;
+    _index = 0;
     notifyListeners();
   }
 

@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/entity_map.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
 import '../../services/app_services.dart';
+import '../../widgets/fade_in_list_item.dart';
 import 'category_editor_screen.dart';
 
 class CategoryListScreen extends StatefulWidget {
@@ -73,6 +75,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   Widget build(BuildContext context) {
     final rail = MediaQuery.sizeOf(context).width >= 720;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Kategoriler${_total > 0 ? ' ($_total)' : ''}'),
         automaticallyImplyLeading: !rail,
@@ -164,8 +167,14 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           final m = _items[i];
           final title = mapTitle(m);
           final sub = mapSubtitle(m);
-          return Card(
-            child: ListTile(
+          final id = entityId(m);
+          return FadeInListItem(
+            key: ValueKey('cat-${id ?? i}'),
+            index: i,
+            child: Card(
+              elevation: 0,
+              surfaceTintColor: AppColors.purple50,
+              child: ListTile(
               leading: const CircleAvatar(
                 backgroundColor: AppColors.purple50,
                 foregroundColor: AppColors.purple600,
@@ -185,6 +194,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                 );
                 if (context.mounted && ok == true) await _load();
               },
+            ),
             ),
           );
         },

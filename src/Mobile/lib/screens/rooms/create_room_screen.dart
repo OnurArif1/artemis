@@ -20,6 +20,12 @@ String _entityTitle(Map<String, dynamic> m) {
   return '${m['title'] ?? m['Title'] ?? m['topicTitle'] ?? ''}'.trim();
 }
 
+/// Bottom sheet’ten abonelik seçimi (`null` = Seçilmedi); kapatma ile karışmaması için sarmalayıcı.
+class _SubPick {
+  const _SubPick(this.value);
+  final int? value;
+}
+
 /// Web `CreateRoom.vue` ile aynı API alanları.
 class CreateRoomScreen extends StatefulWidget {
   const CreateRoomScreen({super.key});
@@ -221,6 +227,158 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     }
   }
 
+  String _topicLabelForId(int? id) {
+    if (id == null) return 'Konu seçin';
+    for (final t in _topics) {
+      if (_entityId(t) == id) {
+        final title = _entityTitle(t);
+        return title.isEmpty ? '#$id' : title;
+      }
+    }
+    return '#$id';
+  }
+
+  String _subscriptionLabel(int? v) {
+    return switch (v) {
+      null => 'Seçilmedi',
+      0 => 'Yok',
+      1 => 'Silver',
+      2 => 'Gold',
+      3 => 'Platinum',
+      _ => 'Seçilmedi',
+    };
+  }
+
+  Future<void> _pickTopic(BuildContext context) async {
+    if (_loadingTopics || _topics.isEmpty) return;
+    final theme = Theme.of(context);
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        final h = MediaQuery.sizeOf(ctx).height;
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+          child: SizedBox(
+            height: (h * 0.52).clamp(260.0, 420.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                  child: Text(
+                    'Konu seçin',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+                    itemCount: _topics.length,
+                    separatorBuilder: (_, __) => Divider(
+                      height: 1,
+                      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                    itemBuilder: (c, i) {
+                      final t = _topics[i];
+                      final id = _entityId(t);
+                      if (id == null) return const SizedBox.shrink();
+                      final title = _entityTitle(t).isEmpty ? '#$id' : _entityTitle(t);
+                      final selected = id == _topicId;
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        selected: selected,
+                        selectedTileColor: AppColors.purple50,
+                        title: Text(
+                          title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: selected
+                            ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
+                            : null,
+                        onTap: () => Navigator.pop(c, id),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (picked != null && mounted) setState(() => _topicId = picked);
+  }
+
+  Future<void> _pickSubscription(BuildContext context) async {
+    final theme = Theme.of(context);
+    const options = <({int? value, String label})>[
+      (value: null, label: 'Seçilmedi'),
+      (value: 0, label: 'Yok'),
+      (value: 1, label: 'Silver'),
+      (value: 2, label: 'Gold'),
+      (value: 3, label: 'Platinum'),
+    ];
+    final result = await showModalBottomSheet<_SubPick?>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      backgroundColor: theme.colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(ctx).bottom + 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+                child: Text(
+                  'Abonelik tipi',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              ...options.map((o) {
+                final sel = _subscriptionType == o.value;
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 2),
+                  selected: sel,
+                  selectedTileColor: AppColors.purple50,
+                  title: Text(o.label),
+                  trailing: sel
+                      ? Icon(Icons.check_rounded, color: theme.colorScheme.primary)
+                      : null,
+                  onTap: () => Navigator.pop(ctx, _SubPick(o.value)),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+    if (result != null && mounted) {
+      setState(() => _subscriptionType = result.value);
+    }
+  }
+
   Future<void> _addPartiesToRoom() async {
     if (_createdRoomId == null) {
       showAppSnackBar(context, 'Oda kimliği yok.', error: true);
@@ -276,33 +434,39 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               controller: _title,
               decoration: const InputDecoration(
                 labelText: 'Başlık *',
-                border: OutlineInputBorder(),
-              ),
+              ).applyDefaults(Theme.of(context).inputDecorationTheme),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              // ignore: deprecated_member_use
-              value: _topicId,
-              decoration: const InputDecoration(
-                labelText: 'Konu *',
-                border: OutlineInputBorder(),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: (_loadingTopics || _topics.isEmpty)
+                    ? null
+                    : () => _pickTopic(context),
+                borderRadius: BorderRadius.circular(12),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Konu *',
+                    suffixIcon: Icon(
+                      _loadingTopics
+                          ? Icons.hourglass_empty_rounded
+                          : Icons.keyboard_arrow_down_rounded,
+                    ),
+                  ).applyDefaults(Theme.of(context).inputDecorationTheme),
+                  child: Text(
+                    _topics.isEmpty && !_loadingTopics
+                        ? 'Konu listesi boş'
+                        : _topicLabelForId(_topicId),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: _topicId == null && _topics.isNotEmpty
+                          ? Theme.of(context).hintColor
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-              items: _topics
-                  .map((t) {
-                    final id = _entityId(t);
-                    if (id == null) return null;
-                    return DropdownMenuItem(
-                      value: id,
-                      child: Text(
-                        _entityTitle(t).isEmpty ? '#$id' : _entityTitle(t),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    );
-                  })
-                  .whereType<DropdownMenuItem<int>>()
-                  .toList(),
-              onChanged: (v) => setState(() => _topicId = v),
             ),
             const SizedBox(height: 12),
             Row(
@@ -331,21 +495,24 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                   setState(() => _roomType = s.first),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<int?>(
-              // ignore: deprecated_member_use
-              value: _subscriptionType,
-              decoration: const InputDecoration(
-                labelText: 'Abonelik tipi',
-                border: OutlineInputBorder(),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _pickSubscription(context),
+                borderRadius: BorderRadius.circular(12),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Abonelik tipi',
+                    suffixIcon: Icon(Icons.keyboard_arrow_down_rounded),
+                  ).applyDefaults(Theme.of(context).inputDecorationTheme),
+                  child: Text(
+                    _subscriptionLabel(_subscriptionType),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ),
-              items: const [
-                DropdownMenuItem(value: null, child: Text('Seçilmedi')),
-                DropdownMenuItem(value: 0, child: Text('Yok')),
-                DropdownMenuItem(value: 1, child: Text('Silver')),
-                DropdownMenuItem(value: 2, child: Text('Gold')),
-                DropdownMenuItem(value: 3, child: Text('Platinum')),
-              ],
-              onChanged: (v) => setState(() => _subscriptionType = v),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -353,8 +520,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: 'Oda menzili (km)',
-                border: OutlineInputBorder(),
-              ),
+              ).applyDefaults(Theme.of(context).inputDecorationTheme),
             ),
             const SizedBox(height: 24),
             FilledButton(

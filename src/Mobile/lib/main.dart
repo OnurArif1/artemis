@@ -20,7 +20,7 @@ Future<void> main() async {
   final homeTab = HomeTabController();
   final auth = AuthProvider(
     authService,
-    onAuthenticatedSessionStarted: () => homeTab.setIndex(2),
+    onAuthenticatedSessionStarted: () => homeTab.setIndex(0),
   );
 
   final dioClient = DioClient(

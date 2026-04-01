@@ -97,7 +97,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   }
 
   void _onHomeTabChanged() {
-    if (!mounted || _homeTab.currentIndex != 2) return;
+    if (!mounted || _homeTab.currentIndex != 0) return;
     final id = _homeTab.consumeRoomFocusRequest();
     if (id == null) return;
     setState(() => _pendingFocusRoomId = id);
@@ -529,89 +529,155 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     final regions = buildCombinedRegions(_rooms, _topics);
     final out = <Marker>[];
     for (final r in regions) {
-      final w = (r.roomCount > 0 && r.topicCount > 0) ? 112.0 : 56.0;
+      final hasBoth = r.roomCount > 0 && r.topicCount > 0;
+      final w = hasBoth ? 64.0 : 36.0;
+      final tip =
+          '${r.roomCount} oda · ${r.topicCount} konu — dokun: haritayı yakınlaştır';
       out.add(
         Marker(
           point: r.center,
           width: w,
-          height: 44,
+          height: 36,
           alignment: Alignment.center,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (r.roomCount > 0)
-                Material(
-                  color: AppColors.purple600,
-                  borderRadius: BorderRadius.circular(20),
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        _mode = _MapViewMode.detail;
-                        _detailRegion = r;
-                        _detailRoomsOnly = true;
-                        _updateCountsForMode();
-                      });
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) _fitCameraForMode();
-                      });
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      child: Text(
-                        '${r.roomCount}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
+          child: Tooltip(
+            message: tip,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (r.roomCount > 0)
+                  Material(
+                    color: AppColors.purple600,
+                    shape: const CircleBorder(),
+                    elevation: 2,
+                    shadowColor: Colors.black26,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () {
+                        setState(() {
+                          _mode = _MapViewMode.detail;
+                          _detailRegion = r;
+                          _detailRoomsOnly = true;
+                          _updateCountsForMode();
+                        });
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _fitCameraForMode();
+                        });
+                      },
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: Center(
+                          child: Text(
+                            '${r.roomCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              if (r.roomCount > 0 && r.topicCount > 0) const SizedBox(width: 6),
-              if (r.topicCount > 0)
-                Material(
-                  color: const Color(0xFF00CED1),
-                  borderRadius: BorderRadius.circular(20),
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        _mode = _MapViewMode.detail;
-                        _detailRegion = r;
-                        _detailRoomsOnly = false;
-                        _updateCountsForMode();
-                      });
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (mounted) _fitCameraForMode();
-                      });
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      child: Text(
-                        '${r.topicCount}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
+                if (hasBoth) const SizedBox(width: 4),
+                if (r.topicCount > 0)
+                  Material(
+                    color: AppColors.purple300,
+                    shape: const CircleBorder(),
+                    elevation: 2,
+                    shadowColor: Colors.black26,
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: () {
+                        setState(() {
+                          _mode = _MapViewMode.detail;
+                          _detailRegion = r;
+                          _detailRoomsOnly = false;
+                          _updateCountsForMode();
+                        });
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) _fitCameraForMode();
+                        });
+                      },
+                      child: SizedBox(
+                        width: 32,
+                        height: 32,
+                        child: Center(
+                          child: Text(
+                            '${r.topicCount}',
+                            style: const TextStyle(
+                              color: AppColors.purple900,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       );
     }
     return out;
+  }
+
+  /// Küçük ikon. Harita jestleri Tooltip’i çoğu zaman yuttuğu için:
+  /// — **Uzun bas**: SnackBar ile isim (telefon / simülatör).
+  /// — **Hover** (fare): dıştaki [Tooltip] (web / masaüstü).
+  Widget _mapIconMarker({
+    required String title,
+    required String semanticsLabel,
+    required Color backgroundColor,
+    required Color iconColor,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Tooltip(
+      message: title,
+      preferBelow: false,
+      verticalOffset: 10,
+      waitDuration: const Duration(milliseconds: 350),
+      showDuration: const Duration(seconds: 4),
+      child: Semantics(
+        label: semanticsLabel,
+        button: true,
+        hint: 'Kısa dokun: aç. Uzun bas: isim göster.',
+        child: Material(
+          color: backgroundColor,
+          shape: const CircleBorder(),
+          elevation: 3,
+          shadowColor: Colors.black38,
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            onLongPress: () {
+              final m = ScaffoldMessenger.maybeOf(context);
+              if (m == null) return;
+              m.clearSnackBars();
+              m.showSnackBar(
+                SnackBar(
+                  content: Text(title),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 2),
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 88),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+            },
+            child: SizedBox(
+              width: 34,
+              height: 34,
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   List<Marker> _buildDetailedMarkers() {
@@ -624,48 +690,16 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
       out.add(
         Marker(
           point: ll,
-          width: 160,
-          height: 40,
+          width: 36,
+          height: 36,
           alignment: Alignment.bottomCenter,
-          child: GestureDetector(
+          child: _mapIconMarker(
+            title: title,
+            semanticsLabel: 'Oda: $title',
+            backgroundColor: AppColors.purple600,
+            iconColor: Colors.white,
+            icon: Icons.meeting_room_rounded,
             onTap: () => _onRoomTap(room),
-            child: Tooltip(
-              message: title,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.purple600,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: const [
-                    BoxShadow(
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                      color: Color(0x33000000),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.meeting_room_rounded,
-                        color: Colors.white, size: 16),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
         ),
       );
@@ -678,47 +712,16 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
       out.add(
         Marker(
           point: ll,
-          width: 160,
-          height: 40,
+          width: 36,
+          height: 36,
           alignment: Alignment.bottomCenter,
-          child: GestureDetector(
+          child: _mapIconMarker(
+            title: title,
+            semanticsLabel: 'Konu: $title',
+            backgroundColor: AppColors.purple300,
+            iconColor: AppColors.purple900,
+            icon: Icons.tag_rounded,
             onTap: () => _onTopicTap(topic),
-            child: Tooltip(
-              message: title,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00A8AA),
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: const [
-                    BoxShadow(
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                      color: Color(0x33000000),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.tag_rounded, color: Colors.white, size: 16),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
         ),
       );

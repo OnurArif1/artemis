@@ -7,6 +7,7 @@ import '../../core/util/entity_map.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
 import '../../services/app_services.dart';
+import '../../widgets/fade_in_list_item.dart';
 import 'create_topic_screen.dart';
 import 'topic_detail_screen.dart';
 
@@ -75,6 +76,7 @@ class _TopicListScreenState extends State<TopicListScreen> {
   Widget build(BuildContext context) {
     final rail = MediaQuery.sizeOf(context).width >= 720;
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text('Konular${_total > 0 ? ' ($_total)' : ''}'),
         automaticallyImplyLeading: !rail,
@@ -167,8 +169,13 @@ class _TopicListScreenState extends State<TopicListScreen> {
           final title = mapTitle(m);
           final sub = mapSubtitle(m);
           final tid = entityId(m);
-          return Card(
-            child: InkWell(
+          return FadeInListItem(
+            key: ValueKey('topic-${tid ?? i}'),
+            index: i,
+            child: Card(
+              elevation: 0,
+              surfaceTintColor: AppColors.purple50,
+              child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: tid == null
                   ? null
@@ -217,6 +224,7 @@ class _TopicListScreenState extends State<TopicListScreen> {
                   ],
                 ),
               ),
+            ),
             ),
           );
         },

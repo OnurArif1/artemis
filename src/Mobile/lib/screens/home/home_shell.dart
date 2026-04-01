@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../providers/home_tab_controller.dart';
+import '../../widgets/app_ambient_background.dart';
 import '../categories/category_list_screen.dart';
 import '../profile/profile_screen.dart';
 import '../rooms/room_map_screen.dart';
@@ -19,6 +20,11 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   static const _destinations = [
     NavigationDestination(
+      icon: Icon(Icons.meeting_room_outlined),
+      selectedIcon: Icon(Icons.meeting_room_rounded),
+      label: 'Odalar',
+    ),
+    NavigationDestination(
       icon: Icon(Icons.topic_outlined),
       selectedIcon: Icon(Icons.topic_rounded),
       label: 'Konular',
@@ -27,11 +33,6 @@ class _HomeShellState extends State<HomeShell> {
       icon: Icon(Icons.category_outlined),
       selectedIcon: Icon(Icons.category_rounded),
       label: 'Kategoriler',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.meeting_room_outlined),
-      selectedIcon: Icon(Icons.meeting_room_rounded),
-      label: 'Odalar',
     ),
     NavigationDestination(
       icon: Icon(Icons.person_outline_rounded),
@@ -46,9 +47,9 @@ class _HomeShellState extends State<HomeShell> {
     final idx = tab.currentIndex;
 
     final pages = <Widget>[
+      const RoomMapScreen(),
       const TopicListScreen(),
       const CategoryListScreen(),
-      const RoomMapScreen(),
       const ProfileScreen(),
     ];
 
@@ -74,6 +75,11 @@ class _HomeShellState extends State<HomeShell> {
               unselectedLabelTextStyle: const TextStyle(color: Color(0xFF6B6B76)),
               destinations: const [
                 NavigationRailDestination(
+                  icon: Icon(Icons.meeting_room_outlined),
+                  selectedIcon: Icon(Icons.meeting_room_rounded),
+                  label: Text('Odalar'),
+                ),
+                NavigationRailDestination(
                   icon: Icon(Icons.topic_outlined),
                   selectedIcon: Icon(Icons.topic_rounded),
                   label: Text('Konular'),
@@ -84,11 +90,6 @@ class _HomeShellState extends State<HomeShell> {
                   label: Text('Kategoriler'),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.meeting_room_outlined),
-                  selectedIcon: Icon(Icons.meeting_room_rounded),
-                  label: Text('Odalar'),
-                ),
-                NavigationRailDestination(
                   icon: Icon(Icons.person_outline_rounded),
                   selectedIcon: Icon(Icons.person_rounded),
                   label: Text('Profil'),
@@ -97,9 +98,15 @@ class _HomeShellState extends State<HomeShell> {
             ),
             const VerticalDivider(width: 1, thickness: 1),
             Expanded(
-              child: IndexedStack(
-                index: idx,
-                children: pages,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  const AppAmbientBackground(),
+                  IndexedStack(
+                    index: idx,
+                    children: pages,
+                  ),
+                ],
               ),
             ),
           ],
@@ -108,9 +115,15 @@ class _HomeShellState extends State<HomeShell> {
     }
 
     return Scaffold(
-      body: IndexedStack(
-        index: idx,
-        children: pages,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const AppAmbientBackground(),
+          IndexedStack(
+            index: idx,
+            children: pages,
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: idx,
