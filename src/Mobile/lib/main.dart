@@ -10,6 +10,9 @@ import 'providers/auth_provider.dart';
 import 'providers/home_tab_controller.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/home/home_shell.dart';
+import 'screens/onboarding/select_interests_screen.dart';
+import 'screens/onboarding/select_purposes_screen.dart';
+import 'screens/onboarding/tell_us_about_yourself_screen.dart';
 import 'services/app_services.dart';
 import 'services/auth_service.dart';
 
@@ -34,10 +37,19 @@ Future<void> main() async {
     redirect: (context, state) {
       final loggedIn = auth.isAuthenticated;
       final loc = state.matchedLocation;
-      if (!loggedIn && loc != '/login') {
-        return '/login';
+      if (!loggedIn) {
+        if (loc.startsWith('/onboarding')) {
+          return '/login';
+        }
+        if (loc != '/login') {
+          return '/login';
+        }
+        return null;
       }
       if (loggedIn && loc == '/login') {
+        if (auth.pendingPostRegistrationOnboarding) {
+          return '/onboarding/interests';
+        }
         return '/app';
       }
       return null;
@@ -46,6 +58,18 @@ Future<void> main() async {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/interests',
+        builder: (context, state) => const SelectInterestsScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/about',
+        builder: (context, state) => const TellUsAboutYourselfScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/purposes',
+        builder: (context, state) => const SelectPurposesScreen(),
       ),
       GoRoute(
         path: '/app',

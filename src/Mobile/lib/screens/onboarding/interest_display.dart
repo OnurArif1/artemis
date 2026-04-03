@@ -1,0 +1,58 @@
+/// WebApi `SelectInterests.vue` ile uyumlu emoji ve Türkçe etiketler.
+String interestEmoji(String name) => _interestEmojis[name] ?? '⭐';
+
+String interestLabelTr(String name) => _interestLabels[name] ?? name;
+
+const _interestEmojis = {
+  'Sports': '⚽',
+  'Fitness': '💪',
+  'Hiking': '🥾',
+  'Coffee': '☕',
+  'Food': '🍕',
+  'Cooking': '🧑‍🍳',
+  'Music': '🎵',
+  'Concerts': '🎤',
+  'Art': '🎨',
+  'Photography': '📸',
+  'Travel': '✈️',
+  'Books': '📚',
+  'Movies': '🎬',
+  'Gaming': '🎮',
+  'Tech': '💻',
+  'Business': '💼',
+  'Meditation': '🧘',
+  'Yoga': '🧘‍♀️',
+  'Dancing': '💃',
+  'Languages': '🌍',
+  'Volunteering': '🤝',
+  'Nature': '🌲',
+  'Animals': '🐾',
+  'Outdoor': '🏕️',
+};
+
+const _interestLabels = {
+  'Sports': 'Spor',
+  'Fitness': 'Fitness',
+  'Hiking': 'Doğa yürüyüşü',
+  'Coffee': 'Kahve',
+  'Food': 'Yemek',
+  'Cooking': 'Yemek pişirme',
+  'Music': 'Müzik',
+  'Concerts': 'Konserler',
+  'Art': 'Sanat',
+  'Photography': 'Fotoğrafçılık',
+  'Travel': 'Seyahat',
+  'Books': 'Kitaplar',
+  'Movies': 'Filmler',
+  'Gaming': 'Oyun',
+  'Tech': 'Teknoloji',
+  'Business': 'İş dünyası',
+  'Meditation': 'Meditasyon',
+  'Yoga': 'Yoga',
+  'Dancing': 'Dans',
+  'Languages': 'Diller',
+  'Volunteering': 'Gönüllülük',
+  'Nature': 'Doğa',
+  'Animals': 'Hayvanlar',
+  'Outdoor': 'Açık hava',
+};

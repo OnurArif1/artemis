@@ -34,7 +34,22 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscureReg2 = true;
 
   @override
+  void initState() {
+    super.initState();
+    _regEmail.addListener(_regFieldsChanged);
+    _regPassword.addListener(_regFieldsChanged);
+    _regPassword2.addListener(_regFieldsChanged);
+  }
+
+  void _regFieldsChanged() {
+    if (mounted && _registerMode) setState(() {});
+  }
+
+  @override
   void dispose() {
+    _regEmail.removeListener(_regFieldsChanged);
+    _regPassword.removeListener(_regFieldsChanged);
+    _regPassword2.removeListener(_regFieldsChanged);
     _email.dispose();
     _password.dispose();
     _regEmail.dispose();
@@ -76,9 +91,25 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  bool _canSubmitRegister() {
+    final e = _regEmail.text.trim();
+    final p = _regPassword.text;
+    if (e.isEmpty || !e.contains('@')) return false;
+    return _passwordRulesOk(p);
+  }
+
   Future<void> _submitRegister() async {
     if (!_formKey.currentState!.validate()) return;
+    final e = _regEmail.text.trim();
     final p = _regPassword.text;
+    if (p != _regPassword2.text) {
+      showAppSnackBar(context, 'Şifreler eşleşmiyor.', error: true);
+      return;
+    }
+    if (p.length < 6) {
+      showAppSnackBar(context, 'Şifre en az 6 karakter olmalı.', error: true);
+      return;
+    }
     if (!_passwordRulesOk(p)) {
       showAppSnackBar(
         context,
@@ -87,16 +118,33 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     }
+
     setState(() => _loading = true);
+    final auth = context.read<AuthProvider>();
+    final authSvc = context.read<AuthService>();
+    auth.setPendingPostRegistrationOnboarding(true);
     try {
-      await context.read<AuthProvider>().register(
-            email: _regEmail.text,
-            password: p,
+      try {
+        await authSvc.registerAccount(email: e, password: p);
+      } on AuthException catch (err) {
+        auth.setPendingPostRegistrationOnboarding(false);
+        if (mounted) showAppSnackBar(context, err.message, error: true);
+        return;
+      }
+      try {
+        await auth.login(email: e, password: p);
+      } on AuthException catch (_) {
+        await authSvc.clearSession();
+        auth.setPendingPostRegistrationOnboarding(false);
+        if (mounted) {
+          showAppSnackBar(
+            context,
+            'Hesabınız oluşturuldu. Lütfen giriş yapın.',
           );
-    } on AuthException catch (e) {
-      if (mounted) showAppSnackBar(context, e.message, error: true);
-    } catch (e) {
-      if (mounted) showAppSnackBar(context, 'Kayıt sırasında hata', error: true);
+          _email.text = e;
+          _setMode(false);
+        }
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -280,12 +328,13 @@ class _LoginScreenState extends State<LoginScreen> {
     final p = _regPassword.text;
     final rules = <_PwdRule>[
       _PwdRule('En az 6 karakter', p.length >= 6),
-      _PwdRule('Bir büyük harf', RegExp(r'[A-Z]').hasMatch(p)),
-      _PwdRule('Bir küçük harf', RegExp(r'[a-z]').hasMatch(p)),
-      _PwdRule('Bir rakam', RegExp(r'[0-9]').hasMatch(p)),
-      _PwdRule('Şifreler eşleşiyor', p.isNotEmpty && p == _regPassword2.text),
+      _PwdRule('En az bir büyük harf', RegExp(r'[A-Z]').hasMatch(p)),
+      _PwdRule('En az bir küçük harf', RegExp(r'[a-z]').hasMatch(p)),
+      _PwdRule('En az bir rakam', RegExp(r'[0-9]').hasMatch(p)),
     ];
-    final doneCount = rules.where((r) => r.ok).length;
+    final mismatch =
+        _regPassword2.text.isNotEmpty && p != _regPassword2.text;
+    final canSubmit = _canSubmitRegister();
 
     return Form(
       key: _formKey,
@@ -302,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Birkaç alan — sonra konular ve yakınındaki odalar.',
+            'Kayıt sonrası ilgi alanların, profilin ve amaçların adım adım tamamlanacak.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.4,
@@ -327,6 +376,29 @@ class _LoginScreenState extends State<LoginScreen> {
               if (!v.contains('@')) return 'Geçerli bir e-posta girin';
               return null;
             },
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.purple50.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.purple100),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Şifre kuralları',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.darkCharcoal,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                ...rules.map((r) => _PasswordRuleTile(rule: r)),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           TextFormField(
@@ -358,7 +430,7 @@ class _LoginScreenState extends State<LoginScreen> {
             obscureText: _obscureReg2,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              labelText: 'Şifre tekrar',
+              labelText: 'Şifre (tekrar)',
               prefixIcon: const Icon(Icons.lock_reset_rounded),
               suffixIcon: IconButton(
                 onPressed: () => setState(() => _obscureReg2 = !_obscureReg2),
@@ -372,29 +444,20 @@ class _LoginScreenState extends State<LoginScreen> {
               return null;
             },
           ),
-          const SizedBox(height: 18),
-          Text(
-            'Şifre gücü',
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
+          if (mismatch)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Şifreler eşleşmiyor',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFFDC2626),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: rules.isEmpty ? 0 : doneCount / rules.length,
-              minHeight: 6,
-              backgroundColor: AppColors.outlineMuted.withValues(alpha: 0.45),
-              color: doneCount == rules.length ? AppColors.purple500 : AppColors.purple300,
-            ),
-          ),
-          const SizedBox(height: 12),
-          ...rules.map((r) => _PasswordRuleTile(rule: r)),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: _loading ? null : _submitRegister,
+            onPressed: (_loading || !canSubmit) ? null : _submitRegister,
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
               textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
@@ -466,7 +529,6 @@ class _PasswordRuleTile extends StatelessWidget {
   }
 }
 
-/// Giriş / Kayıt anahtarı + beyaz kart.
 class _AuthChrome extends StatelessWidget {
   const _AuthChrome({
     required this.registerMode,

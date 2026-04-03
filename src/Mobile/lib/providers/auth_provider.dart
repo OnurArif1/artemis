@@ -14,6 +14,19 @@ class AuthProvider extends ChangeNotifier {
 
   bool get isAuthenticated => _auth.isTokenValid;
 
+  bool _pendingPostRegistrationOnboarding = false;
+  bool get pendingPostRegistrationOnboarding => _pendingPostRegistrationOnboarding;
+
+  void setPendingPostRegistrationOnboarding(bool value) {
+    _pendingPostRegistrationOnboarding = value;
+  }
+
+  void clearPendingPostRegistrationOnboarding() {
+    if (!_pendingPostRegistrationOnboarding) return;
+    _pendingPostRegistrationOnboarding = false;
+    notifyListeners();
+  }
+
   Future<void> login({required String email, required String password}) async {
     await _auth.login(email: email, password: password);
     LocationService.clearCache();
@@ -21,14 +34,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> register({required String email, required String password}) async {
-    await _auth.register(email: email, password: password);
-    LocationService.clearCache();
-    _onAuthenticatedSessionStarted?.call();
-    notifyListeners();
-  }
-
   Future<void> logout() async {
+    _pendingPostRegistrationOnboarding = false;
     LocationService.clearCache();
     await _auth.clearSession();
     notifyListeners();

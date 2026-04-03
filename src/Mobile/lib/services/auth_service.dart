@@ -83,7 +83,9 @@ class AuthService {
     }
   }
 
-  Future<void> register({
+  /// Sadece hesap oluşturur. WebApi `Login.vue` `onRegister` ile aynı ilk adım.
+  /// Oturum açma çağrısı ayrı yapılmalı (`login` veya `AuthProvider.login`).
+  Future<void> registerAccount({
     required String email,
     required String password,
   }) async {
@@ -104,14 +106,6 @@ class AuthService {
       );
     } on DioException catch (e) {
       throw AuthException(_parseRegisterError(e.response?.data));
-    }
-    try {
-      await login(email: email, password: password);
-    } on AuthException catch (e) {
-      await clearSession();
-      throw AuthException(
-        'Hesabınız oluşturuldu. Giriş yapmayı deneyin.\n${e.message}',
-      );
     }
   }
 
