@@ -117,10 +117,58 @@ class AuthService {
 
   String _parseTokenError(dynamic data, String? fallback) {
     if (data is Map) {
-      final err = data['error_description'] ?? data['error'];
-      if (err != null) return err.toString();
+      final code = data['error']?.toString();
+      final desc = data['error_description']?.toString();
+      final primary = (desc != null && desc.trim().isNotEmpty) ? desc.trim() : code;
+      if (primary != null && primary.isNotEmpty) {
+        return _localizeOAuthLoginError(code, primary) ?? primary;
+      }
     }
-    return fallback ?? 'Giriş başarısız';
+    if (fallback != null && fallback.trim().isNotEmpty) {
+      return _localizeKnownLoginError(fallback) ?? fallback;
+    }
+    return 'Giriş başarısız';
+  }
+
+  /// Sunucu OAuth/OpenIddict İngilizce döndüğünde kullanıcıya Türkçe göster.
+  String? _localizeOAuthLoginError(String? code, String message) {
+    if (code == 'invalid_grant') return 'E-posta veya şifre hatalı.';
+    return _localizeKnownLoginError(message);
+  }
+
+  String? _localizeKnownLoginError(String? raw) {
+    if (raw == null) return null;
+    final s = raw.trim();
+    if (s.isEmpty) return null;
+    final lower = s.toLowerCase();
+
+    if (lower == 'invalid_grant' || lower.contains('invalid_grant')) {
+      return 'E-posta veya şifre hatalı.';
+    }
+    if ((lower.contains('username') || lower.contains('user name')) &&
+        lower.contains('password') &&
+        (lower.contains('invalid') ||
+            lower.contains('incorrect') ||
+            lower.contains('wrong'))) {
+      return 'E-posta veya şifre hatalı.';
+    }
+    if (lower.contains('credential') &&
+        (lower.contains('invalid') || lower.contains('incorrect'))) {
+      return 'E-posta veya şifre hatalı.';
+    }
+    if (lower.contains('specified') && lower.contains('invalid') && lower.contains('user')) {
+      return 'E-posta veya şifre hatalı.';
+    }
+    if (lower == 'access_denied' || lower.contains('access_denied')) {
+      return 'Giriş reddedildi.';
+    }
+    if (lower.contains('invalid_client')) {
+      return 'İstemci doğrulanamadı.';
+    }
+    if (lower.contains('unauthorized_client')) {
+      return 'Bu istemci için yetkilendirme yok.';
+    }
+    return null;
   }
 
   String _parseRegisterError(dynamic data) {
