@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'category_service.dart';
 import 'comment_service.dart';
 import 'interest_service.dart';
+import 'message_service.dart';
 import 'party_purpose_service.dart';
 import 'party_service.dart';
 import 'room_service.dart';
@@ -17,7 +18,8 @@ class AppServices {
         parties = PartyService(dio),
         interests = InterestService(dio),
         partyPurposes = PartyPurposeService(dio),
-        comments = CommentService(dio);
+        comments = CommentService(dio),
+        messages = MessageService(dio);
 
   final TopicService topics;
   final CategoryService categories;
@@ -26,4 +28,5 @@ class AppServices {
   final InterestService interests;
   final PartyPurposeService partyPurposes;
   final CommentService comments;
+  final MessageService messages;
 }

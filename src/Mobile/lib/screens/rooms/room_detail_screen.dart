@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/geo/room_map_clustering.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
+import '../chat/room_chat_screen.dart';
 
-/// Web harita / liste üzerinden oda özeti (Chat tam Web’de).
+/// Web harita / liste üzerinden oda özeti + mobil canlı sohbet (SignalR).
 class RoomDetailScreen extends StatelessWidget {
   const RoomDetailScreen({super.key, required this.room});
 
@@ -41,6 +42,23 @@ class RoomDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [
+          if (id != null)
+            IconButton(
+              tooltip: 'Sohbet',
+              onPressed: () {
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RoomChatScreen(
+                      roomId: id,
+                      roomTitle: title,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.chat_rounded),
+            ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
@@ -71,13 +89,26 @@ class RoomDetailScreen extends StatelessWidget {
               child: Text(line),
             ),
           ),
-          const SizedBox(height: 24),
-          Text(
-            'Canlı sohbet Web istemcisinde açılır; mobilde oda bilgileri WebApi ile senkron.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade700,
-                ),
-          ),
+          const SizedBox(height: 16),
+          if (id != null)
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RoomChatScreen(
+                      roomId: id,
+                      roomTitle: title,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.forum_rounded),
+              label: const Text('Canlı sohbete gir'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.purple600,
+                minimumSize: const Size.fromHeight(48),
+              ),
+            ),
         ],
       ),
     );

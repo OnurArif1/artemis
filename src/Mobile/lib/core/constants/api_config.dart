@@ -15,6 +15,12 @@ class ApiConfig {
     defaultValue: 5091,
   );
 
+  /// WebApi `VITE_SIGNALR_HUB_URL` — Artemis.API SignalR (varsayılan 5094).
+  static const int signalRPort = int.fromEnvironment(
+    'SIGNALR_PORT',
+    defaultValue: 5094,
+  );
+
   static String get origin => 'http://$host:$port';
 
   /// `/api/topic/list` vb.
@@ -22,4 +28,7 @@ class ApiConfig {
 
   /// `/identity/connect/token`, `/identity/account/register`
   static String get identityBaseUrl => origin;
+
+  /// `ChatHub` — `Program.cs` `MapHub<ChatHub>("/hubs/chat")`
+  static String get signalRHubUrl => 'http://$host:$signalRPort/hubs/chat';
 }

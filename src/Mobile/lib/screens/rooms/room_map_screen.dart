@@ -726,28 +726,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
         ),
       );
     }
-    if (_mode == _MapViewMode.nearby &&
-        _userLat != null &&
-        _userLng != null) {
-      out.add(
-        Marker(
-          point: LatLng(_userLat!, _userLng!),
-          width: 24,
-          height: 24,
-          alignment: Alignment.center,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.blue.shade600,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: const [
-                BoxShadow(blurRadius: 4, color: Color(0x44000000)),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
     return out;
   }
 

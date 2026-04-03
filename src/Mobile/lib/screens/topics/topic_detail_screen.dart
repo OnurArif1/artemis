@@ -11,6 +11,7 @@ import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
+import '../chat/topic_chat_screen.dart';
 
 /// Web `TopicList.vue` kart + yorum diyaloğu + `goToRoom` akışı.
 class TopicDetailScreen extends StatefulWidget {
@@ -170,6 +171,22 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [
+          IconButton(
+            tooltip: 'Canlı yorumlar (SignalR)',
+            onPressed: () {
+              Navigator.of(context).push<void>(
+                MaterialPageRoute<void>(
+                  builder: (_) => TopicChatScreen(
+                    topicId: widget.topicId,
+                    topicTitle: title,
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.chat_bubble_rounded),
+          ),
+        ],
       ),
       body: _buildBody(context),
     );
@@ -196,6 +213,8 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     }
 
     final t = _topic ?? {};
+    final title =
+        entityString(t, ['title', 'Title']) ?? 'Konu #${widget.topicId}';
     final category =
         entityString(t, ['categoryName', 'CategoryName', 'categoryTitle']);
     final created = formatTrDate(t['createDate'] ?? t['CreateDate']);
@@ -243,6 +262,25 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: () {
+            Navigator.of(context).push<void>(
+              MaterialPageRoute<void>(
+                builder: (_) => TopicChatScreen(
+                  topicId: widget.topicId,
+                  topicTitle: title,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.forum_rounded),
+          label: const Text('Canlı yorum sohbeti'),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.purple600,
+            minimumSize: const Size.fromHeight(48),
+          ),
         ),
         const SizedBox(height: 24),
         Text(
