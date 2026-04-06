@@ -34,6 +34,8 @@ public class RoomService : IRoomService
             throw new ArgumentException("RoomType is required and must be Public or Private.");
         }
 
+        await ValidateCreatorCanCreateRoomAsync(viewModel);
+
         var room = new Room()
         {
             TopicId = viewModel.TopicId,
@@ -63,6 +65,44 @@ public class RoomService : IRoomService
               
         await _artemisDbContext.Rooms.AddAsync(room);
         _artemisDbContext.SaveChanges();
+    }
+
+    /// <summary>
+    /// Oda oluşturma yalnızca Gold ve Platinum üyeler içindir (PartyId veya UserEmail ile çözülen kayıt).
+    /// </summary>
+    private async Task ValidateCreatorCanCreateRoomAsync(CreateOrUpdateRoomViewModel viewModel)
+    {
+        Party? party = null;
+        if (viewModel.PartyId.HasValue && viewModel.PartyId.Value > 0)
+        {
+            party = await _artemisDbContext.Parties.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == viewModel.PartyId.Value);
+            if (party is null)
+            {
+                throw new InvalidOperationException("Belirtilen kullanıcı (party) bulunamadı.");
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(viewModel.UserEmail))
+        {
+            var em = viewModel.UserEmail.Trim().ToLower();
+            party = await _artemisDbContext.Parties.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == em);
+            if (party is null)
+            {
+                throw new InvalidOperationException("Hesabınıza bağlı kullanıcı kaydı bulunamadı.");
+            }
+        }
+        else
+        {
+            return;
+        }
+
+        var tier = party.SubscriptionType ?? SubscriptionType.None;
+        if (tier != SubscriptionType.Gold && tier != SubscriptionType.Platinum)
+        {
+            throw new InvalidOperationException(
+                "Oda oluşturma yalnızca Gold ve Platinum üyeler içindir. Paketinizi yükseltebilirsiniz.");
+        }
     }
 
     public async ValueTask AddParty(AddPartyToRoomViewModel viewModel)

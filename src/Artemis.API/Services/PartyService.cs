@@ -95,6 +95,25 @@ public class PartyService : IPartyService
         await _artemisDbContext.SaveChangesAsync();
     }
 
+    public async ValueTask UpdateSubscriptionByEmail(string email, SubscriptionType subscriptionType)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            throw new ArgumentException("Email is required.", nameof(email));
+        }
+
+        var party = await _artemisDbContext.Parties
+            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
+
+        if (party == null)
+        {
+            throw new InvalidOperationException("User not found.");
+        }
+
+        party.SubscriptionType = subscriptionType;
+        await _artemisDbContext.SaveChangesAsync();
+    }
+
     public async ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel)
     {
         var query = _artemisDbContext.Parties.AsQueryable();
@@ -130,7 +149,8 @@ public class PartyService : IPartyService
             .Select(p => new PartyLookupViewModel
             {
                 PartyId = p.Id,
-                PartyName = p.PartyName
+                PartyName = p.PartyName,
+                SubscriptionType = p.SubscriptionType
             })
             .ToListAsync();
 

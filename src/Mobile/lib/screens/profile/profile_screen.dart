@@ -1,18 +1,31 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:provider/provider.dart';
 
-import '../../core/constants/api_config.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/util/jwt_email.dart';
 import '../../core/util/jwt_subscription.dart';
+import '../../core/util/room_create_policy.dart';
 import '../../core/util/subscription_display.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/artemis_snackbar.dart';
 import '../../widgets/gossip_brand.dart';
 import '../../widgets/subscription_tier_badge.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  int? _partyTier;
+  bool _tierLoading = true;
+  bool _savingTier = false;
 
   String? _emailFromToken(String? token) {
     if (token == null || token.isEmpty) return null;
@@ -25,11 +38,106 @@ class ProfileScreen extends StatelessWidget {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadTier());
+  }
+
+  Future<void> _loadTier() async {
+    final token = context.read<AuthService>().token;
+    final email = emailFromAccessToken(token) ?? _emailFromToken(token);
+    if (email == null || email.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _partyTier = null;
+          _tierLoading = false;
+        });
+      }
+      return;
+    }
+    final app = context.read<AppServices>();
+    final t = await resolveMySubscriptionTypeForRoomCreate(app, token, email);
+    if (!mounted) return;
+    setState(() {
+      _partyTier = t;
+      _tierLoading = false;
+    });
+  }
+
+  Future<void> _pickAndSaveTier() async {
+    final token = context.read<AuthService>().token;
+    if (token == null || token.isEmpty) {
+      showAppSnackBar(context, 'Oturum gerekli.', error: true);
+      return;
+    }
+
+    final picked = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: const Text('Üyelik paketi'),
+        children: [0, 1, 2, 3].map((t) {
+          return SimpleDialogOption(
+            onPressed: () => Navigator.pop(ctx, t),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  SubscriptionTierBadge(subscriptionType: t, compact: true),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(subscriptionTierLabelTr(t))),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+
+    if (picked == null || !mounted) return;
+
+    final email = emailFromAccessToken(token) ?? _emailFromToken(token);
+    if (email == null || email.isEmpty) {
+      showAppSnackBar(context, 'E-posta bulunamadı.', error: true);
+      return;
+    }
+
+    setState(() => _savingTier = true);
+    try {
+      await context.read<AppServices>().parties.updateSubscription(
+            email: email,
+            subscriptionType: picked,
+          );
+      if (!mounted) return;
+      setState(() {
+        _partyTier = picked;
+        _savingTier = false;
+      });
+      showAppSnackBar(context, 'Paket güncellendi.');
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() => _savingTier = false);
+      final data = e.response?.data;
+      String msg = 'Paket güncellenemedi.';
+      if (data is Map && data['message'] != null) {
+        msg = data['message'].toString();
+      } else if (e.message != null && e.message!.isNotEmpty) {
+        msg = e.message!;
+      }
+      showAppSnackBar(context, msg, error: true);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _savingTier = false);
+      showAppSnackBar(context, 'Paket güncellenemedi.', error: true);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     context.watch<AuthProvider>();
     final token = context.read<AuthService>().token;
     final email = _emailFromToken(token);
     final jwtTier = tryParseSubscriptionTypeFromJwt(token);
+    final displayTier = _partyTier ?? jwtTier;
     final rail = MediaQuery.sizeOf(context).width >= 720;
 
     return Scaffold(
@@ -80,7 +188,14 @@ class ProfileScreen extends StatelessWidget {
                     email ?? 'Oturum açık',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  if (jwtTier != null) ...[
+                  if (_tierLoading) ...[
+                    const SizedBox(height: 12),
+                    const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ] else if (displayTier != null) ...[
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -89,19 +204,19 @@ class ProfileScreen extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleSmall,
                         ),
                         SubscriptionTierBadge(
-                          subscriptionType: jwtTier,
+                          subscriptionType: displayTier,
                           compact: false,
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          subscriptionTierLabelTr(jwtTier),
+                          subscriptionTierLabelTr(displayTier),
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
                       ],
                     ),
-                  ]
+                  ],
                 ],
               ),
             ),
@@ -112,6 +227,26 @@ class ProfileScreen extends StatelessWidget {
             surfaceTintColor: AppColors.purple50,
             child: Column(
               children: [
+                ListTile(
+                  leading: const Icon(Icons.workspace_premium_rounded, color: AppColors.purple700),
+                  title: const Text('Üyelik paketini değiştir'),
+                  subtitle: Text(
+                    _tierLoading
+                        ? 'Yükleniyor…'
+                        : (displayTier != null
+                            ? subscriptionTierLabelTr(displayTier)
+                            : 'Sunucudan okunamadı'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  trailing: _savingTier
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chevron_right_rounded),
+                  onTap: _tierLoading || _savingTier ? null : _pickAndSaveTier,
+                ),
               ],
             ),
           ),

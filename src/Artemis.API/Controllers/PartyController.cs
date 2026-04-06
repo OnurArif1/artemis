@@ -1,3 +1,4 @@
+using Artemis.API.Entities.Enums;
 using Artemis.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
@@ -34,6 +35,45 @@ public class PartyController : ControllerBase
     {
         await _partyService.Update(viewModel);
         return Ok();
+    }
+
+    /// <summary>
+    /// `update-profile` ile aynı model: e-posta + paket. JWT doğrulaması yerelde sık başarısız olduğu için
+    /// (Identity authority URL) istemci oturumdaki e-postayı gönderir.
+    /// </summary>
+    [HttpPost("update-subscription")]
+    public async Task<IActionResult> UpdateSubscriptionAsync([FromBody] UpdateSubscriptionRequest? request)
+    {
+        if (request == null)
+        {
+            return BadRequest(new { message = "Body is required." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return BadRequest(new { message = "Email is required." });
+        }
+
+        if (!Enum.IsDefined(typeof(SubscriptionType), request.SubscriptionType))
+        {
+            return BadRequest(new { message = "Invalid subscription type." });
+        }
+
+        var subscriptionType = (SubscriptionType)request.SubscriptionType;
+
+        try
+        {
+            await _partyService.UpdateSubscriptionByEmail(request.Email.Trim(), subscriptionType);
+            return Ok(new { message = "Subscription updated successfully." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("update-profile")]
@@ -92,4 +132,14 @@ public class UpdatePartyProfileRequest
 
     [JsonPropertyName("description")]
     public string? Description { get; set; }
+}
+
+public class UpdateSubscriptionRequest
+{
+    [JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
+
+    /// <summary>0=None, 1=Silver, 2=Gold, 3=Platinum</summary>
+    [JsonPropertyName("subscriptionType")]
+    public int SubscriptionType { get; set; }
 }

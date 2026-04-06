@@ -1,3 +1,5 @@
+using Artemis.API.Entities.Enums;
+
 namespace Artemis.API.Services.Interfaces;
 
 public interface IPartyService
@@ -6,6 +8,7 @@ public interface IPartyService
     ValueTask Create(CreateOrUpdatePartyViewModel viewModel);
     ValueTask Update(CreateOrUpdatePartyViewModel viewModel);
     ValueTask UpdateByEmail(string email, string partyName, string? description);
+    ValueTask UpdateSubscriptionByEmail(string email, SubscriptionType subscriptionType);
     ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel);
     ValueTask Delete(int id);
 }

@@ -19,9 +19,19 @@ public class TopicService : ITopicService
 
     public async ValueTask<TopicListViewModel> GetList(TopicFilterViewModel filterViewModel)
     {
-        var count = await query.CountAsync();
+        var baseQuery = _artemisDbContext.Topics.AsQueryable();
 
-        var topics = await query
+        if (!string.IsNullOrWhiteSpace(filterViewModel.Title))
+        {
+            var term = filterViewModel.Title.Trim();
+            baseQuery = baseQuery.Where(x =>
+                x.Title != null &&
+                x.Title.ToLower().Contains(term.ToLower()));
+        }
+
+        var count = await baseQuery.CountAsync();
+
+        var topics = await baseQuery
             .Include(t => t.Party)
             .Include(t => t.Category)
             .OrderByDescending(i => i.CreateDate)

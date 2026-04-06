@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
+import '../../core/util/jwt_email.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
+import '../../core/util/room_create_policy.dart';
 import '../../services/app_services.dart';
-import '../../widgets/content_kind_badge.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/fade_in_list_item.dart';
 import 'create_topic_screen.dart';
 import 'topic_detail_screen.dart';
@@ -21,21 +25,63 @@ class TopicListScreen extends StatefulWidget {
 
 class _TopicListScreenState extends State<TopicListScreen> {
   final _search = TextEditingController();
+  Timer? _searchDebounce;
   List<Map<String, dynamic>> _items = [];
   bool _loading = true;
   String? _error;
   final int _pageSize = 20;
   int _total = 0;
 
+  int? _mySubscriptionType;
+  bool _tierLoading = true;
+
   @override
   void initState() {
     super.initState();
-    _search.addListener(() => setState(() {}));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    _search.addListener(_onSearchChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _load();
+      _loadMySubscriptionTier();
+    });
+  }
+
+  Future<void> _loadMySubscriptionTier() async {
+    final app = context.read<AppServices>();
+    final token = context.read<AuthService>().token;
+    final email = emailFromAccessToken(token);
+    final t = await resolveMySubscriptionTypeForRoomCreate(app, token, email);
+    if (!mounted) return;
+    setState(() {
+      _mySubscriptionType = t;
+      _tierLoading = false;
+    });
+  }
+
+  Future<void> _onCreateTopicPressed() async {
+    if (_tierLoading) return;
+    if (!canCreateTopic(_mySubscriptionType)) {
+      await showTopicCreateNotAllowedDialog(context);
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const CreateTopicScreen(),
+      ),
+    );
+    if (context.mounted) await _load();
+  }
+
+  void _onSearchChanged() {
+    setState(() {});
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (mounted) _load();
+    });
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _search.dispose();
     super.dispose();
   }
@@ -95,13 +141,17 @@ class _TopicListScreenState extends State<TopicListScreen> {
             child: TextField(
               controller: _search,
               textInputAction: TextInputAction.search,
-              onSubmitted: (_) => _load(),
+              onSubmitted: (_) {
+                _searchDebounce?.cancel();
+                _load();
+              },
               decoration: InputDecoration(
                 hintText: 'Konu ara…',
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _search.text.isNotEmpty
                     ? IconButton(
                         onPressed: () {
+                          _searchDebounce?.cancel();
                           _search.clear();
                           _load();
                         },
@@ -114,17 +164,26 @@ class _TopicListScreenState extends State<TopicListScreen> {
           Expanded(child: _buildBody(context)),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.of(context).push<void>(
-            MaterialPageRoute<void>(
-              builder: (_) => const CreateTopicScreen(),
+      floatingActionButton: _tierLoading
+          ? FloatingActionButton(
+              onPressed: null,
+              backgroundColor: Colors.grey.shade400,
+              child: const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              ),
+            )
+          : FloatingActionButton(
+              onPressed: _onCreateTopicPressed,
+              backgroundColor: canCreateTopic(_mySubscriptionType)
+                  ? AppColors.purple600
+                  : Colors.grey.shade500,
+              child: const Icon(Icons.add_rounded),
             ),
-          );
-          if (context.mounted) await _load();
-        },
-        child: const Icon(Icons.add_rounded),
-      ),
     );
   }
 
@@ -192,8 +251,6 @@ class _TopicListScreenState extends State<TopicListScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const ContentKindBadge(kind: ContentKind.topic, compact: true),
-                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Container(

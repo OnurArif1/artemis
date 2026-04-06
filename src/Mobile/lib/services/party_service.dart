@@ -42,4 +42,18 @@ class PartyService {
       },
     );
   }
+
+  /// Party kaydında `SubscriptionType` günceller (0–3). `update-profile` gibi e-posta gövdesinde gider.
+  Future<void> updateSubscription({
+    required String email,
+    required int subscriptionType,
+  }) async {
+    await _dio.post<void>(
+      '/party/update-subscription',
+      data: {
+        'email': email.trim(),
+        'subscriptionType': subscriptionType,
+      },
+    );
+  }
 }

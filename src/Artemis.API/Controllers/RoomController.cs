@@ -1,3 +1,4 @@
+using System;
 using Artemis.API.Entities;
 using Artemis.API.Services.Interfaces;
 using Artemis.API.ViewModels;
@@ -27,8 +28,19 @@ public class RoomController : ControllerBase
     [HttpPost("create")]
     public async Task<IActionResult> CreateAsync(CreateOrUpdateRoomViewModel viewModel)
     {
-        await _roomService.Create(viewModel);
-        return Ok();
+        try
+        {
+            await _roomService.Create(viewModel);
+            return Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("update")]

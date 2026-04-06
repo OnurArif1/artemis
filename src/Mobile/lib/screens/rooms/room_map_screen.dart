@@ -11,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/paged_result.dart';
+import '../../core/util/room_create_policy.dart';
 import '../../core/util/subscription_display.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
@@ -86,14 +87,45 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   int _topicCount = 0;
   int? _pendingFocusRoomId;
 
+  /// Oda oluşturma için mevcut kullanıcının üyelik seviyesi (Gold/Platinum gerekir).
+  int? _mySubscriptionType;
+  bool _tierLoading = true;
+
   @override
   void initState() {
     super.initState();
     _homeTab = context.read<HomeTabController>();
     _homeTab.addListener(_onHomeTabChanged);
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _loadMap(showRationaleDialog: true),
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadMap(showRationaleDialog: true);
+      _loadMySubscriptionTier();
+    });
+  }
+
+  Future<void> _loadMySubscriptionTier() async {
+    final app = context.read<AppServices>();
+    final token = context.read<AuthService>().token;
+    final email = emailFromAccessToken(token);
+    final t = await resolveMySubscriptionTypeForRoomCreate(app, token, email);
+    if (!mounted) return;
+    setState(() {
+      _mySubscriptionType = t;
+      _tierLoading = false;
+    });
+  }
+
+  Future<void> _onCreateRoomPressed() async {
+    if (_tierLoading) return;
+    if (!canCreateRoom(_mySubscriptionType)) {
+      await showRoomCreateNotAllowedDialog(context);
+      return;
+    }
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => const CreateRoomScreen(),
+      ),
     );
+    if (mounted) await _refresh();
   }
 
   @override
@@ -933,17 +965,26 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
         ],
       ),
       body: _buildBody(context),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.of(context).push<void>(
-            MaterialPageRoute<void>(
-              builder: (_) => const CreateRoomScreen(),
+      floatingActionButton: _tierLoading
+          ? FloatingActionButton(
+              onPressed: null,
+              backgroundColor: Colors.grey.shade400,
+              child: const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              ),
+            )
+          : FloatingActionButton(
+              onPressed: _onCreateRoomPressed,
+              backgroundColor: canCreateRoom(_mySubscriptionType)
+                  ? AppColors.purple600
+                  : Colors.grey.shade500,
+              child: const Icon(Icons.add_rounded),
             ),
-          );
-          if (mounted) await _refresh();
-        },
-        child: const Icon(Icons.add_rounded),
-      ),
     );
   }
 

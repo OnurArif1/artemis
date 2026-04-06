@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
+import '../../core/util/jwt_email.dart';
+import '../../core/util/room_create_policy.dart';
 import '../../services/app_services.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
 
 /// Web `CategoryList.vue` oluştur / düzenle / sil diyalogları.
@@ -44,6 +47,18 @@ class _CategoryEditorScreenState extends State<CategoryEditorScreen> {
     if (name.isEmpty) {
       showAppSnackBar(context, 'Başlık gerekli.', error: true);
       return;
+    }
+    if (!_isEdit) {
+      final app = context.read<AppServices>();
+      final token = context.read<AuthService>().token;
+      final email = emailFromAccessToken(token);
+      final sub =
+          await resolveMySubscriptionTypeForRoomCreate(app, token, email);
+      if (!mounted) return;
+      if (!canCreateCategory(sub)) {
+        await showCategoryCreateNotAllowedDialog(context);
+        return;
+      }
     }
     setState(() => _loading = true);
     final app = context.read<AppServices>();

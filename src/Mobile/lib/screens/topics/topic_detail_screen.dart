@@ -11,7 +11,6 @@ import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
-import '../../widgets/content_kind_badge.dart';
 import '../chat/topic_chat_screen.dart';
 
 /// Web `TopicList.vue` kart + yorum diyaloğu + `goToRoom` akışı.
@@ -174,7 +173,12 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
         title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
           IconButton(
-            tooltip: 'Canlı yorumlar (SignalR)',
+            tooltip: 'Odaya git',
+            onPressed: _roomsForTopic.isEmpty ? null : _goToRoom,
+            icon: const Icon(Icons.meeting_room_outlined),
+          ),
+          IconButton(
+            tooltip: 'Canlı yorum sohbeti',
             onPressed: () {
               Navigator.of(context).push<void>(
                 MaterialPageRoute<void>(
@@ -185,7 +189,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                 ),
               );
             },
-            icon: const Icon(Icons.chat_bubble_rounded),
+            icon: const Icon(Icons.forum_rounded),
           ),
         ],
       ),
@@ -214,25 +218,13 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     }
 
     final t = _topic ?? {};
-    final title =
-        entityString(t, ['title', 'Title']) ?? 'Konu #${widget.topicId}';
     final category =
         entityString(t, ['categoryName', 'CategoryName', 'categoryTitle']);
-    final created = formatTrDate(t['createDate'] ?? t['CreateDate']);
     final desc = entityString(t, ['description', 'Description']);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
       children: [
-        const ContentKindBadge(kind: ContentKind.topic),
-        const SizedBox(height: 8),
-        Text(
-          'Konular yorum ve canlı sohbet içindir; odalar ayrıdır ve üyelik eşleşmesi odada geçerlidir.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade700,
-              ),
-        ),
-        const SizedBox(height: 16),
         if (category != null) ...[
           Row(
             children: [
@@ -249,49 +241,10 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
           ),
           const SizedBox(height: 8),
         ],
-        Row(
-          children: [
-            Icon(Icons.calendar_today_outlined,
-                size: 16, color: Colors.grey.shade600),
-            const SizedBox(width: 8),
-            Text(created, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ),
         if (desc != null && desc.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(desc, style: Theme.of(context).textTheme.bodyLarge),
         ],
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _roomsForTopic.isEmpty ? null : _goToRoom,
-                icon: const Icon(Icons.meeting_room_outlined),
-                label: const Text('Odaya git'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: () {
-            Navigator.of(context).push<void>(
-              MaterialPageRoute<void>(
-                builder: (_) => TopicChatScreen(
-                  topicId: widget.topicId,
-                  topicTitle: title,
-                ),
-              ),
-            );
-          },
-          icon: const Icon(Icons.forum_rounded),
-          label: const Text('Canlı yorum sohbeti'),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.purple600,
-            minimumSize: const Size.fromHeight(48),
-          ),
-        ),
         const SizedBox(height: 24),
         Text(
           'Yorumlar (${_comments.length})',

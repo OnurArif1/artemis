@@ -6,8 +6,11 @@ import 'package:provider/provider.dart';
 
 import '../../core/location/location_service.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/util/jwt_email.dart';
 import '../../core/util/paged_result.dart';
+import '../../core/util/room_create_policy.dart';
 import '../../services/app_services.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
 
 int? _entityId(Map<String, dynamic> m) {
@@ -58,9 +61,19 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadTopics();
-      _fillLocation();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final app = context.read<AppServices>();
+      final token = context.read<AuthService>().token;
+      final email = emailFromAccessToken(token);
+      final t = await resolveMySubscriptionTypeForRoomCreate(app, token, email);
+      if (!mounted) return;
+      if (!canCreateRoom(t)) {
+        await showRoomCreateNotAllowedDialog(context);
+        if (mounted) Navigator.of(context).pop();
+        return;
+      }
+      await _loadTopics();
+      await _fillLocation();
     });
   }
 
@@ -125,6 +138,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
 
     final createdTitle = _title.text.trim();
     final app = context.read<AppServices>();
+    final email = emailFromAccessToken(context.read<AuthService>().token);
     setState(() => _loading = true);
     try {
       await app.rooms.create({
@@ -137,6 +151,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         'roomRange': _roomRange.text.trim().isEmpty
             ? null
             : double.tryParse(_roomRange.text.trim()),
+        if (email != null && email.isNotEmpty) 'userEmail': email,
       });
 
       final list = await app.rooms.getList({
@@ -167,11 +182,12 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
-      showAppSnackBar(
-        context,
-        e.response?.data?.toString() ?? e.message ?? 'Oluşturulamadı',
-        error: true,
-      );
+      var msg = e.message ?? 'Oluşturulamadı';
+      final d = e.response?.data;
+      if (d is Map && d['message'] != null) {
+        msg = '${d['message']}';
+      }
+      showAppSnackBar(context, msg, error: true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);

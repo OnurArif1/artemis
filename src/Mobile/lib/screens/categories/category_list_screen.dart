@@ -4,9 +4,12 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
+import '../../core/util/jwt_email.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
+import '../../core/util/room_create_policy.dart';
 import '../../services/app_services.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/fade_in_list_item.dart';
 import 'category_editor_screen.dart';
 
@@ -25,11 +28,43 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
   final int _pageSize = 20;
   int _total = 0;
 
+  int? _mySubscriptionType;
+  bool _tierLoading = true;
+
   @override
   void initState() {
     super.initState();
     _search.addListener(() => setState(() {}));
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _load();
+      _loadMySubscriptionTier();
+    });
+  }
+
+  Future<void> _loadMySubscriptionTier() async {
+    final app = context.read<AppServices>();
+    final token = context.read<AuthService>().token;
+    final email = emailFromAccessToken(token);
+    final t = await resolveMySubscriptionTypeForRoomCreate(app, token, email);
+    if (!mounted) return;
+    setState(() {
+      _mySubscriptionType = t;
+      _tierLoading = false;
+    });
+  }
+
+  Future<void> _onCreateCategoryPressed() async {
+    if (_tierLoading) return;
+    if (!canCreateCategory(_mySubscriptionType)) {
+      await showCategoryCreateNotAllowedDialog(context);
+      return;
+    }
+    final ok = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => const CategoryEditorScreen(),
+      ),
+    );
+    if (context.mounted && ok == true) await _load();
   }
 
   @override
@@ -112,17 +147,26 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
           Expanded(child: _buildBody(context)),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final ok = await Navigator.of(context).push<bool>(
-            MaterialPageRoute<bool>(
-              builder: (_) => const CategoryEditorScreen(),
+      floatingActionButton: _tierLoading
+          ? FloatingActionButton(
+              onPressed: null,
+              backgroundColor: Colors.grey.shade400,
+              child: const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              ),
+            )
+          : FloatingActionButton(
+              onPressed: _onCreateCategoryPressed,
+              backgroundColor: canCreateCategory(_mySubscriptionType)
+                  ? AppColors.purple600
+                  : Colors.grey.shade500,
+              child: const Icon(Icons.add_rounded),
             ),
-          );
-          if (context.mounted && ok == true) await _load();
-        },
-        child: const Icon(Icons.add_rounded),
-      ),
     );
   }
 
