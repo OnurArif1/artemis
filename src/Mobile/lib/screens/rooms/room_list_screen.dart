@@ -7,8 +7,11 @@ import '../../core/theme/app_colors.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
+import '../../core/util/subscription_display.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/content_kind_badge.dart';
+import '../../widgets/subscription_tier_badge.dart';
 import 'create_room_screen.dart';
 import 'room_detail_screen.dart';
 
@@ -148,18 +151,9 @@ class _RoomListScreenState extends State<RoomListScreen> {
           final m = _items[i];
           final title = mapTitle(m);
           final sub = mapSubtitle(m);
+          final subType = parseSubscriptionType(Map<String, dynamic>.from(m));
           return Card(
-            child: ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: AppColors.purple100,
-                foregroundColor: AppColors.purple700,
-                child: Icon(Icons.meeting_room_rounded),
-              ),
-              title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
-              subtitle: sub != null
-                  ? Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis)
-                  : null,
-              trailing: const Icon(Icons.chevron_right_rounded),
+            child: InkWell(
               onTap: () {
                 Navigator.of(context).push<void>(
                   MaterialPageRoute<void>(
@@ -167,6 +161,66 @@ class _RoomListScreenState extends State<RoomListScreen> {
                   ),
                 );
               },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const CircleAvatar(
+                      backgroundColor: AppColors.purple100,
+                      foregroundColor: AppColors.purple700,
+                      child: Icon(Icons.meeting_room_rounded),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 6,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              const ContentKindBadge(kind: ContentKind.room, compact: true),
+                              if (subType != null)
+                                SubscriptionTierBadge(subscriptionType: subType, compact: true),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          if (sub != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              sub,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey.shade700,
+                                  ),
+                            ),
+                          ],
+                          if (subType != null) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              'Konuşmak için: ${subscriptionTierLabelTr(subType)}',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: AppColors.purple700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right_rounded),
+                  ],
+                ),
+              ),
             ),
           );
         },

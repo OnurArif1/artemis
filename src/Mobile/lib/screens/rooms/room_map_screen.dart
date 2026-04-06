@@ -11,6 +11,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/paged_result.dart';
+import '../../core/util/subscription_display.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
@@ -24,6 +25,9 @@ const _turkeyCenter = LatLng(39, 35.5);
 const _userRadiusKm = 40.0;
 const _detailZoom = 12.0;
 const _zoomClusterThreshold = 10.0;
+
+/// Carto Light zemine yakın; kiremit yüklenene kadar mor [AppAmbientBackground] sızmaz.
+const _mapBaseColor = Color(0xFFF2F2F2);
 
 /// Şehir modunda kamera çerçevesi: Türkiye’ye çok uzak aykırı kümeler (ör. emülatör seed’i,
 /// test odası) tüm haritayı SF’ye zoom’latmasın diye framing’den çıkarılır; marker’lar yine çizilir.
@@ -133,6 +137,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     final ll = itemLatLng(room);
     if (ll != null) {
       _mapController.move(ll, 14);
+      _scheduleTilePipelineKick();
     }
     final r = room;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -345,57 +350,78 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   }
 
   void _fitCameraForMode() {
-    if (_mode == _MapViewMode.nearby &&
-        _userLat != null &&
-        _userLng != null) {
-      final pts = <LatLng>[
-        LatLng(_userLat!, _userLng!),
-        ..._displayRooms.map(itemLatLng).whereType<LatLng>(),
-        ..._displayTopics.map(itemLatLng).whereType<LatLng>(),
-      ];
-      if (pts.length > 1) {
+    try {
+      if (_mode == _MapViewMode.nearby &&
+          _userLat != null &&
+          _userLng != null) {
+        final pts = <LatLng>[
+          LatLng(_userLat!, _userLng!),
+          ..._displayRooms.map(itemLatLng).whereType<LatLng>(),
+          ..._displayTopics.map(itemLatLng).whereType<LatLng>(),
+        ];
+        if (pts.length > 1) {
+          _mapController.fitCamera(
+            CameraFit.coordinates(
+              coordinates: pts,
+              padding: const EdgeInsets.all(64),
+              maxZoom: 13,
+            ),
+          );
+        } else {
+          _mapController.move(LatLng(_userLat!, _userLng!), 12);
+        }
+        return;
+      }
+
+      if (_mode == _MapViewMode.detail && _detailRegion != null) {
+        _mapController.move(_detailRegion!.center, _detailZoom);
+        return;
+      }
+
+      final regions = buildCombinedRegions(_rooms, _topics);
+      if (regions.isEmpty) {
         _mapController.fitCamera(
-          CameraFit.coordinates(
-            coordinates: pts,
-            padding: const EdgeInsets.all(64),
-            maxZoom: 13,
+          CameraFit.bounds(
+            bounds:
+                LatLngBounds(const LatLng(35.8, 25.9), const LatLng(42.2, 44.9)),
+            padding: const EdgeInsets.all(24),
+            maxZoom: 8,
           ),
         );
-      } else {
-        _mapController.move(LatLng(_userLat!, _userLng!), 12);
+        return;
       }
-      return;
-    }
-
-    if (_mode == _MapViewMode.detail && _detailRegion != null) {
-      _mapController.move(_detailRegion!.center, _detailZoom);
-      return;
-    }
-
-    final regions = buildCombinedRegions(_rooms, _topics);
-    if (regions.isEmpty) {
+      final coords = regions.map((r) => r.center).toList();
+      final frame = _cityCameraFrameCoords(coords);
+      if (frame.length == 1) {
+        _mapController.move(frame.single, 9);
+        return;
+      }
       _mapController.fitCamera(
-        CameraFit.bounds(
-          bounds: LatLngBounds(const LatLng(35.8, 25.9), const LatLng(42.2, 44.9)),
-          padding: const EdgeInsets.all(24),
-          maxZoom: 8,
+        CameraFit.coordinates(
+          coordinates: frame,
+          padding: const EdgeInsets.all(48),
+          maxZoom: 10,
         ),
       );
-      return;
+    } finally {
+      _scheduleTilePipelineKick();
     }
-    final coords = regions.map((r) => r.center).toList();
-    final frame = _cityCameraFrameCoords(coords);
-    if (frame.length == 1) {
-      _mapController.move(frame.single, 9);
-      return;
+  }
+
+  /// Programatik kamera hareketinden sonra kiremitlerin bazen gelmemesi (flutter_map #1813).
+  void _scheduleTilePipelineKick() {
+    void nudge() {
+      if (!mounted) return;
+      try {
+        final c = _mapController.camera;
+        _mapController.move(c.center, c.zoom + 1e-8);
+      } catch (_) {}
     }
-    _mapController.fitCamera(
-      CameraFit.coordinates(
-        coordinates: frame,
-        padding: const EdgeInsets.all(48),
-        maxZoom: 10,
-      ),
-    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      nudge();
+      Future<void>.delayed(const Duration(milliseconds: 120), nudge);
+    });
   }
 
   Future<void> _refresh() async {
@@ -447,7 +473,8 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
       _updateCountsForMode();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _fitCameraForMode();
+      if (!mounted) return;
+      _fitCameraForMode();
     });
     await _fetchAndApply(true);
   }
@@ -629,14 +656,18 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   /// — **Hover** (fare): dıştaki [Tooltip] (web / masaüstü).
   Widget _mapIconMarker({
     required String title,
+    String? tooltipExtra,
     required String semanticsLabel,
     required Color backgroundColor,
     required Color iconColor,
     required IconData icon,
     required VoidCallback onTap,
   }) {
+    final tip = tooltipExtra != null && tooltipExtra.isNotEmpty
+        ? '$title\n$tooltipExtra'
+        : title;
     return Tooltip(
-      message: title,
+      message: tip,
       preferBelow: false,
       verticalOffset: 10,
       waitDuration: const Duration(milliseconds: 350),
@@ -659,7 +690,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
               m.clearSnackBars();
               m.showSnackBar(
                 SnackBar(
-                  content: Text(title),
+                  content: Text(tip),
                   behavior: SnackBarBehavior.floating,
                   duration: const Duration(seconds: 2),
                   margin: const EdgeInsets.fromLTRB(16, 0, 16, 88),
@@ -680,6 +711,113 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     );
   }
 
+  /// Oda pin’i: renk = gerekli paket; köşe harfi S/G/P (veya `?` / yok).
+  Widget _mapRoomMarkerByTier({
+    required String title,
+    required int? subscriptionType,
+    required String semanticsLabel,
+    required VoidCallback onTap,
+  }) {
+    final fill = mapRoomMarkerFill(subscriptionType);
+    final badge = mapRoomMarkerBadgeLetter(subscriptionType);
+    final tierLine = subscriptionType == null
+        ? 'Oda · ${subscriptionTierLabelTr(null)}'
+        : 'Oda · ${subscriptionTierLabelTr(subscriptionType)}';
+    final tip = '$title\n$tierLine';
+    return Tooltip(
+      message: tip,
+      preferBelow: false,
+      verticalOffset: 10,
+      waitDuration: const Duration(milliseconds: 350),
+      showDuration: const Duration(seconds: 4),
+      child: Semantics(
+        label: '$semanticsLabel · $tierLine',
+        button: true,
+        hint: 'Kısa dokun: aç. Uzun bas: ayrıntı.',
+        child: Material(
+          color: Colors.transparent,
+          elevation: 0,
+          child: InkWell(
+            onTap: onTap,
+            onLongPress: () {
+              final m = ScaffoldMessenger.maybeOf(context);
+              if (m == null) return;
+              m.clearSnackBars();
+              m.showSnackBar(
+                SnackBar(
+                  content: Text(tip),
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 3),
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 88),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: fill,
+                      border: Border.all(color: Colors.white, width: 2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black38,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.meeting_room_rounded,
+                      color: Colors.white,
+                      size: 17,
+                    ),
+                  ),
+                  if (badge != null)
+                    Positioned(
+                      right: -1,
+                      bottom: -1,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(color: Colors.white, width: 1),
+                        ),
+                        child: Text(
+                          badge,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   List<Marker> _buildDetailedMarkers() {
     final out = <Marker>[];
     for (final room in _displayRooms) {
@@ -687,18 +825,17 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
       if (ll == null) continue;
       final title =
           '${room['title'] ?? room['Title'] ?? 'Oda'}';
+      final st = parseSubscriptionType(Map<String, dynamic>.from(room));
       out.add(
         Marker(
           point: ll,
-          width: 36,
-          height: 36,
+          width: 44,
+          height: 44,
           alignment: Alignment.bottomCenter,
-          child: _mapIconMarker(
+          child: _mapRoomMarkerByTier(
             title: title,
+            subscriptionType: st,
             semanticsLabel: 'Oda: $title',
-            backgroundColor: AppColors.purple600,
-            iconColor: Colors.white,
-            icon: Icons.meeting_room_rounded,
             onTap: () => _onRoomTap(room),
           ),
         ),
@@ -717,6 +854,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
           alignment: Alignment.bottomCenter,
           child: _mapIconMarker(
             title: title,
+            tooltipExtra: 'Konu',
             semanticsLabel: 'Konu: $title',
             backgroundColor: AppColors.purple300,
             iconColor: AppColors.purple900,
@@ -737,6 +875,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
         : '$_liveCount oda · $_topicCount konu';
 
     return Scaffold(
+      backgroundColor: _mapBaseColor,
       appBar: AppBar(
         title: Column(
           crossAxisAlignment:
@@ -793,9 +932,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   }
 
   Widget _buildBody(BuildContext context) {
-    if (_loading && _rooms.isEmpty && _topics.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
     if (_error != null && _rooms.isEmpty && _topics.isEmpty) {
       return Center(
         child: Padding(
@@ -816,28 +952,35 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     }
 
     return Stack(
+      fit: StackFit.expand,
       children: [
-        FlutterMap(
-          mapController: _mapController,
-          options: MapOptions(
-            initialCenter: _turkeyCenter,
-            initialZoom: 6,
-            minZoom: 3,
-            maxZoom: 18,
-            onPositionChanged: _onPositionChanged,
-          ),
-          children: [
-            TileLayer(
-              urlTemplate:
-                  'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-              subdomains: const ['a', 'b', 'c', 'd'],
-              userAgentPackageName: 'artemis_mobile',
-              maxNativeZoom: 19,
+        Positioned.fill(
+          child: ColoredBox(
+            color: _mapBaseColor,
+            child: FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                backgroundColor: _mapBaseColor,
+                initialCenter: _turkeyCenter,
+                initialZoom: 6,
+                minZoom: 3,
+                maxZoom: 18,
+                onPositionChanged: _onPositionChanged,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                  subdomains: const ['a', 'b', 'c', 'd'],
+                  userAgentPackageName: 'artemis_mobile',
+                  maxNativeZoom: 19,
+                ),
+                if (_buildCircles().isNotEmpty)
+                  CircleLayer<Object>(circles: _buildCircles()),
+                MarkerLayer(markers: _buildMarkers()),
+              ],
             ),
-            if (_buildCircles().isNotEmpty)
-              CircleLayer<Object>(circles: _buildCircles()),
-            MarkerLayer(markers: _buildMarkers()),
-          ],
+          ),
         ),
         if (_loading)
           const Positioned(

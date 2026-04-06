@@ -11,6 +11,7 @@ import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
+import '../../widgets/content_kind_badge.dart';
 import '../chat/topic_chat_screen.dart';
 
 /// Web `TopicList.vue` kart + yorum diyaloğu + `goToRoom` akışı.
@@ -223,6 +224,15 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
       children: [
+        const ContentKindBadge(kind: ContentKind.topic),
+        const SizedBox(height: 8),
+        Text(
+          'Konular yorum ve canlı sohbet içindir; odalar ayrıdır ve üyelik eşleşmesi odada geçerlidir.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade700,
+              ),
+        ),
+        const SizedBox(height: 16),
         if (category != null) ...[
           Row(
             children: [

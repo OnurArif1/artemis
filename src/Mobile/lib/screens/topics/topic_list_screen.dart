@@ -7,6 +7,7 @@ import '../../core/util/entity_map.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
 import '../../services/app_services.dart';
+import '../../widgets/content_kind_badge.dart';
 import '../../widgets/fade_in_list_item.dart';
 import 'create_topic_screen.dart';
 import 'topic_detail_screen.dart';
@@ -191,6 +192,8 @@ class _TopicListScreenState extends State<TopicListScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const ContentKindBadge(kind: ContentKind.topic, compact: true),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         Container(
