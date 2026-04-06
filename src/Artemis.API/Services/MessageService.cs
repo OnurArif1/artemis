@@ -70,7 +70,6 @@ public class MessageService : IMessageService
     public async ValueTask<MessageListViewModel> GetList(MessageFilterViewModel filterViewModel)
     {
         var query = _artemisDbContext.Messages.AsQueryable();
-        var count = await query.CountAsync();
 
         if (filterViewModel.RoomId.HasValue)
         {
@@ -81,6 +80,8 @@ public class MessageService : IMessageService
         {
             query = query.Where(x => x.PartyId == filterViewModel.PartyId.Value);
         }
+
+        var count = await query.CountAsync();
 
         var messages = await query.OrderByDescending(i => i.CreateDate)
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)

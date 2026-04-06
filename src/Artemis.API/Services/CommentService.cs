@@ -25,6 +25,11 @@ public class CommentService : ICommentService
             baseQuery = baseQuery.Where(c => c.TopicId == filterViewModel.TopicId.Value);
         }
 
+        if (filterViewModel.PartyId.HasValue && filterViewModel.PartyId.Value > 0)
+        {
+            baseQuery = baseQuery.Where(c => c.PartyId == filterViewModel.PartyId.Value);
+        }
+
         var count = await baseQuery.CountAsync();
 
         var comments = await baseQuery

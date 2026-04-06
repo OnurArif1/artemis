@@ -5,6 +5,7 @@ import '../../core/theme/app_colors.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../widgets/app_ambient_background.dart';
 import '../categories/category_list_screen.dart';
+import '../chat/my_chats_screen.dart';
 import '../profile/profile_screen.dart';
 import '../rooms/room_map_screen.dart';
 import '../topics/topic_list_screen.dart';
@@ -19,6 +20,11 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   static const _destinations = [
+    NavigationDestination(
+      icon: Icon(Icons.chat_bubble_outline_rounded),
+      selectedIcon: Icon(Icons.chat_bubble_rounded),
+      label: 'Sohbetler',
+    ),
     NavigationDestination(
       icon: Icon(Icons.meeting_room_outlined),
       selectedIcon: Icon(Icons.meeting_room_rounded),
@@ -47,6 +53,7 @@ class _HomeShellState extends State<HomeShell> {
     final idx = tab.currentIndex;
 
     final pages = <Widget>[
+      const MyChatsScreen(),
       const RoomMapScreen(),
       const TopicListScreen(),
       const CategoryListScreen(),
@@ -74,6 +81,11 @@ class _HomeShellState extends State<HomeShell> {
               ),
               unselectedLabelTextStyle: const TextStyle(color: Color(0xFF6B6B76)),
               destinations: const [
+                NavigationRailDestination(
+                  icon: Icon(Icons.chat_bubble_outline_rounded),
+                  selectedIcon: Icon(Icons.chat_bubble_rounded),
+                  label: Text('Sohbetler'),
+                ),
                 NavigationRailDestination(
                   icon: Icon(Icons.meeting_room_outlined),
                   selectedIcon: Icon(Icons.meeting_room_rounded),

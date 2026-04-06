@@ -104,7 +104,9 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   }
 
   void _onHomeTabChanged() {
-    if (!mounted || _homeTab.currentIndex != 0) return;
+    if (!mounted || _homeTab.currentIndex != HomeTabController.roomsTabIndex) {
+      return;
+    }
     final id = _homeTab.consumeRoomFocusRequest();
     if (id == null) return;
     setState(() => _pendingFocusRoomId = id);
