@@ -29,6 +29,9 @@ const _zoomClusterThreshold = 10.0;
 /// Carto Light zemine yakın; kiremit yüklenene kadar mor [AppAmbientBackground] sızmaz.
 const _mapBaseColor = Color(0xFFF2F2F2);
 
+const double _minMapZoom = 3;
+const double _maxMapZoom = 18;
+
 /// Şehir modunda kamera çerçevesi: Türkiye’ye çok uzak aykırı kümeler (ör. emülatör seed’i,
 /// test odası) tüm haritayı SF’ye zoom’latmasın diye framing’den çıkarılır; marker’lar yine çizilir.
 List<LatLng> _cityCameraFrameCoords(List<LatLng> centers) {
@@ -422,6 +425,17 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
       nudge();
       Future<void>.delayed(const Duration(milliseconds: 120), nudge);
     });
+  }
+
+  void _zoomByStep(double delta) {
+    try {
+      final c = _mapController.camera;
+      final z = (c.zoom + delta).clamp(_minMapZoom, _maxMapZoom);
+      if ((z - c.zoom).abs() < 0.001) return;
+      _mapController.move(c.center, z);
+      _scheduleTilePipelineKick();
+      if (mounted) setState(() {});
+    } catch (_) {}
   }
 
   Future<void> _refresh() async {
@@ -963,8 +977,8 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
                 backgroundColor: _mapBaseColor,
                 initialCenter: _turkeyCenter,
                 initialZoom: 6,
-                minZoom: 3,
-                maxZoom: 18,
+                minZoom: _minMapZoom,
+                maxZoom: _maxMapZoom,
                 onPositionChanged: _onPositionChanged,
               ),
               children: [
@@ -989,6 +1003,34 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
             top: 0,
             child: LinearProgressIndicator(minHeight: 3),
           ),
+        Positioned(
+          top: 8,
+          right: 8,
+          child: Material(
+            elevation: 4,
+            shadowColor: Colors.black38,
+            borderRadius: BorderRadius.circular(12),
+            color: Colors.white,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Yakınlaştır',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _zoomByStep(1),
+                  icon: const Icon(Icons.add_rounded, color: AppColors.purple700),
+                ),
+                Divider(height: 1, color: Colors.grey.shade300),
+                IconButton(
+                  tooltip: 'Uzaklaştır',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () => _zoomByStep(-1),
+                  icon: const Icon(Icons.remove_rounded, color: AppColors.purple700),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }

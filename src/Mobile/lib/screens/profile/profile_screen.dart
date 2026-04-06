@@ -101,19 +101,7 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ],
-                  const SizedBox(height: 8),
-                  Text(
-                    'Hesabınız WebApi ile aynı kimlik sunucusu üzerinden doğrulanır.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Odalar kartında gördüğünüz rozet, o odada konuşmak için gereken üyelik seviyesidir; erişim sunucuda kontrol edilir. Konular ve odalar listede farklı rozetlerle ayrılır.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade800,
-                        ),
-                  ),
+                  ]
                 ],
               ),
             ),
@@ -124,23 +112,6 @@ class ProfileScreen extends StatelessWidget {
             surfaceTintColor: AppColors.purple50,
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.dns_outlined, color: AppColors.purple600),
-                  title: const Text('API kök adresi'),
-                  subtitle: Text(
-                    ApiConfig.origin,
-                    style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
-                  ),
-                ),
-                const Divider(height: 1),
-                ListTile(
-                  leading: const Icon(Icons.info_outline_rounded, color: AppColors.purple600),
-                  title: const Text('Geliştirici notu'),
-                  subtitle: Text(
-                    'Android emülatör: flutter run --dart-define=API_HOST=10.0.2.2',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
               ],
             ),
           ),
