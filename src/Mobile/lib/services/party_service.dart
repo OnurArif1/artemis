@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// WebApi `PartyService.js`
 class PartyService {
   PartyService(this._dio);
 
@@ -43,7 +42,6 @@ class PartyService {
     );
   }
 
-  /// Party kaydında `SubscriptionType` günceller (0–3). `update-profile` gibi e-posta gövdesinde gider.
   Future<void> updateSubscription({
     required String email,
     required int subscriptionType,

@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// WebApi `CategoryService.js`
 class CategoryService {
   CategoryService(this._dio);
 

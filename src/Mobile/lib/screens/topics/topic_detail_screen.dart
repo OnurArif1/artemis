@@ -13,7 +13,6 @@ import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
 import '../chat/topic_chat_screen.dart';
 
-/// Web `TopicList.vue` kart + yorum diyaloğu + `goToRoom` akışı.
 class TopicDetailScreen extends StatefulWidget {
   const TopicDetailScreen({super.key, required this.topicId});
 

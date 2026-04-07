@@ -739,7 +739,6 @@ class _LoginBackdropState extends State<_LoginBackdrop> with SingleTickerProvide
               painter: _BackdropPainter(phase: t),
               child: const SizedBox.expand(),
             ),
-            // Formun üstünde kalmadan hafif "hareket" hissi verir.
             Positioned(
               top: 88 + 8 * math.sin(t * math.pi * 2),
               right: 24,
@@ -971,7 +970,6 @@ class _AuthHero extends StatelessWidget {
   }
 }
 
-/// iOS Simülatör + Mac fiziksel klavye bazen Option+Q → `œ` gönderir.
 class _EmailMacLayoutAtFixFormatter extends TextInputFormatter {
   const _EmailMacLayoutAtFixFormatter();
 

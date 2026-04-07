@@ -2,7 +2,6 @@ import '../../services/app_services.dart';
 import '../location/location_service.dart';
 import 'entity_map.dart';
 
-/// Web `Chat.vue` `ensureUserInRoom` — listeyi konum + e-posta ile çeker, erişim ve üyelik kontrolü.
 Future<bool> ensureUserInRoom({
   required AppServices app,
   required int roomId,

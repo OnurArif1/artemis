@@ -4,18 +4,14 @@ import '../../services/app_services.dart';
 import 'jwt_subscription.dart';
 import 'paged_result.dart';
 
-/// Oda oluşturma: yalnızca Gold (2) ve Platinum (3).
 bool canCreateRoom(int? subscriptionType) {
   return subscriptionType == 2 || subscriptionType == 3;
 }
 
-/// Konu oluşturma: oda ile aynı kural (Gold / Platinum).
 bool canCreateTopic(int? subscriptionType) => canCreateRoom(subscriptionType);
 
-/// Kategori oluşturma: oda / konu ile aynı kural (Gold / Platinum).
 bool canCreateCategory(int? subscriptionType) => canCreateRoom(subscriptionType);
 
-/// JWT’de claim varsa onu kullan; yoksa party lookup (e-posta) ile doldurur.
 Future<int?> resolveMySubscriptionTypeForRoomCreate(
   AppServices app,
   String? token,

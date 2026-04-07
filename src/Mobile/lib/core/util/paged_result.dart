@@ -1,5 +1,3 @@
-/// WebApi bazen `resultViewModels`, bazen `resultViewmodels` döndürüyor.
-/// Party lookup cevabı `viewModels` kullanır (`ResultPartyLookupViewModel`).
 List<dynamic> extractItems(dynamic data) {
   if (data is List) return data;
   if (data is! Map) return const [];

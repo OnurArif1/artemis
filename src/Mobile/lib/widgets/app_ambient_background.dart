@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
 
-/// Ana shell altında, çok hafif mor ışıma — palet dışına çıkmadan derinlik verir.
 class AppAmbientBackground extends StatefulWidget {
   const AppAmbientBackground({super.key});
 

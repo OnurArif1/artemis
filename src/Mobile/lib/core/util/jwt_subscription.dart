@@ -1,6 +1,5 @@
 import 'package:jwt_decoder/jwt_decoder.dart';
 
-/// Kimlik token’ında özel claim yoksa `null` döner (çoğu kurulumda yoktur).
 int? tryParseSubscriptionTypeFromJwt(String? token) {
   if (token == null || token.isEmpty) return null;
   try {

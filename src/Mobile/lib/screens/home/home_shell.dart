@@ -10,7 +10,6 @@ import '../profile/profile_screen.dart';
 import '../rooms/room_map_screen.dart';
 import '../topics/topic_list_screen.dart';
 
-/// Alt gezinme (telefon) veya yan şerit (tablet / geniş ekran).
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 

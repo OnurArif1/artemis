@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:latlong2/latlong.dart';
 
-/// Web `RoomMap.vue` ile aynı şehir kümeleme mesafesi (km).
 const double cityClusterDistanceKm = 50;
 
 double calculateDistanceKm(

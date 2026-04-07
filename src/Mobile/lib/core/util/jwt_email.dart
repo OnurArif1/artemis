@@ -10,8 +10,6 @@ String? _firstString(Map<String, dynamic> m, List<String> keys) {
   return null;
 }
 
-/// Party / API aramaları için gerçek e-posta.
-/// `sub` çoğu zaman kullanıcı id’si olduğundan yalnızca `@` içeriyorsa kullanılır.
 String? emailFromAccessToken(String? token) {
   if (token == null || token.isEmpty) return null;
   try {

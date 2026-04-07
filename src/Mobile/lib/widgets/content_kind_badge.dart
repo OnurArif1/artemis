@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/theme/app_colors.dart';
 
-/// Liste / detayda içeriğin **Oda** mu **Konu** mu olduğunu net gösterir.
 enum ContentKind { room, topic }
 
 class ContentKindBadge extends StatelessWidget {

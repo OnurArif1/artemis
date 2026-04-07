@@ -1,4 +1,3 @@
-/// WebApi DTO’larında sık kullanılan id / alan okuma.
 int? entityId(Map<String, dynamic> m) {
   final v = m['id'] ?? m['Id'];
   if (v is int) return v;

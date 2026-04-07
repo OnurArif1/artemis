@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// WebApi `CommentService.js`
 class CommentService {
   CommentService(this._dio);
 

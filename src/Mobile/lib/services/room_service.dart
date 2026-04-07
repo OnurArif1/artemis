@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// WebApi `RoomService.js`
 class RoomService {
   RoomService(this._dio);
 

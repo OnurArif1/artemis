@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 
-/// Her ilgi alanı için örnek kapak görseli (Unsplash, HTTPS).
-/// Emoji yerine kullanılır; iOS’ta font/emoji kutu sorununu önler.
 String? interestCoverImageUrl(String englishName) => _coverUrls[englishName];
 
-/// Tanımsız isimler için yedek ikon.
 IconData interestFallbackIcon(String englishName) =>
     _fallbackIcons[englishName] ?? Icons.interests_rounded;
 
@@ -88,7 +85,6 @@ final _fallbackIcons = <String, IconData>{
   'Outdoor': Icons.terrain_rounded,
 };
 
-/// Kart üstündeki kapak: ağ görseli veya mor degrade + ikon.
 class InterestCoverPhoto extends StatelessWidget {
   const InterestCoverPhoto({
     super.key,

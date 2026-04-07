@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Tablet / geniş ekranda içeriği okunabilir genişlikte tutar (UX odaklı).
 class ResponsiveCenter extends StatelessWidget {
   const ResponsiveCenter({
     super.key,

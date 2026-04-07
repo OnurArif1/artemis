@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../core/util/subscription_display.dart';
 
-/// Oda / içerik için gereken üyelik seviyesi (Silver, Gold, Platinum).
 class SubscriptionTierBadge extends StatelessWidget {
   const SubscriptionTierBadge({
     super.key,
@@ -10,7 +9,6 @@ class SubscriptionTierBadge extends StatelessWidget {
     this.compact = true,
   });
 
-  /// `null` ise gösterme (üst widget karar verir).
   final int? subscriptionType;
   final bool compact;
 

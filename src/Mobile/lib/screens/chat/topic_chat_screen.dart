@@ -12,7 +12,6 @@ import '../../services/auth_service.dart';
 import '../../services/chat_hub_session.dart';
 import '../../widgets/artemis_snackbar.dart';
 
-/// Web `TopicCommentChat.vue` — konu yorumları SignalR `ReceiveComment`.
 class TopicChatScreen extends StatefulWidget {
   const TopicChatScreen({
     super.key,

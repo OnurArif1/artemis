@@ -27,14 +27,11 @@ const _userRadiusKm = 40.0;
 const _detailZoom = 12.0;
 const _zoomClusterThreshold = 10.0;
 
-/// Carto Light zemine yakın; kiremit yüklenene kadar mor [AppAmbientBackground] sızmaz.
 const _mapBaseColor = Color(0xFFF2F2F2);
 
 const double _minMapZoom = 3;
 const double _maxMapZoom = 18;
 
-/// Şehir modunda kamera çerçevesi: Türkiye’ye çok uzak aykırı kümeler (ör. emülatör seed’i,
-/// test odası) tüm haritayı SF’ye zoom’latmasın diye framing’den çıkarılır; marker’lar yine çizilir.
 List<LatLng> _cityCameraFrameCoords(List<LatLng> centers) {
   if (centers.length <= 1) return centers;
   const maxKmFromTr = 2400.0;
@@ -87,7 +84,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   int _topicCount = 0;
   int? _pendingFocusRoomId;
 
-  /// Oda oluşturma için mevcut kullanıcının üyelik seviyesi (Gold/Platinum gerekir).
   int? _mySubscriptionType;
   bool _tierLoading = true;
 
@@ -148,7 +144,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     });
   }
 
-  /// Odalar sekmesine `roomId` ile yönlendirmede haritada bul ve detay aç.
   bool _tryApplyPendingRoomFocus() {
     final id = _pendingFocusRoomId;
     if (id == null) return false;
@@ -188,8 +183,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     return true;
   }
 
-  /// İlk açılışta [showRationaleDialog]: kullanıcıya neden konum istediğimizi söyler, sonra sistem izni.
-  /// Yenile / gerçek GPS: [showRationaleDialog] false — doğrudan yeni okuma (önbelleğe güvenilmez).
   Future<void> _loadMap({required bool showRationaleDialog}) async {
     setState(() {
       _loading = true;
@@ -445,7 +438,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     }
   }
 
-  /// Programatik kamera hareketinden sonra kiremitlerin bazen gelmemesi (flutter_map #1813).
   void _scheduleTilePipelineKick() {
     void nudge() {
       if (!mounted) return;
@@ -699,9 +691,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     return out;
   }
 
-  /// Küçük ikon. Harita jestleri Tooltip’i çoğu zaman yuttuğu için:
-  /// — **Uzun bas**: SnackBar ile isim (telefon / simülatör).
-  /// — **Hover** (fare): dıştaki [Tooltip] (web / masaüstü).
   Widget _mapIconMarker({
     required String title,
     String? tooltipExtra,
@@ -759,7 +748,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     );
   }
 
-  /// Oda pin’i: renk = gerekli paket; köşe harfi S/G/P (veya `?` / yok).
   Widget _mapRoomMarkerByTier({
     required String title,
     required int? subscriptionType,

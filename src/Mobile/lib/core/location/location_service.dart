@@ -2,33 +2,26 @@ import 'dart:math' as math;
 
 import 'package:geolocator/geolocator.dart';
 
-/// Uygulama açılışında ve harita ekranında Web’deki gibi konum kullanımı.
 class LocationService {
   LocationService._();
 
   static double? latitude;
   static double? longitude;
 
-  /// Son okumada emülatör/simülatör varsayılanı yok sayıldıysa bir kez `true` döner (sonra sıfırlanır).
   static bool _skippedEmulatorDefaultPending = false;
 
-  /// [tryCurrentPosition] veya [cached] emülatör varsayılanını yok saydıysa `true` döner (tek seferlik).
   static bool consumeSkippedEmulatorDefaultNotification() {
     final v = _skippedEmulatorDefaultPending;
     _skippedEmulatorDefaultPending = false;
     return v;
   }
 
-  /// Android Studio emülatörünün klasik varsayılanı (Mountain View).
   static const double _androidEmuLat = 37.4219983;
   static const double _androidEmuLng = -122.084;
 
-  /// Xcode iOS Simülatör — "Apple" / Cupertino varsayılanlarına yakın.
   static const double _iosSimLat = 37.3349;
   static const double _iosSimLng = -122.0090;
 
-  /// Xcode Simülatör → Features → Location → **San Francisco** (ve çok yakın ön ayarlar).
-  /// Fiziksel olarak İstanbul’da olsanız bile simülatör bu koordinatları döndürür; gerçek GPS değildir.
   static const double _iosSfPresetLat = 37.785834;
   static const double _iosSfPresetLng = -122.406417;
 
@@ -63,7 +56,6 @@ class LocationService {
     longitude = null;
   }
 
-  /// Yeni oturum veya çıkış: eski kullanıcı / emülatör koordinatları haritaya taşınmasın.
   static void clearCache() {
     _clearStored();
     _skippedEmulatorDefaultPending = false;
@@ -78,7 +70,6 @@ class LocationService {
     return v;
   }
 
-  /// Oda oluşturma vb. — mümkünse GPS; başarısızsa son bilinen [cached] konum.
   static Future<({double lat, double lng})?> tryCurrentPosition() async {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
@@ -112,8 +103,6 @@ class LocationService {
     }
   }
 
-  /// Harita ilk açılışı: yalnızca bu çağrıdaki GPS; eski önbellekle doldurulmaz.
-  /// Konum servisi kapalıysa `null` ve tek seferlik bildirim bayrağı.
   static Future<({double lat, double lng})?> acquireForMap() async {
     final enabled = await Geolocator.isLocationServiceEnabled();
     if (!enabled) {

@@ -8,7 +8,6 @@ import '../../core/util/subscription_display.dart';
 import '../../widgets/subscription_tier_badge.dart';
 import '../chat/room_chat_screen.dart';
 
-/// Web harita / liste üzerinden oda özeti + mobil canlı sohbet (SignalR).
 class RoomDetailScreen extends StatelessWidget {
   const RoomDetailScreen({super.key, required this.room});
 

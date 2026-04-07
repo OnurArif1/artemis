@@ -9,7 +9,6 @@ import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
 import 'onboarding_scaffold.dart';
 
-/// WebApi `SelectPurposes.vue` — sabit amaç listesi (+ kategori ikonları).
 class _Purpose {
   const _Purpose({
     required this.id,

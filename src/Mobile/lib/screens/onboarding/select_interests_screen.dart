@@ -19,7 +19,6 @@ class _InterestItem {
   final String name;
 }
 
-/// WebApi `SelectInterests.vue`
 class SelectInterestsScreen extends StatefulWidget {
   const SelectInterestsScreen({super.key});
 

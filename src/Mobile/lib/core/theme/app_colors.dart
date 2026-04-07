@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// WebApi [main.js] içindeki Electric Purple paleti + tailwind özel renkleri.
 abstract final class AppColors {
   static const Color electricPurple = Color(0xFF6300FF);
   static const Color darkCharcoal = Color(0xFF1A1A1D);

@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// WebApi `InterestService.js`
 class InterestService {
   InterestService(this._dio);
 

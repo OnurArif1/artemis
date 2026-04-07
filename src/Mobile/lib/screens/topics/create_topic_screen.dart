@@ -18,7 +18,6 @@ String _categoryTitle(Map<String, dynamic> m) {
   return '${m['title'] ?? m['Title'] ?? m['name'] ?? m['Name'] ?? ''}'.trim();
 }
 
-/// Web `CreateTopic.vue`: konu oluşturma + isteğe bağlı oda.
 class CreateTopicScreen extends StatefulWidget {
   const CreateTopicScreen({super.key});
 

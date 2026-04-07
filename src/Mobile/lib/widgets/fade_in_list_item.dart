@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Liste satırlarında hafif gecikmeli fade + slide — indekse göre kademeli giriş.
 class FadeInListItem extends StatefulWidget {
   const FadeInListItem({
     super.key,

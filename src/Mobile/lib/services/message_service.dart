@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// WebApi `MessageService.js`
 class MessageService {
   MessageService(this._dio);
 

@@ -10,11 +10,9 @@ import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
 
-/// Web `CategoryList.vue` oluştur / düzenle / sil diyalogları.
 class CategoryEditorScreen extends StatefulWidget {
   const CategoryEditorScreen({super.key, this.category});
 
-  /// `null` → yeni kategori.
   final Map<String, dynamic>? category;
 
   @override

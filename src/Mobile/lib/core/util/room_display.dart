@@ -1,4 +1,3 @@
-/// Backend [RoomType]: None=0, Public=1, Private=2
 String roomTypeLabelTr(dynamic value) {
   final n = switch (value) {
     int v => v,

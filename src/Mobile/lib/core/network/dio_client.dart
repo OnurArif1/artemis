@@ -5,7 +5,6 @@ import '../constants/api_config.dart';
 typedef TokenReader = String? Function();
 typedef OnUnauthorized = void Function();
 
-/// WebApi `request.js` ile aynı mantık: Bearer token + 401’de oturumu kapat.
 class DioClient {
   DioClient({
     required TokenReader readToken,

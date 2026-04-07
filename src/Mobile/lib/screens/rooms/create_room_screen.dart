@@ -23,13 +23,11 @@ String _entityTitle(Map<String, dynamic> m) {
   return '${m['title'] ?? m['Title'] ?? m['topicTitle'] ?? ''}'.trim();
 }
 
-/// Bottom sheet’ten abonelik seçimi (`null` = Seçilmedi); kapatma ile karışmaması için sarmalayıcı.
 class _SubPick {
   const _SubPick(this.value);
   final int? value;
 }
 
-/// Web `CreateRoom.vue` ile aynı API alanları.
 class CreateRoomScreen extends StatefulWidget {
   const CreateRoomScreen({super.key});
 

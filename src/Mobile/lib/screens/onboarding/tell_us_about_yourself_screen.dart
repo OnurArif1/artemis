@@ -9,7 +9,6 @@ import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
 import 'onboarding_scaffold.dart';
 
-/// WebApi `TellUsAboutYourself.vue`
 class TellUsAboutYourselfScreen extends StatefulWidget {
   const TellUsAboutYourselfScreen({super.key});
 

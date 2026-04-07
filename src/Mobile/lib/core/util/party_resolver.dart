@@ -1,6 +1,5 @@
 import '../../services/app_services.dart';
 
-/// Web `TopicList.vue` `getCurrentUserPartyId` ile aynı mantık.
 Future<int?> resolveCurrentPartyId(AppServices app, String? email) async {
   if (email == null || email.trim().isEmpty) return null;
   final e = email.trim();

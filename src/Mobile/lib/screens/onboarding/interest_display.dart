@@ -1,4 +1,3 @@
-/// WebApi `SelectInterests.vue` ile uyumlu emoji ve Türkçe etiketler.
 String interestEmoji(String name) => _interestEmojis[name] ?? '⭐';
 
 String interestLabelTr(String name) => _interestLabels[name] ?? name;

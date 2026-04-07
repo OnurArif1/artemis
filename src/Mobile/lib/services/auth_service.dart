@@ -3,7 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/constants/api_config.dart';
 
-/// WebApi `Login.vue` ile aynı OAuth2 password grant + kayıt uçları.
 class AuthService {
   AuthService(this._prefs);
 
@@ -83,8 +82,6 @@ class AuthService {
     }
   }
 
-  /// Sadece hesap oluşturur. WebApi `Login.vue` `onRegister` ile aynı ilk adım.
-  /// Oturum açma çağrısı ayrı yapılmalı (`login` veya `AuthProvider.login`).
   Future<void> registerAccount({
     required String email,
     required String password,
@@ -124,7 +121,6 @@ class AuthService {
     return 'Giriş başarısız';
   }
 
-  /// Sunucu OAuth/OpenIddict İngilizce döndüğünde kullanıcıya Türkçe göster.
   String? _localizeOAuthLoginError(String? code, String message) {
     if (code == 'invalid_grant') return 'E-posta veya şifre hatalı.';
     return _localizeKnownLoginError(message);

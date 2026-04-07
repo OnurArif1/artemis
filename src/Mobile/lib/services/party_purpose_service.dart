@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// WebApi `PartyPurposeService.js`
 class PartyPurposeService {
   PartyPurposeService(this._dio);
 

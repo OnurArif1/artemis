@@ -9,7 +9,6 @@ import 'party_service.dart';
 import 'room_service.dart';
 import 'topic_service.dart';
 
-/// WebApi’deki servis sınıflarının tek giriş noktası.
 class AppServices {
   AppServices(Dio dio)
       : topics = TopicService(dio),

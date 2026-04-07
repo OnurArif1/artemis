@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 
-/// WebApi `TopicService.js`
 class TopicService {
   TopicService(this._dio);
 

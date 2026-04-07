@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../widgets/responsive_center.dart';
 
-/// WebApi auth onboarding sayfalarıyla uyumlu kart + gradient arka plan.
 class OnboardingScaffold extends StatelessWidget {
   const OnboardingScaffold({
     super.key,

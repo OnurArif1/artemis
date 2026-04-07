@@ -46,7 +46,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void reassemble() {
     super.reassemble();
-    // Hot reload: initState çalışmaz; üyeliği tekrar çek.
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadTier());
   }
 

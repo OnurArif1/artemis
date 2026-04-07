@@ -29,7 +29,6 @@ class _ConversationRow {
   final String? preview;
 }
 
-/// WhatsApp benzeri: bugün saat, dün "Dün", aksi kısa tarih.
 String _chatListTimeLabel(DateTime at) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
@@ -44,7 +43,6 @@ String _chatListTimeLabel(DateTime at) {
   return '${at.day.toString().padLeft(2, '0')}.${at.month.toString().padLeft(2, '0')}.${at.year}';
 }
 
-/// Kullanıcının mesaj/yorum yazdığı oda ve konu sohbetleri; dokununca doğrudan sohbet ekranı.
 class MyChatsScreen extends StatefulWidget {
   const MyChatsScreen({super.key});
 
@@ -53,6 +51,7 @@ class MyChatsScreen extends StatefulWidget {
 }
 
 class _MyChatsScreenState extends State<MyChatsScreen> {
+  final _search = TextEditingController();
   List<_ConversationRow> _items = [];
   bool _loading = true;
   bool _refreshing = false;
@@ -60,9 +59,20 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
 
   late final HomeTabController _homeTab;
 
+  List<_ConversationRow> _visibleChats() {
+    final q = _search.text.trim().toLowerCase();
+    if (q.isEmpty) return _items;
+    return _items.where((r) {
+      if (r.title.toLowerCase().contains(q)) return true;
+      final p = (r.preview ?? '').toLowerCase();
+      return p.contains(q);
+    }).toList();
+  }
+
   @override
   void initState() {
     super.initState();
+    _search.addListener(() => setState(() {}));
     _homeTab = context.read<HomeTabController>();
     _homeTab.addListener(_onHomeTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -75,6 +85,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
 
   @override
   void dispose() {
+    _search.dispose();
     _homeTab.removeListener(_onHomeTabChanged);
     super.dispose();
   }
@@ -86,7 +97,6 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
     }
   }
 
-  /// [fullScreenLoading]: ilk açılış / boş liste; aksi halde üstte ince çubuk.
   Future<void> _load({bool fullScreenLoading = true}) async {
     if (fullScreenLoading) {
       setState(() {
@@ -305,20 +315,59 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
         ),
       );
     }
+    final visible = _visibleChats();
+
     if (_items.isEmpty) {
       return ColoredBox(
         color: const Color(0xFFF0F2F5),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              'Henüz oda veya konu sohbetinde mesajınız yok.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey.shade700,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: TextField(
+                controller: _search,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: 'Sohbet ara…',
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  suffixIcon: _search.text.isNotEmpty
+                      ? IconButton(
+                          onPressed: () {
+                            _search.clear();
+                            setState(() {});
+                          },
+                          icon: const Icon(Icons.clear_rounded),
+                        )
+                      : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
                   ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+                  ),
+                ),
+              ),
             ),
-          ),
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    'Henüz oda veya konu sohbetinde mesajınız yok.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Colors.grey.shade700,
+                        ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -329,24 +378,70 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
       children: [
         if (_refreshing)
           const LinearProgressIndicator(minHeight: 2),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: TextField(
+            controller: _search,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'Sohbet ara…',
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: _search.text.isNotEmpty
+                  ? IconButton(
+                      onPressed: () {
+                        _search.clear();
+                        setState(() {});
+                      },
+                      icon: const Icon(Icons.clear_rounded),
+                    )
+                  : null,
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+              ),
+            ),
+          ),
+        ),
         Expanded(
           child: ColoredBox(
             color: Colors.white,
             child: RefreshIndicator(
               color: AppColors.purple500,
               onRefresh: () => _load(fullScreenLoading: false),
-              child: ListView.separated(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                itemCount: _items.length,
-                separatorBuilder: (_, __) => Divider(
-                  height: 1,
-                  thickness: 0.5,
-                  indent: dividerIndent,
-                  color: Colors.black.withValues(alpha: 0.08),
-                ),
-                itemBuilder: (context, i) => _buildChatRow(context, _items[i]),
-              ),
+              child: visible.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.only(top: 48),
+                      children: [
+                        Center(
+                          child: Text(
+                            'Aramanızla eşleşen sohbet yok.',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: Colors.grey.shade700,
+                                ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.separated(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      itemCount: visible.length,
+                      separatorBuilder: (_, __) => Divider(
+                        height: 1,
+                        thickness: 0.5,
+                        indent: dividerIndent,
+                        color: Colors.black.withValues(alpha: 0.08),
+                      ),
+                      itemBuilder: (context, i) => _buildChatRow(context, visible[i]),
+                    ),
             ),
           ),
         ),

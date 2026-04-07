@@ -2,7 +2,6 @@ import 'package:signalr_netcore/signalr_client.dart';
 
 import '../core/constants/api_config.dart';
 
-/// WebApi `SignalRService.js` ile aynı hub: `JoinRoom`, `ReceiveMessage`, `SendComment` vb.
 class ChatHubSession {
   ChatHubSession({required this.getAccessToken});
 
@@ -70,7 +69,6 @@ class ChatHubSession {
     try {
       await requireHub.invoke('LeaveRoom', args: [roomId]);
     } catch (_) {
-      // ignore
     }
   }
 
@@ -83,7 +81,6 @@ class ChatHubSession {
     try {
       await requireHub.invoke('LeaveTopic', args: [topicId]);
     } catch (_) {
-      // ignore
     }
   }
 
