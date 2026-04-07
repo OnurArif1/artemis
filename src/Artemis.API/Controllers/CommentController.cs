@@ -42,7 +42,7 @@ public class CommentController : ControllerBase
         {
             resultViewModel = await _commentService.Create(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -61,7 +61,7 @@ public class CommentController : ControllerBase
         {
             resultViewModel = await _commentService.Update(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -80,7 +80,7 @@ public class CommentController : ControllerBase
         {
             resultViewModel = await _commentService.Delete(id);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";

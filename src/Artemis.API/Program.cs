@@ -84,16 +84,13 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 
-// URL'ler ASPNETCORE_URLS environment variable'ından alınır
-// Docker ortamında docker-compose.yml'de ayarlanmıştır
-// Development ortamında launchSettings.json'dan alınır
 app.Run();
 
 async Task SeedInterestsAsync(ArtemisDbContext context)
 {
     if (await context.Interests.AnyAsync())
     {
-        return; // Seed data zaten var
+        return;
     }
 
     var interests = new List<Interest>

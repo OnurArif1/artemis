@@ -18,7 +18,6 @@ public class IdentityDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
         
-        // Identity tablolarını özelleştir
         builder.Entity<ApplicationUser>(entity =>
         {
             entity.ToTable(name: "Users");

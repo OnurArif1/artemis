@@ -6,11 +6,9 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
-# Copy csproj file and restore dependencies
 COPY ["src/Artemis.Gateway/Artemis.Gateway.csproj", "src/Artemis.Gateway/"]
 RUN dotnet restore "src/Artemis.Gateway/Artemis.Gateway.csproj" --verbosity quiet
 
-# Copy everything else and build
 COPY . .
 WORKDIR "/src/src/Artemis.Gateway"
 RUN dotnet build "Artemis.Gateway.csproj" -c ${BUILD_CONFIGURATION} -o /app/build

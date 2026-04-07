@@ -174,7 +174,6 @@ public class PartyService : IPartyService
         }
     }
 
-    /// <summary>E-posta kolonu veya (eski kayıtlar için) PartyName ile eşleşen party.</summary>
     private async Task<Party?> FindPartyForLoginEmailAsync(string email)
     {
         var trimmed = email.Trim();

@@ -42,7 +42,7 @@ public class PersonController : ControllerBase
         {
             resultViewModel = await _personService.Create(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -61,7 +61,7 @@ public class PersonController : ControllerBase
         {
             resultViewModel = await _personService.Update(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -80,7 +80,7 @@ public class PersonController : ControllerBase
         {
             resultViewModel = await _personService.Delete(id);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";

@@ -67,9 +67,6 @@ public class RoomService : IRoomService
         _artemisDbContext.SaveChanges();
     }
 
-    /// <summary>
-    /// Oda oluşturma yalnızca Gold ve Platinum üyeler içindir (PartyId veya UserEmail ile çözülen kayıt).
-    /// </summary>
     private async Task ValidateCreatorCanCreateRoomAsync(CreateOrUpdateRoomViewModel viewModel)
     {
         Party? party = null;
@@ -116,7 +113,6 @@ public class RoomService : IRoomService
 
         var partiesToAdd = new List<Party>();
 
-        // Çoklu davet desteği - PartyIds varsa onu kullan
         if (viewModel.PartyIds != null && viewModel.PartyIds.Any())
         {
             var existingPartyIds = room.Parties.Select(p => p.Id).ToHashSet();
@@ -131,7 +127,6 @@ public class RoomService : IRoomService
                 partiesToAdd.AddRange(parties);
             }
         }
-        // Backward compatibility - tek party ID varsa onu kullan
         else if (viewModel.PartyId > 0)
         {
             var existingPartyIds = room.Parties.Select(p => p.Id).ToHashSet();
@@ -180,7 +175,6 @@ public class RoomService : IRoomService
             .AsSplitQuery() 
             .ToListAsync();  
 
-        // Kullanıcının Party'sini ve SubscriptionType'ını al (eğer email verilmişse)
         Party? userParty = null;
         if (!string.IsNullOrWhiteSpace(filterViewModel.UserEmail))
         {
@@ -194,7 +188,6 @@ public class RoomService : IRoomService
             bool canAccess = true;
             bool subscriptionAccessDenied = false;
 
-            // Kullanıcı konumu verilmişse mesafe hesapla ve erişim kontrolü yap
             if (filterViewModel.UserLatitude.HasValue && filterViewModel.UserLongitude.HasValue)
             {
                 distance = CalculateDistance(
@@ -204,25 +197,21 @@ public class RoomService : IRoomService
                     r.LocationX
                 );
 
-                // RoomRange değeri varsa kontrol et
                 if (r.RoomRange.HasValue)
                 {
                     canAccess = distance <= r.RoomRange.Value;
                 }
-                // RoomRange null ise herhangi bir mesafe kısıtlaması yok
             }
 
-            // SubscriptionType kontrolü
             if (r.SubscriptionType.HasValue && userParty != null)
             {
                 var roomSubscriptionType = r.SubscriptionType.Value;
                 var userSubscriptionType = userParty.SubscriptionType ?? SubscriptionType.None;
 
-                // Kullanıcının SubscriptionType'ı room'dan düşükse erişim yok
                 if ((int)userSubscriptionType < (int)roomSubscriptionType)
                 {
                     subscriptionAccessDenied = true;
-                    canAccess = false; // Subscription kontrolü başarısızsa erişim yok
+                    canAccess = false;
                 }
             }
 
@@ -321,9 +310,6 @@ public class RoomService : IRoomService
         }
     }
 
-    /// <summary>
-    /// İki koordinat arasındaki mesafeyi kilometre cinsinden hesaplar (Haversine formülü)
-    /// </summary>
     private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
         const double R = 6371; // Dünya'nın yarıçapı (km)

@@ -30,7 +30,7 @@ public class SubscribeController : ControllerBase
         {
             resultViewModel = await _subscribeService.Create(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -49,7 +49,7 @@ public class SubscribeController : ControllerBase
         {
             resultViewModel = await _subscribeService.Update(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -68,7 +68,7 @@ public class SubscribeController : ControllerBase
         {
             resultViewModel = await _subscribeService.Delete(id);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";

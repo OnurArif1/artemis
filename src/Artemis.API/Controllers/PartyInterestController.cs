@@ -56,34 +56,4 @@ public class PartyInterestController : ControllerBase
             return StatusCode(500, new { message = "An error occurred: " + ex.Message });
         }
     }
-
-    // [HttpGet("my-interests")]
-    // [Authorize]
-    // public async Task<IActionResult> GetMyInterestsAsync()
-    // {
-    //     // Get user's email from JWT token
-    //     var email = User.FindFirstValue(ClaimTypes.Email) ?? User.FindFirstValue("email");
-    //     if (string.IsNullOrEmpty(email))
-    //     {
-    //         return Unauthorized(new { message = "User information not found." });
-    //     }
-
-    //     try
-    //     {
-    //         var interests = await _partyInterestService.GetMyInterestsAsync(email);
-    //         return Ok(interests);
-    //     }
-    //     catch (ArgumentException ex)
-    //     {
-    //         return BadRequest(new { message = ex.Message });
-    //     }
-    //     catch (InvalidOperationException ex)
-    //     {
-    //         return NotFound(new { message = ex.Message });
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         return StatusCode(500, new { message = "An error occurred: " + ex.Message });
-    //     }
-    // }
 }

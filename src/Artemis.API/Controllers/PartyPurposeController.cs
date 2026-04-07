@@ -40,7 +40,6 @@ public class PartyPurposeController : ControllerBase
 
         try
         {
-            // Convert int list to enum list
             var purposeTypes = request.PurposeTypes
                 .Select(pt => (PartyPurposeType)pt)
                 .ToList();

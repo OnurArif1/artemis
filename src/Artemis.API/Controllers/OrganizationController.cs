@@ -44,7 +44,7 @@ public class OrganizationController : ControllerBase
         {
             resultViewModel = await _organizationService.Create(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -63,7 +63,7 @@ public class OrganizationController : ControllerBase
         {
             resultViewModel = await _organizationService.Update(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -82,7 +82,7 @@ public class OrganizationController : ControllerBase
         {
             resultViewModel = await _organizationService.Delete(id);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";

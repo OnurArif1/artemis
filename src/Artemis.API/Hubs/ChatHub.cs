@@ -65,9 +65,7 @@ public class ChatHub : Hub
                 }
             }
             catch
-            {
-                // do nothing
-            }
+            {}
 
             await Clients.Group($"Room_{roomId}").SendAsync("ReceiveMessage", partyId, partyName, message, roomId);
         }
@@ -116,9 +114,7 @@ public class ChatHub : Hub
                 }
             }
             catch
-            {
-                // do nothing
-            }
+            {}
 
             await Clients.Group($"Topic_{topicId}").SendAsync("ReceiveComment", partyId, partyName, message, topicId);
         }

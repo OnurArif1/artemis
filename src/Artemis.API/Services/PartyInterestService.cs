@@ -26,7 +26,6 @@ public class PartyInterestService : IPartyInterestService
             throw new ArgumentException("At least one interest must be selected.", nameof(interestIds));
         }
 
-        // Find Party by email
         var party = await _artemisDbContext.Parties
             .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
 
@@ -35,14 +34,12 @@ public class PartyInterestService : IPartyInterestService
             throw new InvalidOperationException("User not found.");
         }
 
-        // Remove existing interests
         var existingPartyInterests = await _artemisDbContext.PartyInterests
             .Where(pi => pi.PartyId == party.Id)
             .ToListAsync();
 
         _artemisDbContext.PartyInterests.RemoveRange(existingPartyInterests);
 
-        // Add new interests
         var partyInterests = interestIds.Select(interestId => new PartyInterest
         {
             PartyId = party.Id,
@@ -61,7 +58,6 @@ public class PartyInterestService : IPartyInterestService
             throw new ArgumentException("Email is required.", nameof(email));
         }
 
-        // Find Party by email
         var party = await _artemisDbContext.Parties
             .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
 
@@ -70,7 +66,6 @@ public class PartyInterestService : IPartyInterestService
             throw new InvalidOperationException("User not found.");
         }
 
-        // Get user's interests
         var interests = await _artemisDbContext.PartyInterests
             .Where(pi => pi.PartyId == party.Id)
             .Include(pi => pi.Interest)

@@ -27,7 +27,6 @@ public class PartyPurposeService : IPartyPurposeService
             throw new ArgumentException("At least one purpose must be selected.", nameof(purposeTypes));
         }
 
-        // Filter out NotSet
         var validPurposeTypes = purposeTypes.Where(pt => pt != PartyPurposeType.NotSet).ToList();
         
         if (!validPurposeTypes.Any())
@@ -35,7 +34,6 @@ public class PartyPurposeService : IPartyPurposeService
             throw new ArgumentException("At least one valid purpose must be selected.", nameof(purposeTypes));
         }
 
-        // Find Party by email
         var party = await _artemisDbContext.Parties
             .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
 
@@ -44,14 +42,12 @@ public class PartyPurposeService : IPartyPurposeService
             throw new InvalidOperationException("User not found.");
         }
 
-        // Remove existing purposes
         var existingPartyPurposes = await _artemisDbContext.PartyPurposes
             .Where(pp => pp.PartyId == party.Id)
             .ToListAsync();
 
         _artemisDbContext.PartyPurposes.RemoveRange(existingPartyPurposes);
 
-        // Add new purposes
         var partyPurposes = validPurposeTypes.Select(purposeType => new PartyPurpose
         {
             PartyId = party.Id,

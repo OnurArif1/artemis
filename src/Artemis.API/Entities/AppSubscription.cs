@@ -1,4 +1,3 @@
-
 namespace Artemis.API.Entities;
 
 public class AppSubscription : BaseEntity, IChangingDate

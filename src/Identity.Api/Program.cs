@@ -14,12 +14,10 @@ using Artemis.API.Entities.Enums;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ConnectionString'i configuration'dan oku
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 var artemisConnectionString = builder.Configuration.GetConnectionString("ArtemisConnection") 
     ?? "Host=65.21.157.56;Port=5432;Database=artemisdb;Username=postgres;Password=xct41troamber65";
 
-// Identity DbContext
 builder.Services.AddDbContext<IdentityDbContext>(options =>
 {
     options.UseNpgsql(connectionString);
@@ -31,7 +29,6 @@ builder.Services.AddDbContext<IdentityDbContext>(options =>
     }
 });
 
-// Artemis DbContext (Party oluşturmak için)
 builder.Services.AddDbContext<ArtemisDbContext>(options =>
 {
     options.UseNpgsql(artemisConnectionString);
@@ -43,7 +40,6 @@ builder.Services.AddDbContext<ArtemisDbContext>(options =>
     }
 });
 
-// Identity Services
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequireDigit = true;
@@ -56,7 +52,6 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<IdentityDbContext>()
 .AddDefaultTokenProviders();
 
-// Identity Server
 builder.Services.AddIdentityServer(options =>
 {
     options.Events.RaiseErrorEvents = true;
@@ -75,10 +70,8 @@ builder.Services.AddIdentityServer(options =>
 })
 .AddAspNetIdentity<ApplicationUser>();
 
-// Profile Service (custom claims için)
 builder.Services.AddTransient<IProfileService, ProfileService>();
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("DevCors", policy =>
@@ -91,56 +84,44 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Controllers
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
-// Development ortamında veritabanı migrasyonlarını otomatik uygula
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     
-    // Identity DbContext
     var identityContext = services.GetRequiredService<IdentityDbContext>();
     identityContext.Database.Migrate();
     
-    // Identity Server DbContexts
     var configContext = services.GetRequiredService<ConfigurationDbContext>();
     configContext.Database.Migrate();
     
     var persistedGrantContext = services.GetRequiredService<PersistedGrantDbContext>();
     persistedGrantContext.Database.Migrate();
     
-    // Seed data
     await SeedDataAsync(services);
 }
 
-// HTTPS yönlendirme
 app.UseHttpsRedirection();
 
-// CORS
 app.UseCors("DevCors");
 
-// Routing
 app.UseRouting();
 
-// Identity Server
 app.UseIdentityServer();
 
-// Controllers
 app.MapControllers();
 
 app.Run();
 
-// Seed data method
 async Task SeedDataAsync(IServiceProvider serviceProvider)
 {
     var configContext = serviceProvider.GetRequiredService<ConfigurationDbContext>();
     var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-    // Seed Identity Resources
     if (!configContext.IdentityResources.Any())
     {
         foreach (var resource in IdentityConfiguration.IdentityResources)
@@ -150,7 +131,6 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
         await configContext.SaveChangesAsync();
     }
 
-    // Seed API Scopes
     if (!configContext.ApiScopes.Any())
     {
         foreach (var scope in IdentityConfiguration.ApiScopes)
@@ -160,7 +140,6 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
         await configContext.SaveChangesAsync();
     }
 
-    // Seed API Resources
     if (!configContext.ApiResources.Any())
     {
         foreach (var resource in IdentityConfiguration.ApiResources)
@@ -170,7 +149,6 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
         await configContext.SaveChangesAsync();
     }
 
-    // Seed Clients
     var existingClient = await configContext.Clients.FirstOrDefaultAsync(c => c.ClientId == "artemis.client");
     if (existingClient == null)
     {
@@ -182,17 +160,14 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
     }
     else
     {
-        // Mevcut client'ın CORS origin'lerini güncelle
         var configClient = IdentityConfiguration.Clients.FirstOrDefault(c => c.ClientId == "artemis.client");
         if (configClient != null && configClient.AllowedCorsOrigins != null)
         {
-            // Mevcut CORS origin'lerini temizle
             var existingCorsOrigins = configContext.Set<Duende.IdentityServer.EntityFramework.Entities.ClientCorsOrigin>()
                 .Where(c => c.ClientId == existingClient.Id)
                 .ToList();
             configContext.Set<Duende.IdentityServer.EntityFramework.Entities.ClientCorsOrigin>().RemoveRange(existingCorsOrigins);
             
-            // Yeni CORS origin'lerini ekle
             foreach (var origin in configClient.AllowedCorsOrigins)
             {
                 configContext.Set<Duende.IdentityServer.EntityFramework.Entities.ClientCorsOrigin>().Add(
@@ -206,7 +181,6 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
         }
     }
 
-    // Seed Roles
     if (!await roleManager.RoleExistsAsync("Admin"))
     {
         await roleManager.CreateAsync(new IdentityRole("Admin"));
@@ -217,7 +191,6 @@ async Task SeedDataAsync(IServiceProvider serviceProvider)
         await roleManager.CreateAsync(new IdentityRole("User"));
     }
 
-    // Seed Admin User
     var adminUser = await userManager.FindByEmailAsync("admin@artemis.com");
     if (adminUser == null)
     {

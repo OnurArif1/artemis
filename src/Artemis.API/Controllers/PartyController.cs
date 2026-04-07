@@ -37,10 +37,6 @@ public class PartyController : ControllerBase
         return Ok();
     }
 
-    /// <summary>
-    /// `update-profile` ile aynı model: e-posta + paket. JWT doğrulaması yerelde sık başarısız olduğu için
-    /// (Identity authority URL) istemci oturumdaki e-postayı gönderir.
-    /// </summary>
     [HttpPost("update-subscription")]
     public async Task<IActionResult> UpdateSubscriptionAsync([FromBody] UpdateSubscriptionRequest? request)
     {
@@ -139,7 +135,6 @@ public class UpdateSubscriptionRequest
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 
-    /// <summary>0=None, 1=Silver, 2=Gold, 3=Platinum</summary>
     [JsonPropertyName("subscriptionType")]
     public int SubscriptionType { get; set; }
 }

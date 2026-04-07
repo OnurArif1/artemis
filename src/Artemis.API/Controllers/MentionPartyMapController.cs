@@ -43,7 +43,7 @@ public class MentionPartyMapController : ControllerBase
         {
             resultViewModel = await _mentionPartyMapService.Create(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -62,7 +62,7 @@ public class MentionPartyMapController : ControllerBase
         {
             resultViewModel = await _mentionPartyMapService.Update(viewModel);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
@@ -81,7 +81,7 @@ public class MentionPartyMapController : ControllerBase
         {
             resultViewModel = await _mentionPartyMapService.Delete(id);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             resultViewModel.IsSuccess = false;
             resultViewModel.ExceptionMessage = $"An unknown error occurred. Exception Message: {ex.Message}";
