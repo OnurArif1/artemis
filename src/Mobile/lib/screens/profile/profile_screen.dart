@@ -43,9 +43,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadTier());
   }
 
+  @override
+  void reassemble() {
+    super.reassemble();
+    // Hot reload: initState çalışmaz; üyeliği tekrar çek.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadTier());
+  }
+
   Future<void> _loadTier() async {
     final token = context.read<AuthService>().token;
-    final email = emailFromAccessToken(token) ?? _emailFromToken(token);
+    final email = emailFromAccessToken(token);
     if (email == null || email.isEmpty) {
       if (mounted) {
         setState(() {
@@ -95,9 +102,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (picked == null || !mounted) return;
 
-    final email = emailFromAccessToken(token) ?? _emailFromToken(token);
+    final email = emailFromAccessToken(token);
     if (email == null || email.isEmpty) {
-      showAppSnackBar(context, 'E-posta bulunamadı.', error: true);
+      showAppSnackBar(
+        context,
+        'Token’da e-posta yok. Çıkış yapıp tekrar giriş deneyin.',
+        error: true,
+      );
       return;
     }
 
@@ -135,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     context.watch<AuthProvider>();
     final token = context.read<AuthService>().token;
-    final email = _emailFromToken(token);
+    final email = emailFromAccessToken(token) ?? _emailFromToken(token);
     final jwtTier = tryParseSubscriptionTypeFromJwt(token);
     final displayTier = _partyTier ?? jwtTier;
     final rail = MediaQuery.sizeOf(context).width >= 720;
@@ -207,13 +218,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           subscriptionType: displayTier,
                           compact: false,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          subscriptionTierLabelTr(displayTier),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
                       ],
                     ),
                   ],
@@ -228,7 +232,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.workspace_premium_rounded, color: AppColors.purple700),
+                  leading: Icon(
+                    _tierLoading
+                        ? Icons.workspace_premium_rounded
+                        : switch (displayTier) {
+                            3 => Icons.diamond_rounded,
+                            2 => Icons.workspace_premium_rounded,
+                            1 => Icons.military_tech_rounded,
+                            0 => Icons.groups_rounded,
+                            _ => Icons.workspace_premium_rounded,
+                          },
+                    color: _tierLoading
+                        ? Colors.grey.shade400
+                        : subscriptionTierColor(displayTier),
+                  ),
                   title: const Text('Üyelik paketini değiştir'),
                   subtitle: Text(
                     _tierLoading

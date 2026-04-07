@@ -1,9 +1,13 @@
 /// WebApi bazen `resultViewModels`, bazen `resultViewmodels` döndürüyor.
+/// Party lookup cevabı `viewModels` kullanır (`ResultPartyLookupViewModel`).
 List<dynamic> extractItems(dynamic data) {
   if (data is List) return data;
   if (data is! Map) return const [];
   final m = Map<String, dynamic>.from(data);
-  final a = m['resultViewModels'] ?? m['resultViewmodels'];
+  final a = m['resultViewModels'] ??
+      m['resultViewmodels'] ??
+      m['viewModels'] ??
+      m['ViewModels'];
   if (a is List) return a;
   return const [];
 }
@@ -11,7 +15,8 @@ List<dynamic> extractItems(dynamic data) {
 int extractCount(dynamic data) {
   if (data is List) return data.length;
   if (data is! Map) return 0;
-  final c = Map<String, dynamic>.from(data)['count'];
+  final m = Map<String, dynamic>.from(data);
+  final c = m['count'] ?? m['Count'];
   if (c is int) return c;
   if (c is num) return c.toInt();
   return extractItems(data).length;

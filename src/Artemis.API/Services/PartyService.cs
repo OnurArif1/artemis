@@ -82,13 +82,14 @@ public class PartyService : IPartyService
             throw new ArgumentException("Email is required.", nameof(email));
         }
 
-        var party = await _artemisDbContext.Parties
-            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
+        var party = await FindPartyForLoginEmailAsync(email);
 
         if (party == null)
         {
             throw new InvalidOperationException("User not found.");
         }
+
+        EnsurePartyEmail(party, email);
 
         party.PartyName = partyName;
         party.Description = description;
@@ -102,13 +103,14 @@ public class PartyService : IPartyService
             throw new ArgumentException("Email is required.", nameof(email));
         }
 
-        var party = await _artemisDbContext.Parties
-            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
+        var party = await FindPartyForLoginEmailAsync(email);
 
         if (party == null)
         {
             throw new InvalidOperationException("User not found.");
         }
+
+        EnsurePartyEmail(party, email);
 
         party.SubscriptionType = subscriptionType;
         await _artemisDbContext.SaveChangesAsync();
@@ -170,6 +172,34 @@ public class PartyService : IPartyService
             _artemisDbContext.Parties.Remove(party);
             await _artemisDbContext.SaveChangesAsync();
         }
+    }
+
+    /// <summary>E-posta kolonu veya (eski kayıtlar için) PartyName ile eşleşen party.</summary>
+    private async Task<Party?> FindPartyForLoginEmailAsync(string email)
+    {
+        var trimmed = email.Trim();
+        var lowered = trimmed.ToLowerInvariant();
+
+        var party = await _artemisDbContext.Parties
+            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == lowered);
+
+        if (party != null)
+        {
+            return party;
+        }
+
+        return await _artemisDbContext.Parties
+            .FirstOrDefaultAsync(p => p.PartyName.ToLower() == lowered);
+    }
+
+    private static void EnsurePartyEmail(Party party, string email)
+    {
+        if (!string.IsNullOrWhiteSpace(party.Email))
+        {
+            return;
+        }
+
+        party.Email = email.Trim();
     }
 
 }
