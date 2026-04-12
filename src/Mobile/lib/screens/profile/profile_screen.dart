@@ -81,7 +81,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (ctx) => SimpleDialog(
         title: const Text('Üyelik paketi'),
-        children: [0, 1, 2, 3].map((t) {
+        children: [1, 2, 3].map((t) {
           return SimpleDialogOption(
             onPressed: () => Navigator.pop(ctx, t),
             child: Padding(
