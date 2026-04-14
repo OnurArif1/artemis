@@ -96,7 +96,7 @@ class _CategoryEditorScreenState extends State<CategoryEditorScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.purple600),
             child: const Text('Sil'),
           ),
         ],
