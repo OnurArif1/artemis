@@ -10,7 +10,6 @@ import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
 import '../../widgets/auth_breakpoint.dart';
 import '../../widgets/gossip_brand.dart';
-import '../../widgets/responsive_center.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -191,23 +190,45 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           const _LoginBackdrop(),
           SafeArea(
-            child: ResponsiveCenter(
-              maxWidth: 400,
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 8),
-                  const GossipBrand(),
-                  const SizedBox(height: 28),
-                  _AuthChrome(
-                    registerMode: _registerMode,
-                    onModeChanged: _setMode,
-                    loading: _loading,
-                    child: form,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 400),
+                      child: const GossipBrand(),
+                    ),
                   ),
-                ],
-              ),
+                ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    const insets = EdgeInsets.fromLTRB(20, 12, 20, 24);
+                    final minH = constraints.maxHeight - insets.vertical;
+                    return SingleChildScrollView(
+                      padding: insets,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: minH > 0 ? minH : 0,
+                        ),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 400),
+                            child: _AuthChrome(
+                              registerMode: _registerMode,
+                              onModeChanged: _setMode,
+                              loading: _loading,
+                              child: form,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ],
