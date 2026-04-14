@@ -30,7 +30,6 @@ class _TopicListScreenState extends State<TopicListScreen> {
   bool _loading = true;
   String? _error;
   final int _pageSize = 20;
-  int _total = 0;
 
   int? _mySubscriptionType;
   bool _tierLoading = true;
@@ -96,12 +95,12 @@ class _TopicListScreenState extends State<TopicListScreen> {
       final data = await svc.getList({
         'pageIndex': 1,
         'pageSize': _pageSize,
+        'sortByUpvoteDesc': true,
         if (_search.text.trim().isNotEmpty) 'title': _search.text.trim(),
       });
       if (!mounted) return;
       setState(() {
         _items = asMapList(data);
-        _total = extractCount(data);
         _loading = false;
       });
     } on DioException catch (e) {
@@ -125,7 +124,9 @@ class _TopicListScreenState extends State<TopicListScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text('Konular${_total > 0 ? ' ($_total)' : ''}'),
+        title: Text(
+          'Konular${_items.isNotEmpty ? ' (${_items.length})' : ''}',
+        ),
         automaticallyImplyLeading: !rail,
         actions: [
           IconButton(
