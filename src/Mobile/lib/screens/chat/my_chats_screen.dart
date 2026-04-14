@@ -57,6 +57,10 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
   bool _loading = true;
   bool _refreshing = false;
   String? _error;
+  final Map<int, String> _roomTitlesCache = {};
+  final Map<int, String> _topicTitlesCache = {};
+  DateTime? _lastLoadedAt;
+  static const _minAutoReloadGap = Duration(seconds: 20);
 
   late final HomeTabController _homeTab;
 
@@ -98,7 +102,76 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
     }
   }
 
-  Future<void> _load({bool fullScreenLoading = true}) async {
+  List<_ConversationRow> _composeRows({
+    required List<Map<String, dynamic>> msgMaps,
+    required List<Map<String, dynamic>> commentMaps,
+  }) {
+    final roomByLast = <int, DateTime>{};
+    final roomPreview = <int, String>{};
+    for (final m in msgMaps) {
+      final rid = m['roomId'] ?? m['RoomId'];
+      final ri = rid is int ? rid : int.tryParse('$rid');
+      if (ri == null || ri <= 0) continue;
+      final cd = m['createDate'] ?? m['CreateDate'];
+      final at = DateTime.tryParse('$cd') ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final prev = roomByLast[ri];
+      if (prev == null || at.isAfter(prev)) {
+        roomByLast[ri] = at;
+        final c = '${m['content'] ?? m['Content'] ?? ''}'.trim();
+        if (c.isNotEmpty) roomPreview[ri] = c;
+      }
+    }
+
+    final topicByLast = <int, DateTime>{};
+    final topicPreview = <int, String>{};
+    for (final m in commentMaps) {
+      final tid = m['topicId'] ?? m['TopicId'];
+      final ti = tid is int ? tid : int.tryParse('$tid');
+      if (ti == null || ti <= 0) continue;
+      final cd = m['createDate'] ?? m['CreateDate'];
+      final at = DateTime.tryParse('$cd') ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final prev = topicByLast[ti];
+      if (prev == null || at.isAfter(prev)) {
+        topicByLast[ti] = at;
+        final c = '${m['content'] ?? m['Content'] ?? ''}'.trim();
+        if (c.isNotEmpty) topicPreview[ti] = c;
+      }
+    }
+
+    final rows = <_ConversationRow>[];
+    for (final e in roomByLast.entries) {
+      rows.add(
+        _ConversationRow(
+          isRoom: true,
+          id: e.key,
+          title: _roomTitlesCache[e.key] ?? 'Oda #${e.key}',
+          lastAt: e.value,
+          preview: roomPreview[e.key],
+        ),
+      );
+    }
+    for (final e in topicByLast.entries) {
+      rows.add(
+        _ConversationRow(
+          isRoom: false,
+          id: e.key,
+          title: _topicTitlesCache[e.key] ?? 'Konu #${e.key}',
+          lastAt: e.value,
+          preview: topicPreview[e.key],
+        ),
+      );
+    }
+    rows.sort((a, b) => b.lastAt.compareTo(a.lastAt));
+    return rows;
+  }
+
+  Future<void> _load({bool fullScreenLoading = true, bool force = false}) async {
+    if (!force &&
+        _items.isNotEmpty &&
+        _lastLoadedAt != null &&
+        DateTime.now().difference(_lastLoadedAt!) < _minAutoReloadGap) {
+      return;
+    }
     if (fullScreenLoading) {
       setState(() {
         _loading = true;
@@ -128,105 +201,80 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
         return;
       }
 
+      // Önce sadece kullanıcının kendi mesaj/yorumları: sohbet listesi hızlı görünsün.
       final results = await Future.wait([
         app.messages.getList({
           'pageIndex': 1,
-          'pageSize': 500,
+          'pageSize': 300,
           'partyId': partyId,
         }),
         app.comments.getList({
           'pageIndex': 1,
-          'pageSize': 500,
+          'pageSize': 300,
           'partyId': partyId,
         }),
-        app.rooms.getList({'pageIndex': 1, 'pageSize': 1000}),
-        app.topics.getList({'pageIndex': 1, 'pageSize': 1000}),
       ]);
 
       final msgMaps = asMapList(results[0]);
       final commentMaps = asMapList(results[1]);
-      final roomMaps = asMapList(results[2]);
-      final topicMaps = asMapList(results[3]);
-
-      final roomTitles = <int, String>{};
-      for (final r in roomMaps) {
-        final id = entityId(r);
-        if (id == null) continue;
-        final t = entityString(r, ['title', 'Title']);
-        if (t != null && t.isNotEmpty) roomTitles[id] = t;
-      }
-
-      final topicTitles = <int, String>{};
-      for (final t in topicMaps) {
-        final id = entityId(t);
-        if (id == null) continue;
-        final title = entityString(t, ['title', 'Title']);
-        if (title != null && title.isNotEmpty) topicTitles[id] = title;
-      }
-
-      final roomByLast = <int, DateTime>{};
-      final roomPreview = <int, String>{};
-      for (final m in msgMaps) {
-        final rid = m['roomId'] ?? m['RoomId'];
-        final ri = rid is int ? rid : int.tryParse('$rid');
-        if (ri == null || ri <= 0) continue;
-        final cd = m['createDate'] ?? m['CreateDate'];
-        final at = DateTime.tryParse('$cd') ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final prev = roomByLast[ri];
-        if (prev == null || at.isAfter(prev)) {
-          roomByLast[ri] = at;
-          final c = '${m['content'] ?? m['Content'] ?? ''}'.trim();
-          if (c.isNotEmpty) roomPreview[ri] = c;
-        }
-      }
-
-      final topicByLast = <int, DateTime>{};
-      final topicPreview = <int, String>{};
-      for (final m in commentMaps) {
-        final tid = m['topicId'] ?? m['TopicId'];
-        final ti = tid is int ? tid : int.tryParse('$tid');
-        if (ti == null || ti <= 0) continue;
-        final cd = m['createDate'] ?? m['CreateDate'];
-        final at = DateTime.tryParse('$cd') ?? DateTime.fromMillisecondsSinceEpoch(0);
-        final prev = topicByLast[ti];
-        if (prev == null || at.isAfter(prev)) {
-          topicByLast[ti] = at;
-          final c = '${m['content'] ?? m['Content'] ?? ''}'.trim();
-          if (c.isNotEmpty) topicPreview[ti] = c;
-        }
-      }
-
-      final rows = <_ConversationRow>[];
-      for (final e in roomByLast.entries) {
-        rows.add(
-          _ConversationRow(
-            isRoom: true,
-            id: e.key,
-            title: roomTitles[e.key] ?? 'Oda #${e.key}',
-            lastAt: e.value,
-            preview: roomPreview[e.key],
-          ),
-        );
-      }
-      for (final e in topicByLast.entries) {
-        rows.add(
-          _ConversationRow(
-            isRoom: false,
-            id: e.key,
-            title: topicTitles[e.key] ?? 'Konu #${e.key}',
-            lastAt: e.value,
-            preview: topicPreview[e.key],
-          ),
-        );
-      }
-      rows.sort((a, b) => b.lastAt.compareTo(a.lastAt));
+      final rows = _composeRows(msgMaps: msgMaps, commentMaps: commentMaps);
 
       if (!mounted) return;
       setState(() {
         _items = rows;
         _loading = false;
         _refreshing = false;
+        _lastLoadedAt = DateTime.now();
       });
+
+      final neededRoomIds = <int>{
+        for (final m in msgMaps)
+          ((m['roomId'] ?? m['RoomId']) is int
+                  ? (m['roomId'] ?? m['RoomId']) as int
+                  : int.tryParse('${m['roomId'] ?? m['RoomId']}')) ??
+              -1,
+      }..removeWhere((id) => id <= 0 || _roomTitlesCache.containsKey(id));
+      final neededTopicIds = <int>{
+        for (final m in commentMaps)
+          ((m['topicId'] ?? m['TopicId']) is int
+                  ? (m['topicId'] ?? m['TopicId']) as int
+                  : int.tryParse('${m['topicId'] ?? m['TopicId']}')) ??
+              -1,
+      }..removeWhere((id) => id <= 0 || _topicTitlesCache.containsKey(id));
+
+      // Eksik başlıklar varsa arka planda tamamla; ilk çizimi bekletme.
+      if (neededRoomIds.isNotEmpty || neededTopicIds.isNotEmpty) {
+        final titlePayloads = await Future.wait([
+          if (neededRoomIds.isNotEmpty) app.rooms.getList({'pageIndex': 1, 'pageSize': 1000}),
+          if (neededTopicIds.isNotEmpty) app.topics.getList({'pageIndex': 1, 'pageSize': 1000}),
+        ]);
+        if (!mounted) return;
+
+        var p = 0;
+        if (neededRoomIds.isNotEmpty) {
+          final roomMaps = asMapList(titlePayloads[p++]);
+          for (final r in roomMaps) {
+            final id = entityId(r);
+            if (id == null || !neededRoomIds.contains(id)) continue;
+            final t = entityString(r, ['title', 'Title']);
+            if (t != null && t.isNotEmpty) _roomTitlesCache[id] = t;
+          }
+        }
+        if (neededTopicIds.isNotEmpty) {
+          final topicMaps = asMapList(titlePayloads[p]);
+          for (final t in topicMaps) {
+            final id = entityId(t);
+            if (id == null || !neededTopicIds.contains(id)) continue;
+            final title = entityString(t, ['title', 'Title']);
+            if (title != null && title.isNotEmpty) _topicTitlesCache[id] = title;
+          }
+        }
+
+        if (!mounted) return;
+        setState(() {
+          _items = _composeRows(msgMaps: msgMaps, commentMaps: commentMaps);
+        });
+      }
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -265,7 +313,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
       );
     }
     if (!mounted) return;
-    _load(fullScreenLoading: false);
+    _load(fullScreenLoading: false, force: true);
   }
 
   @override
@@ -279,7 +327,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
         automaticallyImplyLeading: !rail,
         actions: [
           IconButton(
-            onPressed: (_loading || _refreshing) ? null : () => _load(fullScreenLoading: _items.isEmpty),
+            onPressed: (_loading || _refreshing) ? null : () => _load(fullScreenLoading: _items.isEmpty, force: true),
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
@@ -293,7 +341,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
                     builder: (_) => const StartChatPickerScreen(),
                   ),
                 );
-                if (mounted) _load(fullScreenLoading: false);
+                if (mounted) _load(fullScreenLoading: false, force: true);
               },
         backgroundColor: AppColors.purple600,
         child: const Icon(Icons.add_rounded),
@@ -321,7 +369,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
                 Text(_error!, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
                 FilledButton(
-                  onPressed: () => _load(fullScreenLoading: true),
+                  onPressed: () => _load(fullScreenLoading: true, force: true),
                   child: const Text('Yeniden dene'),
                 ),
               ],
@@ -428,7 +476,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
             color: Colors.white,
             child: RefreshIndicator(
               color: AppColors.purple500,
-              onRefresh: () => _load(fullScreenLoading: false),
+              onRefresh: () => _load(fullScreenLoading: false, force: true),
               child: visible.isEmpty
                   ? ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
