@@ -18,7 +18,6 @@ import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
-import '../topics/topic_detail_screen.dart';
 import 'create_room_screen.dart';
 import 'room_detail_screen.dart';
 import 'room_list_screen.dart';
@@ -68,7 +67,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   late final HomeTabController _homeTab;
 
   List<Map<String, dynamic>> _rooms = [];
-  List<Map<String, dynamic>> _topics = [];
   bool _loading = true;
   String? _error;
 
@@ -79,10 +77,8 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
 
   _MapViewMode _mode = _MapViewMode.city;
   CombinedRegion? _detailRegion;
-  bool _detailRoomsOnly = true;
 
   int _liveCount = 0;
-  int _topicCount = 0;
   int? _pendingFocusRoomId;
 
   int? _mySubscriptionType;
@@ -298,19 +294,14 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
 
     try {
       final svc = context.read<AppServices>();
-      final results = await Future.wait([
-        svc.rooms.getList(roomFilter),
-        svc.topics.getList({'pageIndex': 1, 'pageSize': 1000}),
-      ]);
+      final raw = await svc.rooms.getList(roomFilter);
 
       if (!mounted) return;
 
-      final rooms = asMapList(results[0]);
-      final topics = asMapList(results[1]);
+      final rooms = asMapList(raw);
 
       setState(() {
         _rooms = rooms;
-        _topics = topics;
         _loading = false;
         if (hadLocation && _userLat != null && _userLng != null) {
           _mode = _MapViewMode.nearby;
@@ -346,13 +337,10 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     if (_mode == _MapViewMode.nearby &&
         _userLat != null &&
         _userLng != null) {
-      final nr = filterWithinKm(_rooms, _userLat!, _userLng!, _userRadiusKm);
-      final nt = filterWithinKm(_topics, _userLat!, _userLng!, _userRadiusKm);
-      _liveCount = nr.length;
-      _topicCount = nt.length;
+      _liveCount =
+          filterWithinKm(_rooms, _userLat!, _userLng!, _userRadiusKm).length;
     } else {
       _liveCount = _rooms.length;
-      _topicCount = _topics.length;
     }
   }
 
@@ -363,21 +351,9 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
       return filterWithinKm(_rooms, _userLat!, _userLng!, _userRadiusKm);
     }
     if (_mode == _MapViewMode.detail && _detailRegion != null) {
-      return _detailRoomsOnly ? _detailRegion!.roomItems : [];
+      return _detailRegion!.roomItems;
     }
     return _rooms;
-  }
-
-  List<Map<String, dynamic>> get _displayTopics {
-    if (_mode == _MapViewMode.nearby &&
-        _userLat != null &&
-        _userLng != null) {
-      return filterWithinKm(_topics, _userLat!, _userLng!, _userRadiusKm);
-    }
-    if (_mode == _MapViewMode.detail && _detailRegion != null) {
-      return _detailRoomsOnly ? [] : _detailRegion!.topicItems;
-    }
-    return _topics;
   }
 
   void _fitCameraForMode() {
@@ -388,7 +364,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
         final pts = <LatLng>[
           LatLng(_userLat!, _userLng!),
           ..._displayRooms.map(itemLatLng).whereType<LatLng>(),
-          ..._displayTopics.map(itemLatLng).whereType<LatLng>(),
         ];
         if (pts.length > 1) {
           _mapController.fitCamera(
@@ -409,7 +384,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
         return;
       }
 
-      final regions = buildCombinedRegions(_rooms, _topics);
+      final regions = buildCombinedRegions(_rooms, const []);
       if (regions.isEmpty) {
         _mapController.fitCamera(
           CameraFit.bounds(
@@ -558,16 +533,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     );
   }
 
-  void _onTopicTap(Map<String, dynamic> topic) {
-    final id = entityId(topic);
-    if (id == null) return;
-    Navigator.of(context).push<void>(
-      MaterialPageRoute<void>(
-        builder: (_) => TopicDetailScreen(topicId: id),
-      ),
-    );
-  }
-
   List<Marker> _buildMarkers() {
     if (_mode == _MapViewMode.city) {
       return _buildCityMarkers();
@@ -594,159 +559,58 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   }
 
   List<Marker> _buildCityMarkers() {
-    final regions = buildCombinedRegions(_rooms, _topics);
+    final regions = buildCombinedRegions(_rooms, const []);
     final out = <Marker>[];
     for (final r in regions) {
-      final hasBoth = r.roomCount > 0 && r.topicCount > 0;
-      final w = hasBoth ? 64.0 : 36.0;
+      if (r.roomCount <= 0) continue;
       final tip =
-          '${r.roomCount} oda · ${r.topicCount} konu — dokun: haritayı yakınlaştır';
+          '${r.roomCount} oda — dokun: haritayı yakınlaştır';
       out.add(
         Marker(
           point: r.center,
-          width: w,
+          width: 36,
           height: 36,
           alignment: Alignment.center,
           child: Tooltip(
             message: tip,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (r.roomCount > 0)
-                  Material(
-                    color: AppColors.purple600,
-                    shape: const CircleBorder(),
-                    elevation: 2,
-                    shadowColor: Colors.black26,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () {
-                        setState(() {
-                          _mode = _MapViewMode.detail;
-                          _detailRegion = r;
-                          _detailRoomsOnly = true;
-                          _updateCountsForMode();
-                        });
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) _fitCameraForMode();
-                        });
-                      },
-                      child: SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: Center(
-                          child: Text(
-                            '${r.roomCount}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
+            child: Material(
+              color: AppColors.purple600,
+              shape: const CircleBorder(),
+              elevation: 2,
+              shadowColor: Colors.black26,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () {
+                  setState(() {
+                    _mode = _MapViewMode.detail;
+                    _detailRegion = r;
+                    _updateCountsForMode();
+                  });
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) _fitCameraForMode();
+                  });
+                },
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: Center(
+                    child: Text(
+                      '${r.roomCount}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 11,
                       ),
                     ),
                   ),
-                if (hasBoth) const SizedBox(width: 4),
-                if (r.topicCount > 0)
-                  Material(
-                    color: AppColors.purple300,
-                    shape: const CircleBorder(),
-                    elevation: 2,
-                    shadowColor: Colors.black26,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: () {
-                        setState(() {
-                          _mode = _MapViewMode.detail;
-                          _detailRegion = r;
-                          _detailRoomsOnly = false;
-                          _updateCountsForMode();
-                        });
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (mounted) _fitCameraForMode();
-                        });
-                      },
-                      child: SizedBox(
-                        width: 32,
-                        height: 32,
-                        child: Center(
-                          child: Text(
-                            '${r.topicCount}',
-                            style: const TextStyle(
-                              color: AppColors.purple900,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+                ),
+              ),
             ),
           ),
         ),
       );
     }
     return out;
-  }
-
-  Widget _mapIconMarker({
-    required String title,
-    String? tooltipExtra,
-    required String semanticsLabel,
-    required Color backgroundColor,
-    required Color iconColor,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    final tip = tooltipExtra != null && tooltipExtra.isNotEmpty
-        ? '$title\n$tooltipExtra'
-        : title;
-    return Tooltip(
-      message: tip,
-      preferBelow: false,
-      verticalOffset: 10,
-      waitDuration: const Duration(milliseconds: 350),
-      showDuration: const Duration(seconds: 4),
-      child: Semantics(
-        label: semanticsLabel,
-        button: true,
-        hint: 'Kısa dokun: aç. Uzun bas: isim göster.',
-        child: Material(
-          color: backgroundColor,
-          shape: const CircleBorder(),
-          elevation: 3,
-          shadowColor: Colors.black38,
-          child: InkWell(
-            customBorder: const CircleBorder(),
-            onTap: onTap,
-            onLongPress: () {
-              final m = ScaffoldMessenger.maybeOf(context);
-              if (m == null) return;
-              m.clearSnackBars();
-              m.showSnackBar(
-                SnackBar(
-                  content: Text(tip),
-                  behavior: SnackBarBehavior.floating,
-                  duration: const Duration(seconds: 2),
-                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 88),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              );
-            },
-            child: SizedBox(
-              width: 34,
-              height: 34,
-              child: Icon(icon, color: iconColor, size: 18),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _mapRoomMarkerByTier({
@@ -878,29 +742,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
         ),
       );
     }
-    for (final topic in _displayTopics) {
-      final ll = itemLatLng(topic);
-      if (ll == null) continue;
-      final title =
-          '${topic['title'] ?? topic['Title'] ?? 'Konu'}';
-      out.add(
-        Marker(
-          point: ll,
-          width: 36,
-          height: 36,
-          alignment: Alignment.bottomCenter,
-          child: _mapIconMarker(
-            title: title,
-            tooltipExtra: 'Konu',
-            semanticsLabel: 'Konu: $title',
-            backgroundColor: AppColors.purple300,
-            iconColor: AppColors.purple900,
-            icon: Icons.tag_rounded,
-            onTap: () => _onTopicTap(topic),
-          ),
-        ),
-      );
-    }
     return out;
   }
 
@@ -909,7 +750,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     final rail = MediaQuery.sizeOf(context).width >= 720;
     final subtitle = _loading
         ? 'Yükleniyor…'
-        : '$_liveCount oda · $_topicCount konu';
+        : '$_liveCount oda';
 
     return Scaffold(
       backgroundColor: _mapBaseColor,
@@ -978,7 +819,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   }
 
   Widget _buildBody(BuildContext context) {
-    if (_error != null && _rooms.isEmpty && _topics.isEmpty) {
+    if (_error != null && _rooms.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
