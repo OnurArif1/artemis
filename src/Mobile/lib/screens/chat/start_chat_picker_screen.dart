@@ -71,6 +71,7 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
           'pageIndex': 1,
           'pageSize': 20,
           'startChatPickerMode': true,
+          'listMode': 'startChat',
           if (loc != null) ...{
             'userLatitude': loc.lat,
             'userLongitude': loc.lng,
@@ -88,15 +89,12 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
       final roomMaps = asMapList(results[0]);
       final topicMaps = asMapList(results[1]);
 
-      final accessibleRooms = roomMaps.where((m) {
-        final st = parseSubscriptionType(Map<String, dynamic>.from(m));
-        return userMeetsRoomSubscription(tier, st);
-      }).toList();
-
+      // Üyelik süzmesi sunucuda (StartChatPickerMode); burada tekrar filtrelemek
+      // JWT / API tier uyumsuzluğunda listeyi 1 öğeye düşürebiliyordu.
       setState(() {
         _myTier = tier;
         _tierLoading = false;
-        _allRooms = accessibleRooms;
+        _allRooms = roomMaps;
         _allTopics = topicMaps;
         _loading = false;
       });

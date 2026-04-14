@@ -164,7 +164,7 @@ public class RoomService : IRoomService
 
     public async ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel)
     {
-        if (filterViewModel.StartChatPickerMode)
+        if (IsStartChatPickerListRequest(filterViewModel))
         {
             return await GetStartChatPickerListAsync(filterViewModel);
         }
@@ -211,7 +211,8 @@ public class RoomService : IRoomService
     }
 
     /// <summary>
-    /// Konum + menzil içindeki odalar (mesafeye göre), eksik kalan kadar Upvote sırasıyla tamamlanır.
+    /// Sohbet başlat (+): (1) menzil içi odalar mesafeye göre, (2) eksik kısım menzil dışı en yakınlar,
+    /// (3) hâlâ eksikse Upvote azalan. Konum yoksa doğrudan Upvote.
     /// </summary>
     private async ValueTask<RoomListViewModel> GetStartChatPickerListAsync(RoomFilterViewModel filterViewModel)
     {
@@ -243,33 +244,64 @@ public class RoomService : IRoomService
                 .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == filterViewModel.UserEmail.ToLower());
         }
 
+        // Keşif listesi: süresi dolmuş / üyelik kısıtlı odalar da dahil (sıralamada kullanılır); ayrıntı alanları VM'de kalır.
         var allVms = rooms
             .Select(r => MapRoomToResult(r, userParty, filterViewModel.UserLatitude, filterViewModel.UserLongitude))
-            .Where(vm => !vm.LifecycleExpired && !vm.SubscriptionAccessDenied)
             .ToList();
 
         var hasLatLng = filterViewModel.UserLatitude.HasValue && filterViewModel.UserLongitude.HasValue;
 
-        var nearbyOrdered = allVms
-            .Where(vm =>
-                hasLatLng &&
-                vm.RoomRange.HasValue &&
-                vm.Distance.HasValue &&
-                vm.Distance <= vm.RoomRange.Value)
-            .OrderBy(vm => vm.Distance!.Value)
-            .ToList();
+        var combined = new List<RoomResultViewModel>(limit);
+        var usedIds = new HashSet<int>();
 
-        var picked = nearbyOrdered.Take(limit).ToList();
-        var pickedIds = picked.Select(p => p.Id).ToHashSet();
-        var need = limit - picked.Count;
+        if (hasLatLng)
+        {
+            // 1) Menzil içi (distance <= RoomRange), yakından uzağa
+            var inRange = allVms
+                .Where(vm =>
+                    vm.RoomRange.HasValue &&
+                    vm.Distance.HasValue &&
+                    vm.Distance <= vm.RoomRange.Value)
+                .OrderBy(vm => vm.Distance!.Value)
+                .ToList();
 
-        var filler = allVms
-            .Where(vm => !pickedIds.Contains(vm.Id))
-            .OrderByDescending(vm => vm.Upvote)
-            .Take(need)
-            .ToList();
+            foreach (var vm in inRange)
+            {
+                if (combined.Count >= limit) break;
+                combined.Add(vm);
+                usedIds.Add(vm.Id);
+            }
 
-        var combined = picked.Concat(filler).ToList();
+            // 2) Eksik kısım: menzil dışı ama mesafesi olanlar, yine yakından uzağa
+            if (combined.Count < limit)
+            {
+                var need = limit - combined.Count;
+                var outsideByDistance = allVms
+                    .Where(vm => !usedIds.Contains(vm.Id) && vm.Distance.HasValue)
+                    .OrderBy(vm => vm.Distance!.Value)
+                    .Take(need)
+                    .ToList();
+
+                foreach (var vm in outsideByDistance)
+                {
+                    combined.Add(vm);
+                    usedIds.Add(vm.Id);
+                }
+            }
+        }
+
+        // 3) Konum yoksa veya hâlâ eksikse: Upvote ile tamamla
+        if (combined.Count < limit)
+        {
+            var need = limit - combined.Count;
+            var byUpvote = allVms
+                .Where(vm => !usedIds.Contains(vm.Id))
+                .OrderByDescending(vm => vm.Upvote)
+                .ThenByDescending(vm => vm.CreateDate)
+                .Take(need)
+                .ToList();
+            combined.AddRange(byUpvote);
+        }
 
         return new RoomListViewModel
         {
@@ -277,6 +309,10 @@ public class RoomService : IRoomService
             ResultViewModels = combined
         };
     }
+
+    private static bool IsStartChatPickerListRequest(RoomFilterViewModel f) =>
+        f.StartChatPickerMode ||
+        string.Equals(f.ListMode, "startChat", StringComparison.OrdinalIgnoreCase);
 
     private static RoomResultViewModel MapRoomToResult(
         Room r,
