@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/icons/app_content_icons.dart';
+import '../../core/navigation/app_route_observer.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
@@ -52,7 +55,7 @@ class MyChatsScreen extends StatefulWidget {
   State<MyChatsScreen> createState() => _MyChatsScreenState();
 }
 
-class _MyChatsScreenState extends State<MyChatsScreen> {
+class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   final _search = TextEditingController();
   List<_ConversationRow> _items = [];
   bool _loading = true;
@@ -62,6 +65,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
   final Map<int, String> _topicTitlesCache = {};
   DateTime? _lastLoadedAt;
   static const _minAutoReloadGap = Duration(seconds: 20);
+  Timer? _reloadAfterPopTimer;
 
   late final HomeTabController _homeTab;
 
@@ -90,10 +94,37 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic>) {
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
   void dispose() {
+    _reloadAfterPopTimer?.cancel();
+    appRouteObserver.unsubscribe(this);
     _search.dispose();
     _homeTab.removeListener(_onHomeTabChanged);
     super.dispose();
+  }
+
+  /// Üstte açılan oda/konu sohbeti veya (+) ekranı kapanınca liste güncellensin
+  /// (API’nin mesajı döndürmesi için kısa gecikme).
+  void _scheduleReloadChatsAfterOverlayPop() {
+    _reloadAfterPopTimer?.cancel();
+    _reloadAfterPopTimer = Timer(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      if (_homeTab.currentIndex != HomeTabController.chatsTabIndex) return;
+      _load(fullScreenLoading: false, force: true);
+    });
+  }
+
+  @override
+  void didPopNext() {
+    _scheduleReloadChatsAfterOverlayPop();
   }
 
   void _onHomeTabChanged() {
@@ -314,7 +345,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
       );
     }
     if (!mounted) return;
-    _load(fullScreenLoading: false, force: true);
+    _scheduleReloadChatsAfterOverlayPop();
   }
 
   @override
@@ -336,13 +367,12 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: (_loading || _error != null)
             ? null
-            : () async {
-                await Navigator.of(context).push<void>(
+            : () {
+                Navigator.of(context).push<void>(
                   MaterialPageRoute<void>(
                     builder: (_) => const StartChatPickerScreen(),
                   ),
                 );
-                if (mounted) _load(fullScreenLoading: false, force: true);
               },
         backgroundColor: AppColors.purple600,
         child: const Icon(Icons.add_rounded),

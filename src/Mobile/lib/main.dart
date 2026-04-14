@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/navigation/app_route_observer.dart';
 import 'core/network/dio_client.dart';
 import 'core/theme/app_theme.dart';
 import 'providers/auth_provider.dart';
@@ -32,6 +33,7 @@ Future<void> main() async {
   );
   final appServices = AppServices(dioClient.dio);
   final router = GoRouter(
+    observers: [appRouteObserver],
     initialLocation: auth.isAuthenticated ? '/app' : '/login',
     refreshListenable: auth,
     redirect: (context, state) {
