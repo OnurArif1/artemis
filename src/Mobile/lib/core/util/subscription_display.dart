@@ -8,6 +8,14 @@ int? parseSubscriptionType(Map<String, dynamic> m) {
   return int.tryParse('$v');
 }
 
+/// Oda `SubscriptionType`: 0 = herkes; 1–3 = en az o üyelik gerekir.
+bool userMeetsRoomSubscription(int? userTier, int? roomRequiredTier) {
+  final req = roomRequiredTier ?? 0;
+  if (req <= 0) return true;
+  final u = userTier ?? 0;
+  return u >= req;
+}
+
 String subscriptionTierLabelTr(int? type) {
   return switch (type) {
     null => 'Belirtilmedi',

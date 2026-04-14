@@ -11,6 +11,7 @@ import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import 'room_chat_screen.dart';
+import 'start_chat_picker_screen.dart';
 import 'topic_chat_screen.dart';
 
 class _ConversationRow {
@@ -282,6 +283,20 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
             icon: const Icon(Icons.refresh_rounded),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (_loading || _error != null)
+            ? null
+            : () async {
+                await Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const StartChatPickerScreen(),
+                  ),
+                );
+                if (mounted) _load(fullScreenLoading: false);
+              },
+        backgroundColor: AppColors.purple600,
+        child: const Icon(Icons.add_rounded),
       ),
       body: _buildBody(context),
     );
