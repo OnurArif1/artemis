@@ -298,23 +298,23 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
-                children: [
-                  const TextSpan(text: 'Hesabın yok mu? '),
-                  WidgetSpan(
-                    alignment: PlaceholderAlignment.baseline,
-                    baseline: TextBaseline.alphabetic,
-                    child: GestureDetector(
-                      onTap: _loading ? null : () => _setMode(true),
-                      child: Text(
-                        'Kayıt ol',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                // children: [
+                //   const TextSpan(text: 'Hesabın yok mu? '),
+                //   WidgetSpan(
+                //     alignment: PlaceholderAlignment.baseline,
+                //     baseline: TextBaseline.alphabetic,
+                //     child: GestureDetector(
+                //       onTap: _loading ? null : () => _setMode(true),
+                //       child: Text(
+                //         'Kayıt ol',
+                //         style: TextStyle(
+                //           fontWeight: FontWeight.w700,
+                //           color: theme.colorScheme.primary,
+                //         ),
+                //       ),
+                //     ),
+                //   ),
+                // ],
               ),
             ),
           ),
