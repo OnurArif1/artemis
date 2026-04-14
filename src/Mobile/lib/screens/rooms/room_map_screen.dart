@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/geo/artemis_map_tiles.dart';
 import '../../core/icons/app_content_icons.dart';
 import '../../core/geo/room_map_clustering.dart';
 import '../../core/location/location_service.dart';
@@ -855,16 +856,11 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
                 onPositionChanged: _onPositionChanged,
               ),
               children: [
-                TileLayer(
-                  urlTemplate:
-                      'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                  subdomains: const ['a', 'b', 'c', 'd'],
-                  userAgentPackageName: 'artemis_mobile',
-                  maxNativeZoom: 19,
-                ),
+                ArtemisMapTiles.layer(),
                 if (_buildCircles().isNotEmpty)
                   CircleLayer<Object>(circles: _buildCircles()),
                 MarkerLayer(markers: _buildMarkers()),
+                ArtemisMapTiles.attribution(),
               ],
             ),
           ),
