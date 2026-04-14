@@ -35,6 +35,14 @@ export default class RoomService {
             data: payload
         });
     }
+
+    async updateUpvote(payload) {
+        await this.request({
+            method: 'post',
+            url: '/room/upvote',
+            data: payload
+        });
+    }
     async delete(roomId) {
         return this.request({ method: 'delete', url: `/room/delete/${roomId}` });
     }

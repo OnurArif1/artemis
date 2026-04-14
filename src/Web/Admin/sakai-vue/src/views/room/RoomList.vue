@@ -24,6 +24,10 @@ const showFormDialog = ref(false);
 const showAddPartyDialog = ref(false);
 const showDeleteDialog = ref(false);
 const showChatDialog = ref(false);
+const showUpvoteDialog = ref(false);
+const upvoteEditRoom = ref(null);
+const upvoteEditValue = ref(0);
+const savingUpvote = ref(false);
 const selectedRoom = ref(null);
 
 async function load() {
@@ -170,6 +174,40 @@ function openChat(room) {
     showChatDialog.value = true;
 }
 
+function openUpvoteEdit(room) {
+    upvoteEditRoom.value = room;
+    upvoteEditValue.value = room.upvote ?? 0;
+    showUpvoteDialog.value = true;
+}
+
+async function saveUpvote() {
+    if (!upvoteEditRoom.value?.id) return;
+    savingUpvote.value = true;
+    try {
+        await roomService.updateUpvote({
+            roomId: upvoteEditRoom.value.id,
+            upvote: upvoteEditValue.value ?? 0
+        });
+        showUpvoteDialog.value = false;
+        toast.add({ severity: 'success', summary: t('common.success'), detail: t('room.upvoteUpdated'), life: 3000 });
+        await load();
+    } catch (err) {
+        toast.add({
+            severity: 'error',
+            summary: t('common.error'),
+            detail: err.response?.data?.message || err.message || t('room.upvoteUpdateFailed'),
+            life: 3000
+        });
+    } finally {
+        savingUpvote.value = false;
+    }
+}
+
+function cancelUpvoteEdit() {
+    showUpvoteDialog.value = false;
+    upvoteEditRoom.value = null;
+}
+
 function formatDate(dateString) {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString(locale.value === 'tr' ? 'tr-TR' : 'en-US', {
@@ -217,6 +255,19 @@ const getSeverity = (status) => {
             <Column field="lifeCycle" :header="t('room.lifeCycle')">
                 <template #body="{ data }">
                     <span class="text-sm">{{ data.lifeCycle != null ? data.lifeCycle : '—' }}</span>
+                </template>
+            </Column>
+            <Column field="upvote" :header="t('room.upvote')">
+                <template #body="{ data }">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm">{{ data.upvote ?? 0 }}</span>
+                        <Button
+                            icon="pi pi-thumbs-up"
+                            class="p-button-text p-button-sm"
+                            :v-tooltip.bottom="t('room.editUpvote')"
+                            @click="openUpvoteEdit(data)"
+                        />
+                    </div>
                 </template>
             </Column>
             <Column field="channelId" :header="t('room.channelId')">
@@ -273,6 +324,20 @@ const getSeverity = (status) => {
 
         <Dialog v-model:visible="showChatDialog" modal :closable="true" :header="`${t('room.chatHeader')} - ${selectedRoom?.title || t('room.title')}`" :style="{ width: '800px', height: '600px' }" :maximizable="true">
             <Chat v-if="selectedRoom" :roomIdProp="selectedRoom.id" />
+        </Dialog>
+
+        <Dialog v-model:visible="showUpvoteDialog" modal :closable="true" :header="t('room.editUpvote')" style="width: 400px" @hide="cancelUpvoteEdit">
+            <div v-if="upvoteEditRoom" class="flex flex-col gap-3 p-2">
+                <p class="text-sm text-surface-600 m-0">{{ upvoteEditRoom.title }}</p>
+                <div class="flex flex-col gap-2">
+                    <label for="upvoteValue">{{ t('room.upvote') }}</label>
+                    <InputNumber id="upvoteValue" v-model="upvoteEditValue" :min="0" :showButtons="true" class="w-full" />
+                </div>
+                <div class="flex justify-end gap-2 mt-2">
+                    <Button :label="t('common.cancel')" class="p-button-text" @click="cancelUpvoteEdit" />
+                    <Button :label="t('common.save')" :loading="savingUpvote" @click="saveUpvote" />
+                </div>
+            </div>
         </Dialog>
     </div>
 </template>

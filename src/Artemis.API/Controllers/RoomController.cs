@@ -57,6 +57,24 @@ public class RoomController : ControllerBase
         }
     }
 
+    [HttpPost("upvote")]
+    public async Task<IActionResult> UpdateUpvoteAsync([FromBody] UpdateRoomUpvoteViewModel viewModel)
+    {
+        try
+        {
+            await _roomService.UpdateUpvote(viewModel.RoomId, viewModel.Upvote);
+            return Ok();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpDelete("delete/{id}")]
     public async Task<IActionResult> DeleteAsync(int id)
     {

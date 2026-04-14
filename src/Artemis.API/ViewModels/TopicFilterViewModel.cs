@@ -7,4 +7,7 @@ public class TopicFilterViewModel
 
     /// <summary>Başlıkta içerir araması (mobil / liste).</summary>
     public string? Title { get; set; }
+
+    /// <summary>True ise önce Upvote (yıldız) azalan, sonra oluşturma tarihi.</summary>
+    public bool SortByUpvoteDesc { get; set; }
 }

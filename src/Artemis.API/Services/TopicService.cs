@@ -31,10 +31,15 @@ public class TopicService : ITopicService
 
         var count = await baseQuery.CountAsync();
 
-        var topics = await baseQuery
+        var withIncludes = baseQuery
             .Include(t => t.Party)
-            .Include(t => t.Category)
-            .OrderByDescending(i => i.CreateDate)
+            .Include(t => t.Category);
+
+        IQueryable<Topic> ordered = filterViewModel.SortByUpvoteDesc
+            ? withIncludes.OrderByDescending(i => i.Upvote ?? 0).ThenByDescending(i => i.CreateDate)
+            : withIncludes.OrderByDescending(i => i.CreateDate);
+
+        var topics = await ordered
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
             .Take(filterViewModel.PageSize)
             .Select(r => new TopicResultViewModel

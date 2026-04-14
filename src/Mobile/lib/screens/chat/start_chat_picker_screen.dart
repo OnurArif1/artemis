@@ -69,7 +69,8 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
       final results = await Future.wait([
         app.rooms.getList({
           'pageIndex': 1,
-          'pageSize': 500,
+          'pageSize': 20,
+          'startChatPickerMode': true,
           if (loc != null) ...{
             'userLatitude': loc.lat,
             'userLongitude': loc.lng,
@@ -78,7 +79,8 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
         }),
         app.topics.getList({
           'pageIndex': 1,
-          'pageSize': 500,
+          'pageSize': 20,
+          'sortByUpvoteDesc': true,
         }),
       ]);
 
@@ -90,9 +92,6 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
         final st = parseSubscriptionType(Map<String, dynamic>.from(m));
         return userMeetsRoomSubscription(tier, st);
       }).toList();
-
-      accessibleRooms.sort((a, b) => mapTitle(a).toLowerCase().compareTo(mapTitle(b).toLowerCase()));
-      topicMaps.sort((a, b) => mapTitle(a).toLowerCase().compareTo(mapTitle(b).toLowerCase()));
 
       setState(() {
         _myTier = tier;

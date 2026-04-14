@@ -9,4 +9,9 @@ public class RoomFilterViewModel
     public double? UserLatitude { get; set; }
     public double? UserLongitude { get; set; }
     public string? UserEmail { get; set; }
+
+    /// <summary>
+    /// Sohbet başlat (+): tüm odalar üzerinden menzil içi yakınlar + eksik kısım Upvote ile tamamlanır (PageSize = hedef adet, varsayılan 20).
+    /// </summary>
+    public bool StartChatPickerMode { get; set; }
 }

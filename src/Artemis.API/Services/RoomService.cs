@@ -5,6 +5,7 @@ using Artemis.API.Services.Interfaces;
 using Artemis.API.Utilities;
 using Artemis.API.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Artemis.API.Services;
@@ -163,6 +164,11 @@ public class RoomService : IRoomService
 
     public async ValueTask<RoomListViewModel> GetList(RoomFilterViewModel filterViewModel)
     {
+        if (filterViewModel.StartChatPickerMode)
+        {
+            return await GetStartChatPickerListAsync(filterViewModel);
+        }
+
         var baseQuery = _artemisDbContext.Rooms.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(filterViewModel.Title))
@@ -193,74 +199,150 @@ public class RoomService : IRoomService
                 .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == filterViewModel.UserEmail.ToLower());
         }
 
-        var roomViewModels = rooms.Select(r =>
-        {
-            double? distance = null;
-            bool canAccess = true;
-            bool subscriptionAccessDenied = false;
-
-            if (filterViewModel.UserLatitude.HasValue && filterViewModel.UserLongitude.HasValue)
-            {
-                distance = CalculateDistance(
-                    filterViewModel.UserLatitude.Value,
-                    filterViewModel.UserLongitude.Value,
-                    r.LocationY,
-                    r.LocationX
-                );
-
-                if (r.RoomRange.HasValue)
-                {
-                    canAccess = distance <= r.RoomRange.Value;
-                }
-            }
-
-            if (r.SubscriptionType.HasValue && userParty != null)
-            {
-                var roomSubscriptionType = r.SubscriptionType.Value;
-                var userSubscriptionType = userParty.SubscriptionType ?? SubscriptionType.None;
-
-                if ((int)userSubscriptionType < (int)roomSubscriptionType)
-                {
-                    subscriptionAccessDenied = true;
-                    canAccess = false;
-                }
-            }
-
-            return new RoomResultViewModel
-            {
-                Id = r.Id,
-                TopicId = r.TopicId,
-                TopicTitle = r.Topic?.Title,
-                Title = r.Title,
-                LocationX = r.LocationX,
-                LocationY = r.LocationY,
-                RoomType = r.RoomType,
-                LifeCycle = r.LifeCycle,
-                ChannelId = r.ChannelId,
-                Upvote = r.Upvote,
-                Downvote = r.Downvote,
-                CreateDate = r.CreateDate,
-                PartyId = r.PartyId,
-                PartyName = r.Parties.FirstOrDefault(i => i.Id == r.PartyId)?.PartyName,
-                Parties = r.Parties.Select(p => new PartyInfo
-                {
-                    Id = p.Id,
-                    PartyName = p.PartyName
-                }).ToList(),
-                CategoryTitle = r.Category?.Title,
-                SubscriptionType = r.SubscriptionType,
-                RoomRange = r.RoomRange,
-                CanAccess = canAccess,
-                Distance = distance,
-                SubscriptionAccessDenied = subscriptionAccessDenied,
-                LifecycleExpired = RoomLifecycleHelper.IsExpired(r)
-            };
-        }).ToList();
+        var roomViewModels = rooms
+            .Select(r => MapRoomToResult(r, userParty, filterViewModel.UserLatitude, filterViewModel.UserLongitude))
+            .ToList();
 
         return new RoomListViewModel
         {
             Count = count,
             ResultViewModels = roomViewModels
+        };
+    }
+
+    /// <summary>
+    /// Konum + menzil içindeki odalar (mesafeye göre), eksik kalan kadar Upvote sırasıyla tamamlanır.
+    /// </summary>
+    private async ValueTask<RoomListViewModel> GetStartChatPickerListAsync(RoomFilterViewModel filterViewModel)
+    {
+        var limit = filterViewModel.PageSize > 0 ? filterViewModel.PageSize : 20;
+
+        var baseQuery = _artemisDbContext.Rooms.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filterViewModel.Title))
+        {
+            baseQuery = baseQuery.Where(x => x.Title.Contains(filterViewModel.Title));
+        }
+
+        if (filterViewModel.TopicId.HasValue && filterViewModel.TopicId.Value > 0)
+        {
+            baseQuery = baseQuery.Where(x => x.TopicId == filterViewModel.TopicId.Value);
+        }
+
+        var rooms = await baseQuery
+            .Include(r => r.Parties)
+            .Include(r => r.Category)
+            .Include(r => r.Topic)
+            .AsSplitQuery()
+            .ToListAsync();
+
+        Party? userParty = null;
+        if (!string.IsNullOrWhiteSpace(filterViewModel.UserEmail))
+        {
+            userParty = await _artemisDbContext.Parties
+                .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == filterViewModel.UserEmail.ToLower());
+        }
+
+        var allVms = rooms
+            .Select(r => MapRoomToResult(r, userParty, filterViewModel.UserLatitude, filterViewModel.UserLongitude))
+            .Where(vm => !vm.LifecycleExpired && !vm.SubscriptionAccessDenied)
+            .ToList();
+
+        var hasLatLng = filterViewModel.UserLatitude.HasValue && filterViewModel.UserLongitude.HasValue;
+
+        var nearbyOrdered = allVms
+            .Where(vm =>
+                hasLatLng &&
+                vm.RoomRange.HasValue &&
+                vm.Distance.HasValue &&
+                vm.Distance <= vm.RoomRange.Value)
+            .OrderBy(vm => vm.Distance!.Value)
+            .ToList();
+
+        var picked = nearbyOrdered.Take(limit).ToList();
+        var pickedIds = picked.Select(p => p.Id).ToHashSet();
+        var need = limit - picked.Count;
+
+        var filler = allVms
+            .Where(vm => !pickedIds.Contains(vm.Id))
+            .OrderByDescending(vm => vm.Upvote)
+            .Take(need)
+            .ToList();
+
+        var combined = picked.Concat(filler).ToList();
+
+        return new RoomListViewModel
+        {
+            Count = combined.Count,
+            ResultViewModels = combined
+        };
+    }
+
+    private static RoomResultViewModel MapRoomToResult(
+        Room r,
+        Party? userParty,
+        double? userLatitude,
+        double? userLongitude)
+    {
+        double? distance = null;
+        var canAccess = true;
+        var subscriptionAccessDenied = false;
+
+        if (userLatitude.HasValue && userLongitude.HasValue)
+        {
+            distance = CalculateDistance(
+                userLatitude.Value,
+                userLongitude.Value,
+                r.LocationY,
+                r.LocationX
+            );
+
+            if (r.RoomRange.HasValue)
+            {
+                canAccess = distance <= r.RoomRange.Value;
+            }
+        }
+
+        if (r.SubscriptionType.HasValue && userParty != null)
+        {
+            var roomSubscriptionType = r.SubscriptionType.Value;
+            var userSubscriptionType = userParty.SubscriptionType ?? SubscriptionType.None;
+
+            if ((int)userSubscriptionType < (int)roomSubscriptionType)
+            {
+                subscriptionAccessDenied = true;
+                canAccess = false;
+            }
+        }
+
+        return new RoomResultViewModel
+        {
+            Id = r.Id,
+            TopicId = r.TopicId,
+            TopicTitle = r.Topic?.Title,
+            Title = r.Title,
+            LocationX = r.LocationX,
+            LocationY = r.LocationY,
+            RoomType = r.RoomType,
+            LifeCycle = r.LifeCycle,
+            ChannelId = r.ChannelId,
+            Upvote = r.Upvote,
+            Downvote = r.Downvote,
+            CreateDate = r.CreateDate,
+            PartyId = r.PartyId,
+            PartyName = r.Parties.FirstOrDefault(i => i.Id == r.PartyId)?.PartyName,
+            Parties = r.Parties.Select(p => new PartyInfo
+            {
+                Id = p.Id,
+                PartyName = p.PartyName
+            }).ToList(),
+            CategoryTitle = r.Category?.Title,
+            SubscriptionType = r.SubscriptionType,
+            RoomRange = r.RoomRange,
+            CanAccess = canAccess,
+            Distance = distance,
+            SubscriptionAccessDenied = subscriptionAccessDenied,
+            LifecycleExpired = RoomLifecycleHelper.IsExpired(r)
         };
     }
 
@@ -317,6 +399,24 @@ public class RoomService : IRoomService
             await _artemisDbContext.SaveChangesAsync();
         }
     }
+
+    public async ValueTask UpdateUpvote(int roomId, int upvote)
+    {
+        if (roomId <= 0)
+        {
+            throw new ArgumentException("RoomId is required and must be greater than zero.");
+        }
+
+        var room = await _artemisDbContext.Rooms.FirstOrDefaultAsync(r => r.Id == roomId);
+        if (room is null)
+        {
+            throw new InvalidOperationException($"Room with ID {roomId} was not found.");
+        }
+
+        room.Upvote = upvote;
+        await _artemisDbContext.SaveChangesAsync();
+    }
+
     public async ValueTask Delete(int id)
     {
         var room = await _artemisDbContext.Rooms.FirstOrDefaultAsync(i => i.Id == id);
