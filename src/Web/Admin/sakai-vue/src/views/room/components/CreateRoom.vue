@@ -219,6 +219,10 @@ async function submit() {
         return;
     }
 
+    if (form.value.lifeCycle === null || form.value.lifeCycle === undefined) {
+        return;
+    }
+
     loading.value = true;
     try {
         if (isEditMode.value) {
@@ -279,6 +283,12 @@ function cancel() {
                 <label for="roomType">{{ t('room.roomType') }} <span class="text-red-500">*</span></label>
                 <Dropdown id="roomType" v-model="form.roomType" :options="roomTypeOptions" option-label="label" option-value="value" />
                 <Message v-if="!form.roomType" size="small" severity="error" variant="simple">{{ t('room.roomType') }} {{ t('common.required') }}</Message>
+            </div>
+
+            <div class="flex flex-col gap-2 mb-3">
+                <label for="lifeCycle">{{ t('room.lifeCycle') }} <span class="text-red-500">*</span></label>
+                <InputNumber id="lifeCycle" v-model="form.lifeCycle" :min="0" :minFractionDigits="0" :maxFractionDigits="4" class="w-full" />
+                <Message v-if="form.lifeCycle === null || form.lifeCycle === undefined" size="small" severity="error" variant="simple">{{ t('room.lifeCycleRequired') }}</Message>
             </div>
 
             <div class="flex flex-col gap-2 mb-3">

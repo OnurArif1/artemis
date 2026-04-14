@@ -37,6 +37,7 @@ class CreateRoomScreen extends StatefulWidget {
 
 class _CreateRoomScreenState extends State<CreateRoomScreen> {
   final _title = TextEditingController();
+  final _lifeCycle = TextEditingController();
   final _roomRange = TextEditingController();
   final _partySearch = TextEditingController();
 
@@ -79,6 +80,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   void dispose() {
     _partyDebounce?.cancel();
     _title.dispose();
+    _lifeCycle.dispose();
     _roomRange.dispose();
     _partySearch.dispose();
     super.dispose();
@@ -133,6 +135,11 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       showAppSnackBar(context, 'Konu seçin.', error: true);
       return;
     }
+    final lifeCycle = double.tryParse(_lifeCycle.text.trim());
+    if (lifeCycle == null) {
+      showAppSnackBar(context, 'Yaşam döngüsü gerekli (sayı).', error: true);
+      return;
+    }
 
     final createdTitle = _title.text.trim();
     final app = context.read<AppServices>();
@@ -145,6 +152,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         'locationX': _locationX ?? 0,
         'locationY': _locationY ?? 0,
         'roomType': _roomType,
+        'lifeCycle': lifeCycle,
         'subscriptionType': _subscriptionType,
         'roomRange': _roomRange.text.trim().isEmpty
             ? null
@@ -171,6 +179,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         _createdRoomId = newId;
         _showInvite = true;
         _title.clear();
+        _lifeCycle.clear();
         _topicId = null;
         _roomRange.clear();
         _roomType = 1;
@@ -527,6 +536,14 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                   ),
                 ),
               ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _lifeCycle,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Yaşam döngüsü *',
+              ).applyDefaults(Theme.of(context).inputDecorationTheme),
             ),
             const SizedBox(height: 12),
             TextField(

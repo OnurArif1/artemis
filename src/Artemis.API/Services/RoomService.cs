@@ -2,6 +2,7 @@ using Artemis.API.Entities;
 using Artemis.API.Entities.Enums;
 using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
+using Artemis.API.Utilities;
 using Artemis.API.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -34,6 +35,11 @@ public class RoomService : IRoomService
             throw new ArgumentException("RoomType is required and must be Public or Private.");
         }
 
+        if (!viewModel.LifeCycle.HasValue)
+        {
+            throw new ArgumentException("LifeCycle is required.");
+        }
+
         await ValidateCreatorCanCreateRoomAsync(viewModel);
 
         var room = new Room()
@@ -45,7 +51,7 @@ public class RoomService : IRoomService
             LocationX = viewModel.LocationX ?? 0,
             LocationY = viewModel.LocationY ?? 0,
             RoomType = viewModel.RoomType,
-            LifeCycle = viewModel.LifeCycle ?? 0,
+            LifeCycle = viewModel.LifeCycle.Value,
             ChannelId = viewModel.ChannelId ?? string.Empty,
             ReferenceId = viewModel.ReferenceId ?? string.Empty,
             Upvote = viewModel.Upvote ?? 0,
@@ -109,6 +115,11 @@ public class RoomService : IRoomService
         if (room is null)
         {
             throw new InvalidOperationException($"Room with ID {viewModel.RoomId} not found.");
+        }
+
+        if (RoomLifecycleHelper.IsExpired(room))
+        {
+            throw new InvalidOperationException("Bu odaya artık katılım mümkün değil.");
         }
 
         var partiesToAdd = new List<Party>();
@@ -241,7 +252,8 @@ public class RoomService : IRoomService
                 RoomRange = r.RoomRange,
                 CanAccess = canAccess,
                 Distance = distance,
-                SubscriptionAccessDenied = subscriptionAccessDenied
+                SubscriptionAccessDenied = subscriptionAccessDenied,
+                LifecycleExpired = RoomLifecycleHelper.IsExpired(r)
             };
         }).ToList();
 
@@ -269,6 +281,11 @@ public class RoomService : IRoomService
             throw new ArgumentException("RoomType is required and must be Public or Private.");
         }
 
+        if (!viewModel.LifeCycle.HasValue)
+        {
+            throw new ArgumentException("LifeCycle is required.");
+        }
+
         var query = _artemisDbContext.Rooms.AsQueryable();
         var room = await query.FirstOrDefaultAsync(i => i.Id == viewModel.Id);
         if (room is not null)
@@ -280,7 +297,7 @@ public class RoomService : IRoomService
             room.LocationX = viewModel.LocationX ?? room.LocationX;
             room.LocationY = viewModel.LocationY ?? room.LocationY;
             room.RoomType = viewModel.RoomType;
-            room.LifeCycle = viewModel.LifeCycle ?? room.LifeCycle;
+            room.LifeCycle = viewModel.LifeCycle.Value;
             room.ChannelId = viewModel.ChannelId ?? room.ChannelId;
             room.ReferenceId = viewModel.ReferenceId ?? room.ReferenceId;
             room.Upvote = viewModel.Upvote ?? room.Upvote;

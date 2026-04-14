@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../widgets/app_ambient_background.dart';
@@ -25,13 +26,13 @@ class _HomeShellState extends State<HomeShell> {
       label: 'Sohbetler',
     ),
     NavigationDestination(
-      icon: Icon(Icons.meeting_room_outlined),
-      selectedIcon: Icon(Icons.meeting_room_rounded),
+      icon: Icon(AppContentIcons.roomOutlined),
+      selectedIcon: Icon(AppContentIcons.room),
       label: 'Odalar',
     ),
     NavigationDestination(
-      icon: Icon(Icons.topic_outlined),
-      selectedIcon: Icon(Icons.topic_rounded),
+      icon: Icon(AppContentIcons.topicOutlined),
+      selectedIcon: Icon(AppContentIcons.topic),
       label: 'Konular',
     ),
     NavigationDestination(
@@ -86,13 +87,13 @@ class _HomeShellState extends State<HomeShell> {
                   label: Text('Sohbetler'),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.meeting_room_outlined),
-                  selectedIcon: Icon(Icons.meeting_room_rounded),
+                  icon: Icon(AppContentIcons.roomOutlined),
+                  selectedIcon: Icon(AppContentIcons.room),
                   label: Text('Odalar'),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.topic_outlined),
-                  selectedIcon: Icon(Icons.topic_rounded),
+                  icon: Icon(AppContentIcons.topicOutlined),
+                  selectedIcon: Icon(AppContentIcons.topic),
                   label: Text('Konular'),
                 ),
                 NavigationRailDestination(

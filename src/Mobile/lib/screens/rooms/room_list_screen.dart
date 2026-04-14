@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/location/location_service.dart';
+import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/map_helpers.dart';
@@ -262,7 +263,7 @@ class _RoomListScreenState extends State<RoomListScreen> {
                     const CircleAvatar(
                       backgroundColor: AppColors.purple100,
                       foregroundColor: AppColors.purple700,
-                      child: Icon(Icons.meeting_room_rounded),
+                      child: Icon(AppContentIcons.room),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

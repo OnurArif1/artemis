@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
@@ -174,7 +175,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
           IconButton(
             tooltip: 'Odaya git',
             onPressed: _roomsForTopic.isEmpty ? null : _goToRoom,
-            icon: const Icon(Icons.meeting_room_outlined),
+            icon: const Icon(AppContentIcons.roomOutlined),
           ),
           IconButton(
             tooltip: 'Canlı yorum sohbeti',
@@ -188,7 +189,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                 ),
               );
             },
-            icon: const Icon(Icons.forum_rounded),
+            icon: const Icon(Icons.chat_bubble_rounded),
           ),
         ],
       ),

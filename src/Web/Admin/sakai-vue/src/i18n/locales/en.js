@@ -80,6 +80,7 @@ export default {
         locationX: 'Location X',
         locationY: 'Location Y',
         lifeCycle: 'Life Cycle',
+        lifeCycleRequired: 'Life cycle is required.',
         referenceId: 'Reference ID',
         upvote: 'Upvote',
         downvote: 'Downvote',

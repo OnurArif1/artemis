@@ -46,8 +46,15 @@ public class RoomController : ControllerBase
     [HttpPost("update")]
     public async Task<IActionResult> UpdateAsync(CreateOrUpdateRoomViewModel viewModel)
     {
-        await _roomService.Update(viewModel);
-        return Ok();
+        try
+        {
+            await _roomService.Update(viewModel);
+            return Ok();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("delete/{id}")]

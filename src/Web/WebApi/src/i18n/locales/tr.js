@@ -103,6 +103,8 @@ export default {
         locationX: 'X Koordinatı',
         locationY: 'Y Koordinatı',
         roomType: 'Oda Tipi',
+        lifeCycle: 'Yaşam döngüsü',
+        lifeCycleRequired: 'Yaşam döngüsü zorunludur.',
         public: 'Herkese Açık',
         private: 'Özel',
         createSuccess: 'Oda başarıyla oluşturuldu',

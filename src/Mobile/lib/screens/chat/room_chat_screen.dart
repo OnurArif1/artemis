@@ -54,6 +54,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
   bool _sending = false;
   String? _error;
   bool _hubReady = false;
+  bool _readOnlyExpired = false;
   int? _partyId;
   MethodInvocationFunc? _receiveHandler;
   MethodInvocationFunc? _errorHandler;
@@ -112,23 +113,35 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
     }
     _partyId = pid;
 
-    final ok = await ensureUserInRoom(
+    final entry = await resolveRoomEntry(
       app: app,
       roomId: widget.roomId,
       userPartyId: pid,
       userEmail: email,
     );
     if (!mounted) return;
-    if (!ok) {
+    if (!entry.allowed) {
       setState(() {
         _loading = false;
-        _error = 'Bu odaya sohbet için erişiminiz yok veya oda bulunamadı.';
+        _error = entry.errorMessage ??
+            'Bu odaya sohbet için erişiminiz yok veya oda bulunamadı.';
       });
       return;
     }
 
+    _readOnlyExpired = entry.readOnlyExpired;
+
     await _loadHistory(app);
     if (!mounted) return;
+
+    if (_readOnlyExpired) {
+      setState(() {
+        _loading = false;
+        _hubReady = false;
+      });
+      _showExpiredReadOnlyDialog();
+      return;
+    }
 
     final session = ChatHubSession(
       getAccessToken: () async => context.read<AuthService>().token,
@@ -169,6 +182,29 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
             'Canlı bağlantı kurulamadı (SignalR). Sunucu adresi ve SIGNALR_PORT (varsayılan 5094) kontrol edin.';
       });
     }
+  }
+
+  void _showExpiredReadOnlyDialog() {
+    if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        barrierDismissible: true,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Oda artık aktif değil'),
+          content: const Text(
+            'Bu oda için süre dolmuş. Geçmiş mesajları görebilirsiniz; yeni mesaj gönderemezsiniz.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Tamam'),
+            ),
+          ],
+        ),
+      );
+    });
   }
 
   Future<void> _loadHistory(AppServices app) async {
@@ -266,6 +302,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
   }
 
   Future<void> _send() async {
+    if (_readOnlyExpired) return;
     final t = _text.text.trim();
     final pid = _partyId;
     final hub = _hub;
@@ -310,11 +347,13 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
               overflow: TextOverflow.ellipsis,
             ),
             Text(
-              _hubReady
-                  ? 'Bağlı'
-                  : _loading
-                      ? 'Yükleniyor…'
-                      : 'Bağlantı yok',
+              _readOnlyExpired
+                  ? 'Salt okunur — süre doldu'
+                  : _hubReady
+                      ? 'Bağlı'
+                      : _loading
+                          ? 'Yükleniyor…'
+                          : 'Bağlantı yok',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Colors.white.withValues(alpha: 0.85),
                   ),
@@ -405,12 +444,15 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _text,
+                      enabled: !_readOnlyExpired,
                       minLines: 1,
                       maxLines: 5,
                       textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        hintText: 'Mesaj yazın…',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        hintText: _readOnlyExpired
+                            ? 'Bu odada mesaj gönderilemez'
+                            : 'Mesaj yazın…',
+                        border: const OutlineInputBorder(),
                         isDense: true,
                       ),
                       onSubmitted: (_) => _send(),
@@ -418,7 +460,9 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                   ),
                   const SizedBox(width: 8),
                   FilledButton(
-                    onPressed: (_sending || !_hubReady) ? null : _send,
+                    onPressed: (_readOnlyExpired || _sending || !_hubReady)
+                        ? null
+                        : _send,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.purple600,
                       padding: const EdgeInsets.symmetric(

@@ -1,6 +1,7 @@
 using Artemis.API.Entities;
 using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
+using Artemis.API.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Artemis.API.Services;
@@ -16,6 +17,22 @@ public class MessageService : IMessageService
 
     public async ValueTask Create(CreateOrUpdateMessageViewModel viewModel)
     {
+        if (viewModel.RoomId > 0)
+        {
+            var room = await _artemisDbContext.Rooms
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == viewModel.RoomId);
+            if (room is null)
+            {
+                throw new InvalidOperationException("Oda bulunamadı.");
+            }
+
+            if (RoomLifecycleHelper.IsExpired(room))
+            {
+                throw new InvalidOperationException("Bu oda artık aktif değil; mesaj gönderilemez.");
+            }
+        }
+
         var message = new Message()
         {
             RoomId = viewModel.RoomId,

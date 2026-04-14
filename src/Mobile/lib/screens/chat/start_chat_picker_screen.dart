@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/location/location_service.dart';
+import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
@@ -289,7 +290,7 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
           leading: const CircleAvatar(
             backgroundColor: AppColors.purple100,
             foregroundColor: AppColors.purple700,
-            child: Icon(Icons.meeting_room_rounded),
+            child: Icon(AppContentIcons.room),
           ),
           title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text(
@@ -331,7 +332,7 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
           leading: const CircleAvatar(
             backgroundColor: Color(0xFFCCFBF1),
             foregroundColor: Color(0xFF0F766E),
-            child: Icon(Icons.topic_rounded),
+            child: Icon(AppContentIcons.topic),
           ),
           title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
           subtitle: Text(

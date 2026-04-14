@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
@@ -541,7 +542,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> {
                 foregroundColor:
                     r.isRoom ? AppColors.purple700 : const Color(0xFF0F766E),
                 child: Icon(
-                  r.isRoom ? Icons.meeting_room_rounded : Icons.topic_rounded,
+                  r.isRoom ? AppContentIcons.room : AppContentIcons.topic,
                   size: 26,
                 ),
               ),

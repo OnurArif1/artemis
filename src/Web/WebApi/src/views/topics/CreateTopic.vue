@@ -29,7 +29,8 @@ const roomFormData = ref({
     title: '',
     locationX: null,
     locationY: null,
-    roomType: 1
+    roomType: 1,
+    lifeCycle: null
 });
 
 const topicTypeOptions = [
@@ -141,7 +142,8 @@ async function createTopic() {
             title: '',
             locationX: formData.value.locationX || null,
             locationY: formData.value.locationY || null,
-            roomType: 1
+            roomType: 1,
+            lifeCycle: null
         };
 
         formData.value = {
@@ -172,7 +174,8 @@ function resetForm() {
         title: '',
         locationX: null,
         locationY: null,
-        roomType: 1
+        roomType: 1,
+        lifeCycle: null
     };
     formData.value = {
         title: '',
@@ -204,6 +207,16 @@ async function createRoomForTopic() {
         return;
     }
 
+    if (roomFormData.value.lifeCycle === null || roomFormData.value.lifeCycle === undefined) {
+        toast.add({
+            severity: 'warn',
+            summary: t('common.warning'),
+            detail: t('room.lifeCycleRequired'),
+            life: 3000
+        });
+        return;
+    }
+
     loading.value = true;
     try {
         await roomService.create({
@@ -211,7 +224,8 @@ async function createRoomForTopic() {
             topicId: createdTopicId.value,
             locationX: roomFormData.value.locationX || 0,
             locationY: roomFormData.value.locationY || 0,
-            roomType: roomFormData.value.roomType
+            roomType: roomFormData.value.roomType,
+            lifeCycle: roomFormData.value.lifeCycle
         });
 
         toast.add({
@@ -369,6 +383,18 @@ onMounted(() => {
                             optionLabel="label"
                             optionValue="value"
                             class="w-full"
+                        />
+                    </div>
+
+                    <div class="form-field">
+                        <label for="roomLifeCycle">{{ t('room.lifeCycle') }} <span class="required">*</span></label>
+                        <InputNumber
+                            id="roomLifeCycle"
+                            v-model="roomFormData.lifeCycle"
+                            class="w-full"
+                            :min="0"
+                            :minFractionDigits="0"
+                            :maxFractionDigits="4"
                         />
                     </div>
                 </div>

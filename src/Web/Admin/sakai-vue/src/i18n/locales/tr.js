@@ -86,6 +86,7 @@ export default {
         locationX: 'Konum X',
         locationY: 'Konum Y',
         lifeCycle: 'Yaşam Döngüsü',
+        lifeCycleRequired: 'Yaşam döngüsü zorunludur',
         referenceId: 'Referans No',
         upvote: 'Beğeni',
         downvote: 'Beğenmeme',

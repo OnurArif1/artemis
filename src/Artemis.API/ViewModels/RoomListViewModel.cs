@@ -31,6 +31,11 @@ public class RoomResultViewModel
     public bool CanAccess { get; set; } = true;
     public double? Distance { get; set; }
     public bool SubscriptionAccessDenied { get; set; } = false;
+
+    /// <summary>
+    /// CreateDate + LifeCycle (dk) sonrası true; mesaj ve yeni katılım kapalı.
+    /// </summary>
+    public bool LifecycleExpired { get; set; }
 }
 
 public class PartyInfo

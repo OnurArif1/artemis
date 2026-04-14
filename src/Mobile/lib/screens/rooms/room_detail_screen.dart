@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/icons/app_content_icons.dart';
 import '../../core/geo/room_map_clustering.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
@@ -61,7 +62,7 @@ class RoomDetailScreen extends StatelessWidget {
               const CircleAvatar(
                 backgroundColor: AppColors.purple100,
                 foregroundColor: AppColors.purple700,
-                child: Icon(Icons.meeting_room_rounded),
+                child: Icon(AppContentIcons.room),
               ),
               if (subType != null) ...[
                 const SizedBox(width: 10),

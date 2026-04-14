@@ -172,7 +172,7 @@ function onRoomCreated(payload) {
                 locationX: payload.locationX || 0,
                 locationY: payload.locationY || 0,
                 roomType: payload.roomType || 1,
-                lifeCycle: payload.lifeCycle || 0,
+                lifeCycle: payload.lifeCycle,
                 channelId: payload.channelId || '',
                 referenceId: payload.referenceId || '',
                 upvote: payload.upvote || 0,

@@ -19,6 +19,7 @@ const formData = ref({
     locationX: null,
     locationY: null,
     roomType: 1, // Public
+    lifeCycle: null,
     subscriptionType: null,
     roomRange: null
 });
@@ -181,6 +182,16 @@ async function createRoom() {
         return;
     }
 
+    if (formData.value.lifeCycle === null || formData.value.lifeCycle === undefined) {
+        toast.add({
+            severity: 'warn',
+            summary: t('common.warning'),
+            detail: t('room.lifeCycleRequired'),
+            life: 3000
+        });
+        return;
+    }
+
     loading.value = true;
     try {
         await roomService.create({
@@ -189,6 +200,7 @@ async function createRoom() {
             locationX: formData.value.locationX || 0,
             locationY: formData.value.locationY || 0,
             roomType: formData.value.roomType,
+            lifeCycle: formData.value.lifeCycle,
             subscriptionType: formData.value.subscriptionType,
             roomRange: formData.value.roomRange
         });
@@ -222,6 +234,7 @@ async function createRoom() {
             locationX: null,
             locationY: null,
             roomType: 1,
+            lifeCycle: null,
             subscriptionType: null,
             roomRange: null
         };
@@ -253,6 +266,7 @@ function resetForm() {
         locationX: null,
         locationY: null,
         roomType: 1,
+        lifeCycle: null,
         subscriptionType: null,
         roomRange: null
     };
@@ -381,6 +395,18 @@ onMounted(() => {
                         optionLabel="label"
                         optionValue="value"
                         class="w-full"
+                    />
+                </div>
+
+                <div class="form-field">
+                    <label for="lifeCycle">{{ t('room.lifeCycle') }} <span class="required">*</span></label>
+                    <InputNumber
+                        id="lifeCycle"
+                        v-model="formData.lifeCycle"
+                        class="w-full"
+                        :min="0"
+                        :minFractionDigits="0"
+                        :maxFractionDigits="4"
                     />
                 </div>
 

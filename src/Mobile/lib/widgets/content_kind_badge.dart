@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/icons/app_content_icons.dart';
 import '../core/theme/app_colors.dart';
 
 enum ContentKind { room, topic }
@@ -18,7 +19,7 @@ class ContentKindBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRoom = kind == ContentKind.room;
     final label = isRoom ? 'Oda' : 'Konu';
-    final icon = isRoom ? Icons.meeting_room_rounded : Icons.topic_rounded;
+    final icon = isRoom ? AppContentIcons.room : AppContentIcons.topic;
     final bg = isRoom
         ? AppColors.purple600.withValues(alpha: 0.12)
         : const Color(0xFF0D9488).withValues(alpha: 0.14);

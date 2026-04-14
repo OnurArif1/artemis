@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/icons/app_content_icons.dart';
 import '../../core/geo/room_map_clustering.dart';
 import '../../core/location/location_service.dart';
 import '../../core/theme/app_colors.dart';
@@ -815,7 +816,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
                       ],
                     ),
                     child: const Icon(
-                      Icons.meeting_room_rounded,
+                      AppContentIcons.room,
                       color: Colors.white,
                       size: 17,
                     ),

@@ -28,6 +28,7 @@ class CreateTopicScreen extends StatefulWidget {
 class _CreateTopicScreenState extends State<CreateTopicScreen> {
   final _title = TextEditingController();
   final _roomTitle = TextEditingController();
+  final _roomLifeCycle = TextEditingController();
 
   List<Map<String, dynamic>> _categories = [];
   int? _categoryId;
@@ -57,6 +58,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
   void dispose() {
     _title.dispose();
     _roomTitle.dispose();
+    _roomLifeCycle.dispose();
     super.dispose();
   }
 
@@ -190,6 +192,11 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
       showAppSnackBar(context, 'Konu kimliği bulunamadı.', error: true);
       return;
     }
+    final lifeCycle = double.tryParse(_roomLifeCycle.text.trim());
+    if (lifeCycle == null) {
+      showAppSnackBar(context, 'Yaşam döngüsü gerekli (sayı).', error: true);
+      return;
+    }
 
     final app = context.read<AppServices>();
     setState(() => _loading = true);
@@ -200,6 +207,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
         'locationX': _roomLocationX ?? 0,
         'locationY': _roomLocationY ?? 0,
         'roomType': _roomType,
+        'lifeCycle': lifeCycle,
       });
       if (!mounted) return;
       setState(() => _loading = false);
@@ -319,6 +327,15 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
               controller: _roomTitle,
               decoration: const InputDecoration(
                 labelText: 'Oda başlığı *',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _roomLifeCycle,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'Yaşam döngüsü *',
                 border: OutlineInputBorder(),
               ),
             ),

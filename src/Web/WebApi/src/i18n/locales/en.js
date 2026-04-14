@@ -102,6 +102,8 @@ export default {
         locationX: 'X Coordinate',
         locationY: 'Y Coordinate',
         roomType: 'Room Type',
+        lifeCycle: 'Life cycle',
+        lifeCycleRequired: 'Life cycle is required.',
         public: 'Public',
         private: 'Private',
         createSuccess: 'Room created successfully',

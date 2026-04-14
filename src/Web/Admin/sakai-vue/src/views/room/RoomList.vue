@@ -86,7 +86,7 @@ function onCreated(payload) {
                 categoryId: payload.categoryId || null,
                 locationX: payload.locationX ?? null,
                 locationY: payload.locationY ?? null,
-                lifeCycle: payload.lifeCycle ?? null,
+                lifeCycle: payload.lifeCycle,
                 channelId: payload.channelId || null,
                 referenceId: payload.referenceId || null,
                 upvote: payload.upvote ?? null,
@@ -133,7 +133,7 @@ function onUpdated(payload) {
                 categoryId: payload.categoryId || null,
                 locationX: payload.locationX ?? null,
                 locationY: payload.locationY ?? null,
-                lifeCycle: payload.lifeCycle ?? null,
+                lifeCycle: payload.lifeCycle,
                 channelId: payload.channelId || null,
                 referenceId: payload.referenceId || null,
                 upvote: payload.upvote ?? null,
@@ -212,6 +212,11 @@ const getSeverity = (status) => {
             <Column field="roomType" :header="t('room.roomType')">
                 <template #body="{ data }">
                     <Tag :value="data.roomType === 1 ? t('common.public') : t('common.private')" :severity="getSeverity(data.roomType)" />
+                </template>
+            </Column>
+            <Column field="lifeCycle" :header="t('room.lifeCycle')">
+                <template #body="{ data }">
+                    <span class="text-sm">{{ data.lifeCycle != null ? data.lifeCycle : '—' }}</span>
                 </template>
             </Column>
             <Column field="channelId" :header="t('room.channelId')">
