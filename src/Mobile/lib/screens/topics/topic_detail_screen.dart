@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
@@ -162,6 +164,75 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     Navigator.of(context).pop();
   }
 
+  static double? _readCoord(Map<String, dynamic> m, String camel, String pascal) {
+    final v = m[camel] ?? m[pascal];
+    if (v == null) return null;
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString());
+  }
+
+  /// Konu için enlem/boylam tanımlı ve (0,0) değil.
+  bool _hasTopicLocation(Map<String, dynamic>? t) {
+    if (t == null) return false;
+    final lat = _readCoord(t, 'locationY', 'LocationY');
+    final lng = _readCoord(t, 'locationX', 'LocationX');
+    if (lat == null || lng == null) return false;
+    if (!lat.isFinite || !lng.isFinite) return false;
+    if (lat == 0 && lng == 0) return false;
+    return true;
+  }
+
+  /// iOS’ta önce Apple / yerel şemalar; diğer platformlarda web + geo.
+  static List<Uri> _mapLaunchCandidates(double lat, double lng) {
+    final query = Uri.encodeComponent('$lat,$lng');
+    final googleWeb =
+        Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    final geo = Uri.parse('geo:$lat,$lng');
+    if (kIsWeb) {
+      return [googleWeb, geo];
+    }
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return <Uri>[
+        Uri.parse('https://maps.apple.com/?ll=$lat,$lng'),
+        Uri.parse('maps://maps.apple.com/?ll=$lat,$lng&z=14'),
+        Uri.parse('comgooglemaps://?center=$lat,$lng&zoom=14'),
+        googleWeb,
+        geo,
+      ];
+    }
+    return [googleWeb, geo];
+  }
+
+  Future<void> _openTopicLocationOnMap() async {
+    final t = _topic;
+    if (t == null || !_hasTopicLocation(t)) {
+      showAppSnackBar(context, 'Bu konu için konum bilgisi yok.', error: true);
+      return;
+    }
+    final lat = _readCoord(t, 'locationY', 'LocationY')!;
+    final lng = _readCoord(t, 'locationX', 'LocationX')!;
+    final candidates = _mapLaunchCandidates(lat, lng);
+    try {
+      for (final uri in candidates) {
+        var ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+        if (ok) return;
+        ok = await launchUrl(uri, mode: LaunchMode.platformDefault);
+        if (ok) return;
+        final scheme = uri.scheme;
+        if (scheme == 'https' || scheme == 'http') {
+          ok = await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+          if (ok) return;
+        }
+      }
+      if (!mounted) return;
+      showAppSnackBar(context, 'Harita açılamadı.', error: true);
+    } catch (_) {
+      if (mounted) {
+        showAppSnackBar(context, 'Harita açılamadı.', error: true);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = _topic != null
@@ -190,6 +261,15 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
               );
             },
             icon: const Icon(Icons.chat_bubble_rounded),
+          ),
+          IconButton(
+            tooltip: _topic != null && _hasTopicLocation(_topic!)
+                ? 'Konumu haritada aç'
+                : 'Konum bilgisi yok',
+            onPressed: _topic != null && _hasTopicLocation(_topic!)
+                ? _openTopicLocationOnMap
+                : null,
+            icon: const Icon(Icons.map_rounded),
           ),
         ],
       ),
