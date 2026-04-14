@@ -4,6 +4,12 @@ int? entityId(Map<String, dynamic> m) {
   return int.tryParse('$v');
 }
 
+int? entityPartyId(Map<String, dynamic> m) {
+  final v = m['partyId'] ?? m['PartyId'];
+  if (v is int) return v;
+  return int.tryParse('$v');
+}
+
 String? entityString(Map<String, dynamic> m, List<String> keys) {
   for (final k in keys) {
     final v = m[k];

@@ -10,6 +10,7 @@ import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/paged_result.dart';
 import '../../core/util/party_resolver.dart';
+import '../../core/util/privacy_label.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
@@ -343,8 +344,14 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
           )
         else
           ..._comments.map((c) {
-            final author = entityString(c, ['partyName', 'PartyName']) ??
+            final commentParty = entityPartyId(c);
+            final isMine = _partyId != null &&
+                commentParty != null &&
+                commentParty == _partyId;
+            final rawAuthor = entityString(c, ['partyName', 'PartyName']) ??
                 'Katılımcı #${entityId(c) ?? ''}';
+            final author =
+                maskEmailLikeLabel(rawAuthor, showFull: isMine);
             final date = formatTrDate(c['createDate'] ?? c['CreateDate']);
             final body =
                 entityString(c, ['content', 'Content']) ?? '—';

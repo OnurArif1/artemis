@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/util/ensure_room_access.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
+import '../../core/util/privacy_label.dart';
 import '../../core/util/paged_result.dart';
 import '../../core/util/party_resolver.dart';
 import '../../services/app_services.dart';
@@ -410,7 +411,8 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                                 : CrossAxisAlignment.start,
                             children: [
                               Text(
-                                m.partyName,
+                                maskEmailLikeLabel(m.partyName,
+                                    showFull: mine),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 12,
