@@ -203,15 +203,6 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
                     if (_tierLoading)
                       const LinearProgressIndicator(minHeight: 2)
                     else if (_myTier != null)
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-                        child: Text(
-                          'Üyeliğiniz: ${subscriptionTierLabelTr(_myTier)} — odalar buna göre listelenir.',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                       child: TextField(
