@@ -28,6 +28,8 @@ const _turkeyCenter = LatLng(39, 35.5);
 const _userRadiusKm = 40.0;
 const _detailZoom = 12.0;
 const _zoomClusterThreshold = 10.0;
+const _roomOpenMinZoom = 14.5;
+const _roomTapZoomTarget = 16.0;
 
 const _mapBaseColor = Color(0xFFF2F2F2);
 
@@ -543,6 +545,14 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     final msg = _roomAccessMessage(room);
     if (msg != null) {
       showAppSnackBar(context, msg, error: true);
+      return;
+    }
+    final ll = itemLatLng(room);
+    final currentZoom = _mapController.camera.zoom;
+    if (ll != null && currentZoom < _roomOpenMinZoom) {
+      _mapController.move(ll, _roomTapZoomTarget);
+      _scheduleTilePipelineKick();
+      showAppSnackBar(context, 'Odayi acmak icin tekrar dokunun.');
       return;
     }
     Navigator.of(context).push<void>(
