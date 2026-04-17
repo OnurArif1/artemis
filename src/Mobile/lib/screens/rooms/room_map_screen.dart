@@ -878,7 +878,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
                 if (_buildCircles().isNotEmpty)
                   CircleLayer<Object>(circles: _buildCircles()),
                 MarkerLayer(markers: _buildMarkers()),
-                ArtemisMapTiles.attribution(),
               ],
             ),
           ),
