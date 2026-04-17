@@ -27,7 +27,7 @@ class RoomDetailScreen extends StatelessWidget {
     final distance = room['distance'] ?? room['Distance'];
     final ll = itemLatLng(room);
     final subType = parseSubscriptionType(Map<String, dynamic>.from(room));
-    final appBarTitle = (topicTitle != null && topicTitle.isNotEmpty)
+    final headerTitle = (topicTitle != null && topicTitle.isNotEmpty)
         ? '$title ($topicTitle)'
         : title;
 
@@ -47,35 +47,23 @@ class RoomDetailScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          appBarTitle,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+        title: Row(
+          children: [
+            const Icon(AppContentIcons.room, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                headerTitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
         ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const CircleAvatar(
-                backgroundColor: AppColors.purple100,
-                foregroundColor: AppColors.purple700,
-                child: Icon(AppContentIcons.room),
-              ),
-              if (subType != null) ...[
-                const SizedBox(width: 10),
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: SubscriptionTierBadge(
-                    subscriptionType: subType,
-                    compact: false,
-                  ),
-                ),
-              ],
-            ],
-          ),
           if (desc != null && desc.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(desc, style: Theme.of(context).textTheme.bodyLarge),
@@ -92,6 +80,22 @@ class RoomDetailScreen extends StatelessWidget {
               child: Text(line),
             ),
           ),
+          if (subType != null) ...[
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Text(
+                  'Paket:',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(width: 8),
+                SubscriptionTierBadge(
+                  subscriptionType: subType,
+                  compact: true,
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 16),
           if (id != null)
             FilledButton.icon(
@@ -100,7 +104,7 @@ class RoomDetailScreen extends StatelessWidget {
                   MaterialPageRoute<void>(
                     builder: (_) => RoomChatScreen(
                       roomId: id,
-                      roomTitle: appBarTitle,
+                      roomTitle: headerTitle,
                     ),
                   ),
                 );
