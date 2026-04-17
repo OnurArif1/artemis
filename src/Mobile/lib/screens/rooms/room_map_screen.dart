@@ -15,6 +15,7 @@ import '../../core/util/jwt_email.dart';
 import '../../core/util/paged_result.dart';
 import '../../core/util/room_create_policy.dart';
 import '../../core/util/subscription_display.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
@@ -66,6 +67,7 @@ class RoomMapScreen extends StatefulWidget {
 class _RoomMapScreenState extends State<RoomMapScreen> {
   final MapController _mapController = MapController();
   late final HomeTabController _homeTab;
+  late final AuthProvider _authProvider;
 
   List<Map<String, dynamic>> _rooms = [];
   bool _loading = true;
@@ -84,15 +86,29 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
 
   int? _mySubscriptionType;
   bool _tierLoading = true;
+  int _seenSubscriptionVersion = -1;
 
   @override
   void initState() {
     super.initState();
     _homeTab = context.read<HomeTabController>();
+    _authProvider = context.read<AuthProvider>();
     _homeTab.addListener(_onHomeTabChanged);
+    _authProvider.addListener(_onSubscriptionChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadMap(showRationaleDialog: true);
       _loadMySubscriptionTier();
+    });
+  }
+
+  void _onSubscriptionChanged() {
+    final v = _authProvider.subscriptionVersion;
+    if (v == _seenSubscriptionVersion) return;
+    _seenSubscriptionVersion = v;
+    if (!mounted) return;
+    setState(() {
+      _mySubscriptionType = _authProvider.subscriptionType;
+      _tierLoading = false;
     });
   }
 
@@ -102,6 +118,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     final email = emailFromAccessToken(token);
     final t = await resolveMySubscriptionTypeForRoomCreate(app, token, email);
     if (!mounted) return;
+    _authProvider.setSubscriptionType(t, notify: false);
     setState(() {
       _mySubscriptionType = t;
       _tierLoading = false;
@@ -125,6 +142,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   @override
   void dispose() {
     _homeTab.removeListener(_onHomeTabChanged);
+    _authProvider.removeListener(_onSubscriptionChanged);
     _mapController.dispose();
     super.dispose();
   }

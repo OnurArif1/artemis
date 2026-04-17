@@ -64,6 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final app = context.read<AppServices>();
     final t = await resolveMySubscriptionTypeForRoomCreate(app, token, email);
     if (!mounted) return;
+    context.read<AuthProvider>().setSubscriptionType(t, notify: false);
     setState(() {
       _partyTier = t;
       _tierLoading = false;
@@ -118,6 +119,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subscriptionType: picked,
           );
       if (!mounted) return;
+      context.read<AuthProvider>().setSubscriptionType(picked);
       setState(() {
         _partyTier = picked;
         _savingTier = false;

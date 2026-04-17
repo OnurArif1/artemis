@@ -8,6 +8,7 @@ import '../../core/util/jwt_email.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
 import '../../core/util/room_create_policy.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/fade_in_list_item.dart';
@@ -30,14 +31,29 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
   int? _mySubscriptionType;
   bool _tierLoading = true;
+  late final AuthProvider _authProvider;
+  int _seenSubscriptionVersion = -1;
 
   @override
   void initState() {
     super.initState();
+    _authProvider = context.read<AuthProvider>();
+    _authProvider.addListener(_onSubscriptionChanged);
     _search.addListener(() => setState(() {}));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _load();
       _loadMySubscriptionTier();
+    });
+  }
+
+  void _onSubscriptionChanged() {
+    final v = _authProvider.subscriptionVersion;
+    if (v == _seenSubscriptionVersion) return;
+    _seenSubscriptionVersion = v;
+    if (!mounted) return;
+    setState(() {
+      _mySubscriptionType = _authProvider.subscriptionType;
+      _tierLoading = false;
     });
   }
 
@@ -47,6 +63,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
     final email = emailFromAccessToken(token);
     final t = await resolveMySubscriptionTypeForRoomCreate(app, token, email);
     if (!mounted) return;
+    _authProvider.setSubscriptionType(t, notify: false);
     setState(() {
       _mySubscriptionType = t;
       _tierLoading = false;
@@ -69,6 +86,7 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
 
   @override
   void dispose() {
+    _authProvider.removeListener(_onSubscriptionChanged);
     _search.dispose();
     super.dispose();
   }

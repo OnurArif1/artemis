@@ -17,6 +17,11 @@ class AuthProvider extends ChangeNotifier {
   bool _pendingPostRegistrationOnboarding = false;
   bool get pendingPostRegistrationOnboarding => _pendingPostRegistrationOnboarding;
 
+  int? _subscriptionType;
+  int? get subscriptionType => _subscriptionType;
+  int _subscriptionVersion = 0;
+  int get subscriptionVersion => _subscriptionVersion;
+
   void setPendingPostRegistrationOnboarding(bool value) {
     _pendingPostRegistrationOnboarding = value;
   }
@@ -30,14 +35,31 @@ class AuthProvider extends ChangeNotifier {
   Future<void> login({required String email, required String password}) async {
     await _auth.login(email: email, password: password);
     LocationService.clearCache();
+    _subscriptionType = null;
+    _subscriptionVersion = 0;
     _onAuthenticatedSessionStarted?.call();
     notifyListeners();
   }
 
   Future<void> logout() async {
     _pendingPostRegistrationOnboarding = false;
+    _subscriptionType = null;
+    _subscriptionVersion = 0;
     LocationService.clearCache();
     await _auth.clearSession();
     notifyListeners();
+  }
+
+  /// Profilde paket değiştiğinde, ilgili ekranların koşullu butonlarını
+  /// anında güncellemek için kullanılır.
+  void setSubscriptionType(int? value, {bool notify = true}) {
+    final changed = _subscriptionType != value;
+    _subscriptionType = value;
+    if (changed) {
+      _subscriptionVersion++;
+    }
+    if (notify) {
+      notifyListeners();
+    }
   }
 }
