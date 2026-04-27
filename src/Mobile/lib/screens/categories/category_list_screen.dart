@@ -13,6 +13,7 @@ import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/fade_in_list_item.dart';
 import 'category_editor_screen.dart';
+import 'category_topics_screen.dart';
 
 class CategoryListScreen extends StatefulWidget {
   const CategoryListScreen({super.key});
@@ -247,6 +248,17 @@ class _CategoryListScreenState extends State<CategoryListScreen> {
                   ? Text(sub, maxLines: 2, overflow: TextOverflow.ellipsis)
                   : null,
               onTap: () async {
+                if (id == null) return;
+                await Navigator.of(context).push<void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => CategoryTopicsScreen(
+                      categoryId: id,
+                      categoryTitle: title,
+                    ),
+                  ),
+                );
+              },
+              onLongPress: () async {
                 final ok = await Navigator.of(context).push<bool>(
                   MaterialPageRoute<bool>(
                     builder: (_) => CategoryEditorScreen(
