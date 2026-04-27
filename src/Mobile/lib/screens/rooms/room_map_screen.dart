@@ -465,57 +465,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     await _loadMap(showRationaleDialog: false);
   }
 
-  Future<void> _goToMyLocation() async {
-    final pos = await LocationService.acquireForMap();
-    if (!mounted) return;
-    if (LocationService.consumeSkippedEmulatorDefaultNotification()) {
-      showAppSnackBar(
-        context,
-        'Emülatör varsayılanı kullanılmadı. Emülatörde İstanbul koordinatı seçin veya gerçek cihaz kullanın.',
-        error: true,
-      );
-    }
-    if (LocationService.consumeLocationServiceDisabledNotification()) {
-      showAppSnackBar(
-        context,
-        'Cihazda konum servisi kapalı.',
-        error: true,
-      );
-    }
-    if (pos == null) {
-      final p = await Geolocator.checkPermission();
-      if (mounted && p == LocationPermission.deniedForever) {
-        showAppSnackBar(
-          context,
-          'Konum izni ayarlardan açılmalı.',
-          error: true,
-        );
-      } else if (mounted) {
-        showAppSnackBar(
-          context,
-          'Konum alınamadı. İzin ve GPS’i kontrol edin.',
-          error: true,
-        );
-      }
-      return;
-    }
-    if (!mounted) return;
-    setState(() {
-      _userLat = pos.lat;
-      _userLng = pos.lng;
-      _filterLat = pos.lat;
-      _filterLng = pos.lng;
-      _mode = _MapViewMode.nearby;
-      _detailRegion = null;
-      _updateCountsForMode();
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _fitCameraForMode();
-    });
-    await _fetchAndApply(true);
-  }
-
   void _onPositionChanged(MapCamera camera, bool _) {
     if (camera.zoom >= _zoomClusterThreshold) return;
     if (_mode == _MapViewMode.city) return;
@@ -815,11 +764,6 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
             tooltip: 'Yenile',
             onPressed: _loading ? null : _refresh,
             icon: const Icon(Icons.refresh_rounded),
-          ),
-          IconButton(
-            tooltip: 'Konumum',
-            onPressed: _loading ? null : _goToMyLocation,
-            icon: const Icon(Icons.my_location_rounded),
           ),
         ],
       ),
