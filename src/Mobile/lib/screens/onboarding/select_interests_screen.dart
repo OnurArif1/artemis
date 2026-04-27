@@ -135,7 +135,9 @@ class _SelectInterestsState extends State<SelectInterestsScreen> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
+    final h = MediaQuery.sizeOf(context).height;
     final cross = _crossAxisCount(w);
+    final gridHeight = (h * 0.52).clamp(260.0, 520.0);
 
     return OnboardingScaffold(
       title: 'İlgi Alanlarınız',
@@ -152,76 +154,78 @@ class _SelectInterestsState extends State<SelectInterestsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: cross,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 0.78,
-                  ),
-                  itemCount: _items.length,
-                  itemBuilder: (context, i) {
-                    final it = _items[i];
-                    final sel = _selected.contains(it.id);
-                    final label = interestLabelTr(it.name);
-                    return Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () => _toggle(it.id),
-                        borderRadius: BorderRadius.circular(12),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              width: 2,
-                              color: sel ? AppColors.purple500 : AppColors.outlineMuted,
+                SizedBox(
+                  height: gridHeight,
+                  child: GridView.builder(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: cross,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 0.78,
+                    ),
+                    itemCount: _items.length,
+                    itemBuilder: (context, i) {
+                      final it = _items[i];
+                      final sel = _selected.contains(it.id);
+                      final label = interestLabelTr(it.name);
+                      return Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () => _toggle(it.id),
+                          borderRadius: BorderRadius.circular(12),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 10,
                             ),
-                            color: sel
-                                ? AppColors.purple500.withValues(alpha: 0.08)
-                                : Colors.white,
-                            boxShadow: sel
-                                ? [
-                                    BoxShadow(
-                                      color: AppColors.purple500.withValues(alpha: 0.18),
-                                      blurRadius: 12,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              InterestCoverPhoto(
-                                nameKey: it.name,
-                                height: cross >= 4 ? 58 : 64,
-                                selected: sel,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                width: 2,
+                                color: sel ? AppColors.purple500 : AppColors.outlineMuted,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                label,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: sel ? AppColors.purple600 : AppColors.darkCharcoal,
-                                      height: 1.15,
-                                    ),
-                              ),
-                            ],
+                              color: sel
+                                  ? AppColors.purple500.withValues(alpha: 0.08)
+                                  : Colors.white,
+                              boxShadow: sel
+                                  ? [
+                                      BoxShadow(
+                                        color: AppColors.purple500.withValues(alpha: 0.18),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                InterestCoverPhoto(
+                                  nameKey: it.name,
+                                  height: cross >= 4 ? 58 : 64,
+                                  selected: sel,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  label,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: sel ? AppColors.purple600 : AppColors.darkCharcoal,
+                                        height: 1.15,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 20),
                 FilledButton(
