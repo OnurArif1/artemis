@@ -30,12 +30,11 @@ public class CategoryHashtagMapService : ICategoryHashtagMapService
             throw new InvalidOperationException($"Hashtag with Id {viewModel.HashtagId} does not exist.");
         }
 
-        var map = new CategoryHashtagMap()
+        await _artemisDbContext.CategoryHashtagMaps.AddAsync(new CategoryHashtagMap
         {
             CategoryId = viewModel.CategoryId,
             HashtagId = viewModel.HashtagId
-        };
-        await _artemisDbContext.CategoryHashtagMaps.AddAsync(map);
+        });
         await _artemisDbContext.SaveChangesAsync();
     }
 
@@ -121,7 +120,7 @@ public class CategoryHashtagMapService : ICategoryHashtagMapService
 
         return new ResultCategoryHashtagMapLookupViewModel
         {
-            Count = maps.Count(),
+            Count = maps.Count,
             ViewModels = maps
         };
     }

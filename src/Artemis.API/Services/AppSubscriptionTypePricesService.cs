@@ -16,6 +16,16 @@ public class AppSubscriptionTypePricesService : IAppSubscriptionTypePricesServic
 
     public async ValueTask Create(CreateOrUpdateAppSubscriptionTypePricesViewModel viewModel)
     {
+        var x = await _artemisDbContext.AppSubscriptionTypePrices
+            .FirstOrDefaultAsync(i => i.SubscriptionType == viewModel.SubscriptionType
+                                      && i.PriceCurrencyType == viewModel.PriceCurrencyType
+                                      && i.AppSubscriptionPeriodType == viewModel.AppSubscriptionPeriodType
+                                      && i.ThruDate == null);
+        if (x is not null)        
+        {
+            throw new InvalidOperationException("An active subscription price with the same subscription type, price currency type, and subscription period type already exists.");
+        }
+
         var appSubscriptionTypePrices = new AppSubscriptionTypePrices
         {
             SubscriptionType = viewModel.SubscriptionType,
@@ -97,9 +107,7 @@ public class AppSubscriptionTypePricesService : IAppSubscriptionTypePricesServic
             
         if (appSubscriptionTypePrices is not null)
         {
-            var todayUtc = DateTime.UtcNow.Date;
-            appSubscriptionTypePrices.ThruDate = todayUtc;
-            
+            appSubscriptionTypePrices.ThruDate = DateTime.UtcNow.Date;   
             await _artemisDbContext.SaveChangesAsync();
         }
     }

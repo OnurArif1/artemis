@@ -17,12 +17,17 @@ public class HashtagService : IHashtagService
 
     public async ValueTask Create(CreateOrUpdateHashtagViewModel viewModel)
     {
-        var hashtag = new Hashtag()
+        var exists = await _artemisDbContext.Hashtags
+            .FirstOrDefaultAsync(i => i.HashtagName == viewModel.HashtagName);
+        if (exists is not null)
+        {
+            throw new Exception("Bu hashtag zaten mevcut.");
+        }
+
+        await _artemisDbContext.Hashtags.AddAsync(new Hashtag()
         {
             HashtagName = viewModel.HashtagName
-        };
-
-        await _artemisDbContext.Hashtags.AddAsync(hashtag);
+        });
         await _artemisDbContext.SaveChangesAsync();
     }
 

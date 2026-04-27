@@ -20,16 +20,14 @@ public class MentionService : IMentionService
         var messageId = viewModel.MessageId.HasValue && viewModel.MessageId.Value > 0 ? viewModel.MessageId : null;
         var commentId = viewModel.CommentId.HasValue && viewModel.CommentId.Value > 0 ? viewModel.CommentId : null;
         var topicId = viewModel.TopicId.HasValue && viewModel.TopicId.Value > 0 ? viewModel.TopicId : null;
-
-        var mention = new Mention()
+        
+        await _artemisDbContext.Mentions.AddAsync(new Mention
         {
             RoomId = roomId,
             MessageId = messageId,
             CommentId = commentId,
             TopicId = topicId
-        };
-        
-        await _artemisDbContext.Mentions.AddAsync(mention);
+        });
         await _artemisDbContext.SaveChangesAsync();
     }
 

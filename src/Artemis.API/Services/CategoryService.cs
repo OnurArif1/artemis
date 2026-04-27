@@ -16,12 +16,18 @@ public class CategoryService : ICategoryService
 
     public async ValueTask Create(CreateOrUpdateCategoryViewModel viewModel)
     {
-        var category = new Category
+        var exists = await _artemisDbContext.Categories
+            .FirstOrDefaultAsync(i => i.Title == viewModel.Title);
+        if (exists is not null)        
+        {
+            throw new Exception("Bu kategori zaten mevcut.");
+        }
+
+        await _artemisDbContext.Categories.AddAsync(new Category
         {
             Title = viewModel.Title,
             CreateDate = viewModel.CreateDate
-        };
-        await _artemisDbContext.Categories.AddAsync(category);
+        });
         await _artemisDbContext.SaveChangesAsync();
     }
 
