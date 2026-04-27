@@ -21,14 +21,20 @@ public class RoomService : IRoomService
 
     public async ValueTask Create(CreateOrUpdateRoomViewModel viewModel)
     {
-        if (!viewModel.TopicId.HasValue || viewModel.TopicId.Value <= 0)
-        {
-            throw new ArgumentException("TopicId is required and must be greater than zero.");
-        }
-
         if (string.IsNullOrWhiteSpace(viewModel.Title))
         {
             throw new ArgumentException("Title is required.");
+        }
+
+        var exists = await _artemisDbContext.Rooms.SingleOrDefaultAsync(r => r.Title == viewModel.Title);
+        if (exists != null)
+        {
+            throw new ArgumentException("Bu başlıkta zaten bir oda mevcut. Lütfen farklı bir başlık seçiniz.");
+        }
+
+        if (!viewModel.TopicId.HasValue || viewModel.TopicId.Value <= 0)
+        {
+            throw new ArgumentException("TopicId is required and must be greater than zero.");
         }
 
         if (viewModel.RoomType == RoomType.None)

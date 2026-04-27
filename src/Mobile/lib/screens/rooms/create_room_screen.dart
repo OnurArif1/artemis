@@ -12,6 +12,7 @@ import '../../core/util/room_create_policy.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
+import '../chat/room_chat_screen.dart';
 
 int? _entityId(Map<String, dynamic> m) {
   final v = m['id'] ?? m['Id'];
@@ -37,7 +38,6 @@ class CreateRoomScreen extends StatefulWidget {
 
 class _CreateRoomScreenState extends State<CreateRoomScreen> {
   final _title = TextEditingController();
-  final _lifeCycle = TextEditingController();
   final _roomRange = TextEditingController();
   final _partySearch = TextEditingController();
 
@@ -47,11 +47,13 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   int? _subscriptionType;
   double? _locationX;
   double? _locationY;
+  DateTime? _lifeCycleEnd;
 
   bool _loading = false;
   bool _loadingTopics = true;
   bool _showInvite = false;
   int? _createdRoomId;
+  String? _createdRoomTitle;
   final List<Map<String, dynamic>> _selectedParties = [];
   List<Map<String, dynamic>> _partyResults = [];
   bool _loadingParties = false;
@@ -80,7 +82,6 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   void dispose() {
     _partyDebounce?.cancel();
     _title.dispose();
-    _lifeCycle.dispose();
     _roomRange.dispose();
     _partySearch.dispose();
     super.dispose();
@@ -135,9 +136,9 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       showAppSnackBar(context, 'Konu seçin.', error: true);
       return;
     }
-    final lifeCycle = double.tryParse(_lifeCycle.text.trim());
+    final lifeCycle = _lifeCycleMinutes();
     if (lifeCycle == null) {
-      showAppSnackBar(context, 'Yaşam döngüsü gerekli (sayı).', error: true);
+      showAppSnackBar(context, 'Yaşam döngüsü için tarih ve saat seçin.', error: true);
       return;
     }
 
@@ -177,13 +178,14 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       setState(() {
         _loading = false;
         _createdRoomId = newId;
+        _createdRoomTitle = createdTitle;
         _showInvite = true;
         _title.clear();
-        _lifeCycle.clear();
         _topicId = null;
         _roomRange.clear();
         _roomType = 1;
         _subscriptionType = null;
+        _lifeCycleEnd = null;
       });
       showAppSnackBar(context, 'Oda oluşturuldu.');
     } on DioException catch (e) {
@@ -200,6 +202,52 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       setState(() => _loading = false);
       showAppSnackBar(context, 'Oluşturulamadı', error: true);
     }
+  }
+
+  Future<void> _pickLifeCycleEnd() async {
+    final now = DateTime.now();
+    final initial = _lifeCycleEnd != null && _lifeCycleEnd!.isAfter(now)
+        ? _lifeCycleEnd!
+        : now.add(const Duration(hours: 1));
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365)),
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (time == null || !mounted) return;
+    final picked = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    setState(() => _lifeCycleEnd = picked);
+  }
+
+  double? _lifeCycleMinutes() {
+    final end = _lifeCycleEnd;
+    if (end == null) return null;
+    final diff = end.toUtc().difference(DateTime.now().toUtc());
+    if (diff.inMinutes <= 0) return null;
+    return diff.inMinutes.toDouble();
+  }
+
+  String _lifeCycleLabel(BuildContext context) {
+    final end = _lifeCycleEnd;
+    if (end == null) return 'Tarih ve saat seçin';
+    final d = MaterialLocalizations.of(context).formatCompactDate(end);
+    final t = MaterialLocalizations.of(context).formatTimeOfDay(
+      TimeOfDay.fromDateTime(end),
+      alwaysUse24HourFormat: true,
+    );
+    return '$d $t';
   }
 
   void _onPartySearchChanged(String q) {
@@ -538,12 +586,26 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _lifeCycle,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Yaşam döngüsü *',
-              ).applyDefaults(Theme.of(context).inputDecorationTheme),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _pickLifeCycleEnd,
+                borderRadius: BorderRadius.circular(12),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Yaşam döngüsü bitişi *',
+                    suffixIcon: Icon(Icons.calendar_month_rounded),
+                  ).applyDefaults(Theme.of(context).inputDecorationTheme),
+                  child: Text(
+                    _lifeCycleLabel(context),
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: _lifeCycleEnd == null
+                          ? Theme.of(context).hintColor
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -639,7 +701,25 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               child: const Text('Seçilenleri odaya ekle'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                final id = _createdRoomId;
+                if (id == null) {
+                  Navigator.of(context).pop();
+                  return;
+                }
+                final roomTitle =
+                    (_createdRoomTitle != null && _createdRoomTitle!.trim().isNotEmpty)
+                        ? _createdRoomTitle!.trim()
+                        : 'Oda #$id';
+                Navigator.of(context).pushReplacement<void, void>(
+                  MaterialPageRoute<void>(
+                    builder: (_) => RoomChatScreen(
+                      roomId: id,
+                      roomTitle: roomTitle,
+                    ),
+                  ),
+                );
+              },
               child: const Text('Bitir'),
             ),
           ],
