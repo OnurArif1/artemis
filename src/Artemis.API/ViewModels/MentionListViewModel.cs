@@ -3,7 +3,7 @@ namespace Artemis.API.Services;
 public class MentionListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<MentionResultViewModel> ResultViewModels { get; set; } = new List<MentionResultViewModel>();
+    public IEnumerable<MentionResultViewModel> ResultViewModels { get; set; } = [];
 }
 
 public class MentionResultViewModel

@@ -3,7 +3,7 @@ namespace Artemis.API.Services;
 public class TopicHashtagMapListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<TopicHashtagMapResultViewModel> ResultViewModels { get; set; } = new List<TopicHashtagMapResultViewModel>();
+    public IEnumerable<TopicHashtagMapResultViewModel> ResultViewModels { get; set; } = [];
 }
 
 public class TopicHashtagMapResultViewModel

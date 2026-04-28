@@ -5,7 +5,7 @@ namespace Artemis.API.Services;
 public class OrganizationListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<OrganizationResultViewModel> ResultViewModels { get; set; } = new List<OrganizationResultViewModel>();
+    public IEnumerable<OrganizationResultViewModel> ResultViewModels { get; set; } = [];
 }
 
 public class OrganizationResultViewModel

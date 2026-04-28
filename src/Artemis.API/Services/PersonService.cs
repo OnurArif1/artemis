@@ -86,7 +86,7 @@ public class PersonService : IPersonService
             IsBanned = viewModel.IsBanned,
             DeviceId = viewModel.DeviceId
         });
-        _artemisDbContext.SaveChanges();
+        await _artemisDbContext.SaveChangesAsync();
 
         resultViewModel.IsSuccess = true;
         return resultViewModel;

@@ -84,7 +84,7 @@ public class SubscribeService : ISubscribeService
             CreatedPartyId = viewModel.CreatedPartyId,
             SubscriberPartyId = viewModel.SubscriberPartyId
         });
-        _artemisDbContext.SaveChanges();
+        await _artemisDbContext.SaveChangesAsync();
 
         resultViewModel.IsSuccess = true;
         return resultViewModel;

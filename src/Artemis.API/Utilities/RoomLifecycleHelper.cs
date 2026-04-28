@@ -4,9 +4,6 @@ namespace Artemis.API.Utilities;
 
 public static class RoomLifecycleHelper
 {
-    /// <summary>
-    /// LifeCycle alanı dakika cinsinden; CreateDate + LifeCycle sonrası oda mesaj/katılım için kapanır.
-    /// </summary>
     public static bool IsExpired(Room room)
     {
         var end = LifecycleEndUtc(room.CreateDate, room.LifeCycle);

@@ -3,7 +3,7 @@ namespace Artemis.API.Services;
 public class SubscribeListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<SubscribeResultViewModel> ResultViewModels { get; set; } = new List<SubscribeResultViewModel>();
+    public IEnumerable<SubscribeResultViewModel> ResultViewModels { get; set; } = [];
 }
 
 public class SubscribeResultViewModel

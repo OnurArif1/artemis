@@ -5,7 +5,7 @@ namespace Artemis.API.Services;
 public class AppSubscriptionTypePricesListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<AppSubscriptionTypePricesResultViewModel> ResultViewmodels { get; set; } = new List<AppSubscriptionTypePricesResultViewModel>();
+    public IEnumerable<AppSubscriptionTypePricesResultViewModel> ResultViewmodels { get; set; } = [];
 }
 
 public class AppSubscriptionTypePricesResultViewModel

@@ -77,7 +77,7 @@ public class RoomService : IRoomService
         }
               
         await _artemisDbContext.Rooms.AddAsync(room);
-        _artemisDbContext.SaveChanges();
+        await _artemisDbContext.SaveChangesAsync();
     }
 
     private async Task ValidateCreatorCanCreateRoomAsync(CreateOrUpdateRoomViewModel viewModel)
@@ -216,10 +216,6 @@ public class RoomService : IRoomService
         };
     }
 
-    /// <summary>
-    /// Sohbet başlat (+): (1) menzil içi odalar mesafeye göre, (2) eksik kısım menzil dışı en yakınlar,
-    /// (3) hâlâ eksikse Upvote azalan. Konum yoksa doğrudan Upvote.
-    /// </summary>
     private async ValueTask<RoomListViewModel> GetStartChatPickerListAsync(RoomFilterViewModel filterViewModel)
     {
         var limit = filterViewModel.PageSize > 0 ? filterViewModel.PageSize : 20;
@@ -250,7 +246,6 @@ public class RoomService : IRoomService
                 .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == filterViewModel.UserEmail.ToLower());
         }
 
-        // Keşif listesi: süresi dolmuş / üyelik kısıtlı odalar da dahil (sıralamada kullanılır); ayrıntı alanları VM'de kalır.
         var allVms = rooms
             .Select(r => MapRoomToResult(r, userParty, filterViewModel.UserLatitude, filterViewModel.UserLongitude))
             .ToList();
@@ -262,7 +257,6 @@ public class RoomService : IRoomService
 
         if (hasLatLng)
         {
-            // 1) Menzil içi (distance <= RoomRange), yakından uzağa
             var inRange = allVms
                 .Where(vm =>
                     vm.RoomRange.HasValue &&
@@ -278,7 +272,6 @@ public class RoomService : IRoomService
                 usedIds.Add(vm.Id);
             }
 
-            // 2) Eksik kısım: menzil dışı ama mesafesi olanlar, yine yakından uzağa
             if (combined.Count < limit)
             {
                 var need = limit - combined.Count;
@@ -296,7 +289,6 @@ public class RoomService : IRoomService
             }
         }
 
-        // 3) Konum yoksa veya hâlâ eksikse: Upvote ile tamamla
         if (combined.Count < limit)
         {
             var need = limit - combined.Count;
@@ -471,7 +463,7 @@ public class RoomService : IRoomService
 
     private static double CalculateDistance(double lat1, double lon1, double lat2, double lon2)
     {
-        const double R = 6371; // Dünya'nın yarıçapı (km)
+        const double R = 6371;
         var dLat = ToRadians(lat2 - lat1);
         var dLon = ToRadians(lon2 - lon1);
         var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +

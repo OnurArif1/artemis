@@ -7,7 +7,6 @@ public class CreateOrUpdateRoomViewModel
     public int? Id { get; set; } = null;
     public int? TopicId { get; set; }
     public int? PartyId { get; set; }
-    /// <summary>Mobil / istemci: oluşturan kullanıcının e-postası (üyelik kontrolü).</summary>
     public string? UserEmail { get; set; }
     public int? CategoryId { get; set; }
     public string Title { get; set; } = string.Empty;

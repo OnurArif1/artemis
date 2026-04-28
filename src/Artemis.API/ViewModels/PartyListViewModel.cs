@@ -5,7 +5,7 @@ namespace Artemis.API.Services;
 public class PartyListViewModel
 {
     public int? Count { get; set; }
-    public IEnumerable<PartyResultViewModel> ResultViewmodels { get; set; } = new List<PartyResultViewModel>();
+    public IEnumerable<PartyResultViewModel> ResultViewmodels { get; set; } = [];
 }
 
 public class PartyResultViewModel
