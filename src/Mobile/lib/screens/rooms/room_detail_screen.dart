@@ -97,7 +97,6 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         pageIndex++;
       }
     } catch (_) {
-      // Sessiz geç: detay ekranını sayım hatası yüzünden bloke etmeyelim.
     }
     if (!mounted) return;
     setState(() {

@@ -11,7 +11,6 @@ class RoomEntryResult {
   });
 
   final bool allowed;
-  /// Süre dolmuş; kullanıcı bu odada daha önce mesaj atmış, geçmiş okunabilir, yazılamaz.
   final bool readOnlyExpired;
   final String? errorMessage;
 

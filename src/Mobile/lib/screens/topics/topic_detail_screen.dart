@@ -171,14 +171,12 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
     final s = v.toString().trim();
     final d = double.tryParse(s);
     if (d != null) return d;
-    // "41,0362" (TR ondalık virgül)
     if (s.contains(',') && !s.contains('.')) {
       return double.tryParse(s.replaceAll(',', '.'));
     }
     return null;
   }
 
-  /// Konu için enlem/boylam tanımlı ve (0,0) değil.
   bool _hasTopicLocation(Map<String, dynamic>? t) {
     if (t == null) return false;
     final lat = _readCoord(t, 'locationY', 'LocationY');

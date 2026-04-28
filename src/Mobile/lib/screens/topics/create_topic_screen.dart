@@ -250,7 +250,6 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<int?>(
-              // ignore: deprecated_member_use
               value: _categoryId,
               decoration: const InputDecoration(
                 labelText: 'Kategori',

@@ -50,8 +50,6 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Profilde paket değiştiğinde, ilgili ekranların koşullu butonlarını
-  /// anında güncellemek için kullanılır.
   void setSubscriptionType(int? value, {bool notify = true}) {
     final changed = _subscriptionType != value;
     _subscriptionType = value;

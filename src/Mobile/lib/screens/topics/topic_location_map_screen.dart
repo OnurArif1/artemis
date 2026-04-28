@@ -5,7 +5,6 @@ import 'package:latlong2/latlong.dart';
 import '../../core/geo/artemis_map_tiles.dart';
 import '../../core/theme/app_colors.dart';
 
-/// Odalar haritası ile aynı stil: tek konu işareti.
 class TopicLocationMapScreen extends StatefulWidget {
   const TopicLocationMapScreen({
     super.key,
@@ -38,7 +37,6 @@ class _TopicLocationMapScreenState extends State<TopicLocationMapScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _kickTilePipeline());
   }
 
-  /// Odalar haritasındaki gibi: ilk karede karolar bazen çizilmez; hafif kamera oynatması tetikler.
   void _kickTilePipeline() {
     void nudge() {
       if (!mounted) return;

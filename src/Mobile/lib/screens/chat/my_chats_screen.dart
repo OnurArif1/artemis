@@ -111,8 +111,6 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
     super.dispose();
   }
 
-  /// Üstte açılan oda/konu sohbeti veya (+) ekranı kapanınca liste güncellensin
-  /// (API’nin mesajı döndürmesi için kısa gecikme).
   void _scheduleReloadChatsAfterOverlayPop() {
     _reloadAfterPopTimer?.cancel();
     _reloadAfterPopTimer = Timer(const Duration(milliseconds: 400), () {
@@ -233,7 +231,6 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         return;
       }
 
-      // Önce sadece kullanıcının kendi mesaj/yorumları: sohbet listesi hızlı görünsün.
       final results = await Future.wait([
         app.messages.getList({
           'pageIndex': 1,
@@ -274,7 +271,6 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
               -1,
       }..removeWhere((id) => id <= 0 || _topicTitlesCache.containsKey(id));
 
-      // Eksik başlıklar varsa arka planda tamamla; ilk çizimi bekletme.
       if (neededRoomIds.isNotEmpty || neededTopicIds.isNotEmpty) {
         final titlePayloads = await Future.wait([
           if (neededRoomIds.isNotEmpty) app.rooms.getList({'pageIndex': 1, 'pageSize': 1000}),

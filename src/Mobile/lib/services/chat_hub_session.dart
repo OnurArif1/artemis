@@ -45,7 +45,6 @@ class ChatHubSession {
     try {
       await _hub!.invoke('GetConnectionId');
     } catch (_) {
-      // Bazı sürümlerde isteğe bağlı
     }
   }
 
@@ -55,7 +54,6 @@ class ChatHubSession {
     try {
       await h.stop();
     } catch (_) {
-      // ignore
     }
     _hub = null;
   }

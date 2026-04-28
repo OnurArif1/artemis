@@ -16,7 +16,6 @@ import '../../services/auth_service.dart';
 import 'room_chat_screen.dart';
 import 'topic_chat_screen.dart';
 
-/// WhatsApp’taki «yeni sohbet» benzeri: pakete uygun odalar + tüm konular; seçimde sohbet ekranı.
 class StartChatPickerScreen extends StatefulWidget {
   const StartChatPickerScreen({super.key});
 
@@ -89,8 +88,6 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
       final roomMaps = asMapList(results[0]);
       final topicMaps = asMapList(results[1]);
 
-      // Üyelik süzmesi sunucuda (StartChatPickerMode); burada tekrar filtrelemek
-      // JWT / API tier uyumsuzluğunda listeyi 1 öğeye düşürebiliyordu.
       setState(() {
         _myTier = tier;
         _tierLoading = false;

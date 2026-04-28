@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
-/// Odalar haritası ile **aynı** karo kaynağı (Carto light_all).
-/// Birincil yüklenemezse OSM yedeği kullanılır.
 class ArtemisMapTiles {
   ArtemisMapTiles._();
 
-  /// [RoomMapScreen] ile birebir aynı şablon (Carto Positron / light_all).
   static TileLayer layer() {
     return TileLayer(
       urlTemplate:

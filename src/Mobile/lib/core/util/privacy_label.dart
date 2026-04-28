@@ -1,5 +1,3 @@
-/// E-posta biçimindeki gösterim adlarında gizlilik: ilk 2 karakter açık, kalanı `*`.
-/// Kendi satırın için [showFull] true verilir.
 String maskEmailLikeLabel(String label, {required bool showFull}) {
   if (showFull) return label;
   final s = label.trim();

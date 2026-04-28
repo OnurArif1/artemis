@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Oda ve konu için uygulama genelinde kullanılan tutarlı ikonlar.
-/// — Oda: tartışma/sohbet alanı (`forum`)
-/// — Konu: başlık veya etiket (`tag`)
 abstract final class AppContentIcons {
   AppContentIcons._();
 

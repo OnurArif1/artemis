@@ -44,7 +44,6 @@ class LocationService {
     return r * c <= km;
   }
 
-  /// Geliştirici emülatör/simülatör fabrika konumu — gerçek GPS değil.
   static bool isLikelySimulatorDefault(double lat, double lng) {
     return _withinKm(lat, lng, _androidEmuLat, _androidEmuLng, 2.5) ||
         _withinKm(lat, lng, _iosSimLat, _iosSimLng, 3.0) ||
