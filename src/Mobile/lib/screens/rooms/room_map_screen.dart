@@ -508,6 +508,81 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
     } catch (_) {}
   }
 
+  /// Yakınlaştırma kutusunun altındaki «Konumum»: izin varsa haritayı kullanıcıya götürür.
+  Future<void> _centerOnMyLocation() async {
+    double? lat = _userLat;
+    double? lng = _userLng;
+    var refetchRooms = false;
+
+    if (lat == null || lng == null) {
+      final cached = LocationService.cached;
+      if (cached != null) {
+        lat = cached.lat;
+        lng = cached.lng;
+        refetchRooms = true;
+      }
+    }
+
+    if (lat == null || lng == null) {
+      final perm = await Geolocator.checkPermission();
+      if (!mounted) return;
+      if (perm == LocationPermission.deniedForever) {
+        showAppSnackBar(
+          context,
+          'Konum izni kapalı. Ayarlar → Uygulama → Konum üzerinden izin verin.',
+          error: true,
+        );
+        return;
+      }
+
+      final pos = await LocationService.tryCurrentPosition();
+      if (!mounted) return;
+
+      if (LocationService.consumeSkippedEmulatorDefaultNotification()) {
+        showAppSnackBar(
+          context,
+          'Geliştirici emülatörünün varsayılan konumu kullanılmıyor. '
+          'Gerçek telefonda deneyin veya emülatörde konumu ayarlayın.',
+        );
+        return;
+      }
+
+      if (pos == null) {
+        showAppSnackBar(
+          context,
+          'Konum alınamadı veya izin verilmedi.',
+          error: true,
+        );
+        return;
+      }
+      lat = pos.lat;
+      lng = pos.lng;
+      refetchRooms = true;
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      _filterLat = lat;
+      _filterLng = lng;
+      _userLat = lat;
+      _userLng = lng;
+      _mode = _MapViewMode.nearby;
+      _detailRegion = null;
+      _updateCountsForMode();
+    });
+
+    if (refetchRooms) {
+      await _fetchAndApply(true);
+      if (!mounted) return;
+    }
+
+    try {
+      _mapController.move(LatLng(lat, lng), 14);
+      _scheduleTilePipelineKick();
+    } catch (_) {}
+  }
+
   Future<void> _refresh() async {
     await _loadMap(showRationaleDialog: false);
   }
@@ -920,6 +995,13 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
                   visualDensity: VisualDensity.compact,
                   onPressed: () => _zoomByStep(-1),
                   icon: const Icon(Icons.remove_rounded, color: AppColors.purple700),
+                ),
+                Divider(height: 1, color: Colors.grey.shade300),
+                IconButton(
+                  tooltip: 'Konumum',
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _loading ? null : _centerOnMyLocation,
+                  icon: const Icon(Icons.my_location_rounded, color: AppColors.purple700),
                 ),
               ],
             ),
