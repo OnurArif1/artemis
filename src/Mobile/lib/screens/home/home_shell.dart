@@ -5,7 +5,6 @@ import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../widgets/app_ambient_background.dart';
-import '../categories/category_list_screen.dart';
 import '../chat/my_chats_screen.dart';
 import '../profile/profile_screen.dart';
 import '../rooms/room_map_screen.dart';
@@ -36,11 +35,6 @@ class _HomeShellState extends State<HomeShell> {
       label: 'Konular',
     ),
     NavigationDestination(
-      icon: Icon(Icons.category_outlined),
-      selectedIcon: Icon(Icons.category_rounded),
-      label: 'Kategoriler',
-    ),
-    NavigationDestination(
       icon: Icon(Icons.person_outline_rounded),
       selectedIcon: Icon(Icons.person_rounded),
       label: 'Profil',
@@ -56,7 +50,6 @@ class _HomeShellState extends State<HomeShell> {
       const MyChatsScreen(),
       const RoomMapScreen(),
       const TopicListScreen(),
-      const CategoryListScreen(),
       const ProfileScreen(),
     ];
 
@@ -95,11 +88,6 @@ class _HomeShellState extends State<HomeShell> {
                   icon: Icon(AppContentIcons.topicOutlined),
                   selectedIcon: Icon(AppContentIcons.topic),
                   label: Text('Konular'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.category_outlined),
-                  selectedIcon: Icon(Icons.category_rounded),
-                  label: Text('Kategoriler'),
                 ),
                 NavigationRailDestination(
                   icon: Icon(Icons.person_outline_rounded),
