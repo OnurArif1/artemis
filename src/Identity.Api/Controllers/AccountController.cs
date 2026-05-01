@@ -58,47 +58,59 @@ public class AccountController : ControllerBase
 
         await _userManager.AddToRoleAsync(user, "User");
 
-        var partyName = string.IsNullOrWhiteSpace(request.PartyName) ? email : request.PartyName.Trim();
+        const string pendingPartyName = "-";
         var effectiveSubscription = request.SubscriptionType;
         if (request.PartyType == PartyType.Organization)
         {
             effectiveSubscription ??= SubscriptionType.Gold;
         }
 
-        // TPT: yalnızca Party eklemek Person/Organization tablolarına yazmaz; doğru türetilmiş satır gerekir.
-        if (request.PartyType == PartyType.Organization)
+        await using var trx = await _artemisDb.Database.BeginTransactionAsync(ct);
+        try
         {
-            await _artemisDb.Organizations.AddAsync(
-                new Organization
+            if (request.PartyType == PartyType.Organization)
+            {
+                var org = new Organization
                 {
-                    PartyName = partyName,
+                    PartyName = pendingPartyName,
                     Email = email,
                     PartyType = PartyType.Organization,
                     SubscriptionType = effectiveSubscription,
                     IsBanned = request.IsBanned ?? false,
                     DeviceId = request.DeviceId ?? 0,
                     CreateDate = DateTime.UtcNow,
-                },
-                ct);
-        }
-        else
-        {
-            var partyType = request.PartyType == PartyType.None ? PartyType.Person : request.PartyType;
-            await _artemisDb.People.AddAsync(
-                new Person
+                };
+                await _artemisDb.Organizations.AddAsync(org, ct);
+                await _artemisDb.SaveChangesAsync(ct);
+                org.PartyName = $"institutional{org.Id}";
+                await _artemisDb.SaveChangesAsync(ct);
+            }
+            else
+            {
+                var partyType = request.PartyType == PartyType.None ? PartyType.Person : request.PartyType;
+                var person = new Person
                 {
-                    PartyName = partyName,
+                    PartyName = pendingPartyName,
                     Email = email,
                     PartyType = partyType,
                     SubscriptionType = effectiveSubscription,
                     IsBanned = request.IsBanned ?? false,
                     DeviceId = request.DeviceId ?? 0,
                     CreateDate = DateTime.UtcNow,
-                },
-                ct);
-        }
+                };
+                await _artemisDb.People.AddAsync(person, ct);
+                await _artemisDb.SaveChangesAsync(ct);
+                person.PartyName = $"anonymous{person.Id}";
+                await _artemisDb.SaveChangesAsync(ct);
+            }
 
-        await _artemisDb.SaveChangesAsync(ct);
+            await trx.CommitAsync(ct);
+        }
+        catch
+        {
+            await trx.RollbackAsync(ct);
+            throw;
+        }
 
         return Ok(new { message = "Your account has been created. You can log in." });
     }

@@ -29,14 +29,15 @@ class PartyService {
 
   Future<void> updateProfile({
     required String email,
-    required String partyName,
+    String? partyName,
     String? description,
   }) async {
     await _dio.post<void>(
       '/party/update-profile',
       data: {
         'email': email,
-        'partyName': partyName,
+        if (partyName != null && partyName.trim().isNotEmpty)
+          'partyName': partyName.trim(),
         'description': description,
       },
     );

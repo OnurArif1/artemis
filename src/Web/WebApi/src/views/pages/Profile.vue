@@ -128,7 +128,7 @@ const saveDescription = async () => {
 
         await partyService.updateProfile(
             email,
-            partyName.value || email,
+            partyName.value?.trim() ? partyName.value.trim() : undefined,
             editingDescription.value.trim() || null
         );
 

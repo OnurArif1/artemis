@@ -18,6 +18,17 @@ import 'room_chat_screen.dart';
 import 'start_chat_picker_screen.dart';
 import 'topic_chat_screen.dart';
 
+String? _partyNameFromLookupResponse(dynamic lu) {
+  if (lu is! Map) return null;
+  final vm = lu['viewModels'] ?? lu['ViewModels'];
+  if (vm is! List || vm.isEmpty) return null;
+  final first = vm.first;
+  if (first is! Map) return null;
+  final m = Map<String, dynamic>.from(first);
+  final n = '${m['partyName'] ?? m['PartyName'] ?? ''}'.trim();
+  return n.isEmpty ? null : n;
+}
+
 class _ConversationRow {
   _ConversationRow({
     required this.isRoom,
@@ -25,6 +36,8 @@ class _ConversationRow {
     required this.title,
     required this.lastAt,
     this.preview,
+    this.lastSenderPartyName,
+    this.lastSenderPartyId,
     this.roomTopicTitle,
   });
 
@@ -33,6 +46,12 @@ class _ConversationRow {
   final String title;
   final DateTime lastAt;
   final String? preview;
+
+  /// API mesaj satırında varsa son gönderenin partyName'i.
+  final String? lastSenderPartyName;
+
+  /// Liste yanıtında isim yoksa lookup için gönderen party id.
+  final int? lastSenderPartyId;
 
   /// Oda sohbeti için konu başlığı (üst çubukta parantez içinde gösterilir).
   final String? roomTopicTitle;
@@ -68,6 +87,8 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   final Map<int, String> _roomTitlesCache = {};
   final Map<int, String> _roomTopicTitlesCache = {};
   final Map<int, String> _topicTitlesCache = {};
+  /// Mesaj listesinde partyName gelmediğinde lookup ile doldurulur.
+  final Map<int, String> _partyDisplayNamesById = {};
   DateTime? _lastLoadedAt;
   static const _minAutoReloadGap = Duration(seconds: 20);
   Timer? _reloadAfterPopTimer;
@@ -86,7 +107,15 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
     return _items.where((r) {
       if (r.title.toLowerCase().contains(q)) return true;
       final p = (r.preview ?? '').toLowerCase();
-      return p.contains(q);
+      if (p.contains(q)) return true;
+      final inline = (r.lastSenderPartyName ?? '').toLowerCase();
+      if (inline.contains(q)) return true;
+      final pid = r.lastSenderPartyId;
+      if (pid != null) {
+        final cached = (_partyDisplayNamesById[pid] ?? '').toLowerCase();
+        if (cached.contains(q)) return true;
+      }
+      return false;
     }).toList();
   }
 
@@ -149,6 +178,8 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   }) {
     final roomByLast = <int, DateTime>{};
     final roomPreview = <int, String>{};
+    final roomSenderName = <int, String>{};
+    final roomSenderPartyId = <int, int>{};
     for (final m in msgMaps) {
       final rid = m['roomId'] ?? m['RoomId'];
       final ri = rid is int ? rid : int.tryParse('$rid');
@@ -160,11 +191,22 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         roomByLast[ri] = at;
         final c = '${m['content'] ?? m['Content'] ?? ''}'.trim();
         if (c.isNotEmpty) roomPreview[ri] = c;
+        final pn = '${m['partyName'] ?? m['PartyName'] ?? ''}'.trim();
+        final pidRaw = m['partyId'] ?? m['PartyId'];
+        final pid = pidRaw is int ? pidRaw : int.tryParse('$pidRaw');
+        if (pid != null && pid > 0) {
+          roomSenderPartyId[ri] = pid;
+        }
+        if (pn.isNotEmpty) {
+          roomSenderName[ri] = pn;
+        }
       }
     }
 
     final topicByLast = <int, DateTime>{};
     final topicPreview = <int, String>{};
+    final topicSenderName = <int, String>{};
+    final topicSenderPartyId = <int, int>{};
     for (final m in commentMaps) {
       final tid = m['topicId'] ?? m['TopicId'];
       final ti = tid is int ? tid : int.tryParse('$tid');
@@ -176,6 +218,15 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         topicByLast[ti] = at;
         final c = '${m['content'] ?? m['Content'] ?? ''}'.trim();
         if (c.isNotEmpty) topicPreview[ti] = c;
+        final pn = '${m['partyName'] ?? m['PartyName'] ?? ''}'.trim();
+        final pidRaw = m['partyId'] ?? m['PartyId'];
+        final pid = pidRaw is int ? pidRaw : int.tryParse('$pidRaw');
+        if (pid != null && pid > 0) {
+          topicSenderPartyId[ti] = pid;
+        }
+        if (pn.isNotEmpty) {
+          topicSenderName[ti] = pn;
+        }
       }
     }
 
@@ -188,6 +239,8 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
           title: _roomTitlesCache[e.key] ?? 'Oda #${e.key}',
           lastAt: e.value,
           preview: roomPreview[e.key],
+          lastSenderPartyName: roomSenderName[e.key],
+          lastSenderPartyId: roomSenderPartyId[e.key],
           roomTopicTitle: _resolvedRoomTopicTitle(e.key),
         ),
       );
@@ -200,11 +253,52 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
           title: _topicTitlesCache[e.key] ?? 'Konu #${e.key}',
           lastAt: e.value,
           preview: topicPreview[e.key],
+          lastSenderPartyName: topicSenderName[e.key],
+          lastSenderPartyId: topicSenderPartyId[e.key],
         ),
       );
     }
     rows.sort((a, b) => b.lastAt.compareTo(a.lastAt));
     return rows;
+  }
+
+  Future<void> _resolveSenderDisplayNames(
+    AppServices app,
+    List<_ConversationRow> rows,
+  ) async {
+    final missing = <int>{};
+    for (final r in rows) {
+      final pid = r.lastSenderPartyId;
+      if (pid == null || pid <= 0) continue;
+      final inline = r.lastSenderPartyName?.trim();
+      if (inline != null && inline.isNotEmpty) continue;
+      if (_partyDisplayNamesById.containsKey(pid)) continue;
+      missing.add(pid);
+    }
+    if (missing.isEmpty) return;
+
+    final results = await Future.wait(
+      missing.map((id) async {
+        try {
+          final lu = await app.parties.getLookup({'PartyId': id});
+          return MapEntry(id, _partyNameFromLookupResponse(lu));
+        } catch (_) {
+          return MapEntry(id, null);
+        }
+      }),
+    );
+
+    if (!mounted) return;
+
+    var touched = false;
+    for (final e in results) {
+      final name = e.value;
+      if (name != null && name.isNotEmpty) {
+        _partyDisplayNamesById[e.key] = name;
+        touched = true;
+      }
+    }
+    if (touched) setState(() {});
   }
 
   Future<void> _load({bool fullScreenLoading = true, bool force = false}) async {
@@ -267,6 +361,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         _refreshing = false;
         _lastLoadedAt = DateTime.now();
       });
+      await _resolveSenderDisplayNames(app, rows);
 
       final neededRoomIds = <int>{
         for (final m in msgMaps)
@@ -321,9 +416,9 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         }
 
         if (!mounted) return;
-        setState(() {
-          _items = _composeRows(msgMaps: msgMaps, commentMaps: commentMaps);
-        });
+        final rows2 = _composeRows(msgMaps: msgMaps, commentMaps: commentMaps);
+        setState(() => _items = rows2);
+        await _resolveSenderDisplayNames(app, rows2);
       }
     } on DioException catch (e) {
       if (!mounted) return;
@@ -575,6 +670,20 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         ? preview
         : 'Sohbete dokunun';
 
+    final senderRaw = () {
+      final a = r.lastSenderPartyName?.trim();
+      if (a != null && a.isNotEmpty) return a;
+      final pid = r.lastSenderPartyId;
+      if (pid != null && pid > 0) {
+        final b = _partyDisplayNamesById[pid]?.trim();
+        if (b != null && b.isNotEmpty) return b;
+      }
+      return null;
+    }();
+    final senderLine = (senderRaw != null && senderRaw.isNotEmpty)
+        ? (senderRaw.length > 36 ? '${senderRaw.substring(0, 36)}…' : senderRaw)
+        : null;
+
     return Material(
       color: Colors.white,
       child: InkWell(
@@ -626,6 +735,26 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                       ],
                     ),
                     const SizedBox(height: 4),
+                    if (senderLine != null) ...[
+                      Text(
+                        senderLine,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                              color: muted.withValues(alpha: 0.95),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              height: 1.25,
+                            ) ??
+                            TextStyle(
+                              color: muted.withValues(alpha: 0.95),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              height: 1.25,
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                    ],
                     Text(
                       secondLine,
                       style: TextStyle(

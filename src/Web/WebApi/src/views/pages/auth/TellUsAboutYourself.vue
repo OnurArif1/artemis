@@ -34,10 +34,8 @@ const saveProfile = async () => {
 
     saving.value = true;
     try {
-        // Full name güncellemiyoruz, email'i partyName olarak gönderiyoruz (backend zorunlu kılıyor)
-        // Bio'yu güvenli bir şekilde gönderiyoruz
         const bioValue = bio.value ? bio.value.trim() : '';
-        await partyService.updateProfile(email, email, bioValue || null);
+        await partyService.updateProfile(email, undefined, bioValue || null);
         toast.add({
             severity: 'success',
             summary: 'Başarılı',

@@ -75,7 +75,7 @@ public class PartyService : IPartyService
         }    
     }
 
-    public async ValueTask UpdateByEmail(string email, string partyName, string? description)
+    public async ValueTask UpdateByEmail(string email, string? partyName, string? description)
     {
         if (string.IsNullOrEmpty(email))
         {
@@ -91,7 +91,11 @@ public class PartyService : IPartyService
 
         EnsurePartyEmail(party, email);
 
-        party.PartyName = partyName;
+        if (!string.IsNullOrWhiteSpace(partyName))
+        {
+            party.PartyName = partyName.Trim();
+        }
+
         party.Description = description;
         await _artemisDbContext.SaveChangesAsync();
     }

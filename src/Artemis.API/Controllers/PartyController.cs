@@ -75,9 +75,9 @@ public class PartyController : ControllerBase
     [HttpPost("update-profile")]
     public async Task<IActionResult> UpdateProfileAsync([FromBody] UpdatePartyProfileRequest request)
     {
-        if (request == null || string.IsNullOrEmpty(request.PartyName))
+        if (request == null)
         {
-            return BadRequest(new { message = "Party name is required." });
+            return BadRequest(new { message = "Body is required." });
         }
 
         if (string.IsNullOrEmpty(request.Email))
@@ -87,7 +87,7 @@ public class PartyController : ControllerBase
 
         try
         {
-            await _partyService.UpdateByEmail(request.Email, request.PartyName, request.Description);
+            await _partyService.UpdateByEmail(request.Email, request.PartyName?.Trim(), request.Description);
             return Ok(new { message = "Profile updated successfully." });
         }
         catch (ArgumentException ex)
@@ -105,9 +105,9 @@ public class PartyController : ControllerBase
     }
 
     [HttpGet("lookup")]
-    public async Task<IActionResult> GetLookupAsync([FromQuery] GetLookupPartyViewModel viewmodel)
+    public async Task<IActionResult> GetLookupAsync([FromQuery] GetLookupPartyViewModel viewModel)
     {
-        var parties = await _partyService.GetPartyLookup(viewmodel);
+        var parties = await _partyService.GetPartyLookup(viewModel);
         return Ok(parties);
     }
     [HttpDelete("delete/{id}")]
@@ -124,7 +124,7 @@ public class UpdatePartyProfileRequest
     public string Email { get; set; } = string.Empty;
 
     [JsonPropertyName("partyName")]
-    public string PartyName { get; set; } = string.Empty;
+    public string? PartyName { get; set; }
 
     [JsonPropertyName("description")]
     public string? Description { get; set; }

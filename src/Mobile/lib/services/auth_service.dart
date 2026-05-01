@@ -92,7 +92,6 @@ class AuthService {
     final body = {
       'Email': email.trim(),
       'Password': password,
-      'PartyName': email.trim(),
       'PartyType': partyType,
       if (subscriptionType != null) 'SubscriptionType': subscriptionType,
       'DeviceId': null,

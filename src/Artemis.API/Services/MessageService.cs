@@ -100,7 +100,8 @@ public class MessageService : IMessageService
 
         var count = await query.CountAsync();
 
-        var messages = await query.OrderByDescending(i => i.CreateDate)
+        var messages = await query
+            .OrderByDescending(i => i.CreateDate)
             .Skip((filterViewModel.PageIndex - 1) * filterViewModel.PageSize)
             .Take(filterViewModel.PageSize)
             .Select(m => new MessageResultViewModel
@@ -108,6 +109,7 @@ public class MessageService : IMessageService
                 Id = m.Id,
                 RoomId = m.RoomId,
                 PartyId = m.PartyId,
+                PartyName = m.Party != null ? m.Party.PartyName : null,
                 Content = m.Content,
                 Upvote = m.Upvote,
                 Downvote = m.Downvote,

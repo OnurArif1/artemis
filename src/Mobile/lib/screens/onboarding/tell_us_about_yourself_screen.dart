@@ -43,7 +43,6 @@ class _TellUsAboutYourselfScreenState extends State<TellUsAboutYourselfScreen> {
       final bio = _bio.text.trim();
       await context.read<AppServices>().parties.updateProfile(
             email: email,
-            partyName: email,
             description: bio.isEmpty ? null : bio,
           );
       if (mounted) {

@@ -42,14 +42,17 @@ export default class PartyService {
     }
 
     async updateProfile(email, partyName, description) {
+        const data = { email };
+        if (partyName != null && `${partyName}`.trim() !== '') {
+            data.partyName = `${partyName}`.trim();
+        }
+        if (description !== undefined) {
+            data.description = description;
+        }
         await this.request({
             method: 'post',
             url: '/party/update-profile',
-            data: {
-                email,
-                partyName,
-                description
-            }
+            data
         });
     }
 }
