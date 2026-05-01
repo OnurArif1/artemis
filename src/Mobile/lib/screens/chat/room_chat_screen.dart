@@ -142,17 +142,8 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
     return null;
   }
 
-  DateTime? _lifecycleEndUtcFromRoom(Map<String, dynamic> room) {
-    final lc = room['lifeCycle'] ?? room['LifeCycle'];
-    final cd = room['createDate'] ?? room['CreateDate'];
-    final minutes = lc is num ? lc.toDouble() : double.tryParse('$lc');
-    final created = DateTime.tryParse('$cd');
-    if (minutes == null || created == null) return null;
-    final startUtc = created.isUtc ? created : created.toUtc();
-    return startUtc.add(
-      Duration(milliseconds: (minutes * 60000).round()),
-    );
-  }
+  DateTime? _lifecycleEndUtcFromRoom(Map<String, dynamic> room) =>
+      lifecycleEndUtcFromRoomMap(room);
 
   Future<void> _loadUniqueSpeakerCount(AppServices app) async {
     const pageSize = 500;

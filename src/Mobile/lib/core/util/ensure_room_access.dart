@@ -24,6 +24,19 @@ class RoomEntryResult {
       RoomEntryResult._(allowed: false, errorMessage: message);
 }
 
+/// `lifeCycle` dakika + `createDate` ile bitiş anı (UTC). Süresiz / bilinmiyorsa `null`.
+DateTime? lifecycleEndUtcFromRoomMap(Map<String, dynamic> room) {
+  final lc = room['lifeCycle'] ?? room['LifeCycle'];
+  final cd = room['createDate'] ?? room['CreateDate'];
+  final minutes = lc is num ? lc.toDouble() : double.tryParse('$lc');
+  final created = DateTime.tryParse('$cd');
+  if (minutes == null || created == null || minutes <= 0) return null;
+  final startUtc = created.isUtc ? created : created.toUtc();
+  return startUtc.add(
+    Duration(milliseconds: (minutes * 60000).round()),
+  );
+}
+
 bool lifecycleExpiredFromRoomMap(Map<String, dynamic> room) {
   bool? apiExpired;
   final rawFlag = room['lifecycleExpired'] ?? room['LifecycleExpired'];

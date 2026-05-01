@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,14 +34,87 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
   int? _messageParticipantCount;
   bool _loadingMessageParticipantCount = true;
 
+  DateTime? _lifecycleEndsAtUtc;
+  Timer? _lifecycleTimer;
+  DateTime _lifecycleTick = DateTime.now();
+
   @override
   void initState() {
     super.initState();
     _expired = lifecycleExpiredFromRoomMap(widget.room);
+    _lifecycleEndsAtUtc = lifecycleEndUtcFromRoomMap(widget.room);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _resolveChatState();
       _loadMessageParticipantCount();
     });
+    _startLifecycleCountdown();
+  }
+
+  @override
+  void dispose() {
+    _lifecycleTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startLifecycleCountdown() {
+    _lifecycleTimer?.cancel();
+    final end = _lifecycleEndsAtUtc;
+    if (end == null) return;
+    if (DateTime.now().toUtc().isAfter(end)) {
+      if (!_expired && mounted) {
+        setState(() {
+          _expired = true;
+          _chatAllowed = false;
+        });
+      }
+      return;
+    }
+    _lifecycleTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      final e = _lifecycleEndsAtUtc;
+      if (e != null && DateTime.now().toUtc().isAfter(e)) {
+        _lifecycleTimer?.cancel();
+        _lifecycleTimer = null;
+        setState(() {
+          _lifecycleTick = DateTime.now();
+          _expired = true;
+          _chatAllowed = false;
+        });
+        return;
+      }
+      setState(() => _lifecycleTick = DateTime.now());
+    });
+  }
+
+  String _lifecycleCountdownText(BuildContext context) {
+    if (_lifecycleEndsAtUtc == null) return '';
+    if (_expired) {
+      return 'Bu oda için yaşam döngüsü sona erdi.';
+    }
+    final end = _lifecycleEndsAtUtc!;
+    final nowUtc = _lifecycleTick.toUtc();
+    if (!nowUtc.isBefore(end)) {
+      return 'Bu oda için yaşam döngüsü sona erdi.';
+    }
+    final remaining = end.difference(nowUtc);
+    final endLocal = end.toLocal();
+    final loc = MaterialLocalizations.of(context);
+    final dateStr = loc.formatCompactDate(endLocal);
+    final timeStr = loc.formatTimeOfDay(
+      TimeOfDay.fromDateTime(endLocal),
+      alwaysUse24HourFormat: true,
+    );
+    final d = remaining.inDays;
+    final h = remaining.inHours.remainder(24);
+    final min = remaining.inMinutes.remainder(60);
+    final sec = remaining.inSeconds.remainder(60);
+    final parts = <String>[];
+    if (d > 0) parts.add('$d gün');
+    if (h > 0 || d > 0) parts.add('$h sa');
+    parts.add('$min dk');
+    parts.add('$sec sn');
+    final countdown = parts.join(' ');
+    return 'Bitiş: $dateStr $timeStr\nKalan süre: $countdown';
   }
 
   Future<void> _resolveChatState() async {
@@ -169,6 +244,42 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
             'Bilgiler',
             style: Theme.of(context).textTheme.titleSmall,
           ),
+          if (_lifecycleEndsAtUtc != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: _expired ? Colors.red.shade50 : AppColors.purple50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _expired ? Colors.red.shade200 : AppColors.purple200,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Yaşam döngüsü',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: _expired ? Colors.red.shade900 : AppColors.purple700,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    _lifecycleCountdownText(context),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          height: 1.35,
+                          color: _expired
+                              ? Colors.red.shade900
+                              : AppColors.darkCharcoal,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           ...rows.map(
             (line) => Padding(
