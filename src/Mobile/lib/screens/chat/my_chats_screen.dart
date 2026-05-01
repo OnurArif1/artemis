@@ -25,6 +25,7 @@ class _ConversationRow {
     required this.title,
     required this.lastAt,
     this.preview,
+    this.roomTopicTitle,
   });
 
   final bool isRoom;
@@ -32,6 +33,9 @@ class _ConversationRow {
   final String title;
   final DateTime lastAt;
   final String? preview;
+
+  /// Oda sohbeti için konu başlığı (üst çubukta parantez içinde gösterilir).
+  final String? roomTopicTitle;
 }
 
 String _chatListTimeLabel(DateTime at) {
@@ -62,12 +66,19 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   bool _refreshing = false;
   String? _error;
   final Map<int, String> _roomTitlesCache = {};
+  final Map<int, String> _roomTopicTitlesCache = {};
   final Map<int, String> _topicTitlesCache = {};
   DateTime? _lastLoadedAt;
   static const _minAutoReloadGap = Duration(seconds: 20);
   Timer? _reloadAfterPopTimer;
 
   late final HomeTabController _homeTab;
+
+  String? _resolvedRoomTopicTitle(int roomId) {
+    if (!_roomTopicTitlesCache.containsKey(roomId)) return null;
+    final s = _roomTopicTitlesCache[roomId]!.trim();
+    return s.isEmpty ? null : s;
+  }
 
   List<_ConversationRow> _visibleChats() {
     final q = _search.text.trim().toLowerCase();
@@ -177,6 +188,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
           title: _roomTitlesCache[e.key] ?? 'Oda #${e.key}',
           lastAt: e.value,
           preview: roomPreview[e.key],
+          roomTopicTitle: _resolvedRoomTopicTitle(e.key),
         ),
       );
     }
@@ -262,7 +274,12 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                   ? (m['roomId'] ?? m['RoomId']) as int
                   : int.tryParse('${m['roomId'] ?? m['RoomId']}')) ??
               -1,
-      }..removeWhere((id) => id <= 0 || _roomTitlesCache.containsKey(id));
+      }..removeWhere(
+          (id) =>
+              id <= 0 ||
+              (_roomTitlesCache.containsKey(id) &&
+                  _roomTopicTitlesCache.containsKey(id)),
+        );
       final neededTopicIds = <int>{
         for (final m in commentMaps)
           ((m['topicId'] ?? m['TopicId']) is int
@@ -286,6 +303,11 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
             if (id == null || !neededRoomIds.contains(id)) continue;
             final t = entityString(r, ['title', 'Title']);
             if (t != null && t.isNotEmpty) _roomTitlesCache[id] = t;
+            final tt = entityString(r, ['topicTitle', 'TopicTitle']);
+            _roomTopicTitlesCache[id] = tt ?? '';
+          }
+          for (final rid in neededRoomIds) {
+            _roomTopicTitlesCache.putIfAbsent(rid, () => '');
           }
         }
         if (neededTopicIds.isNotEmpty) {
@@ -327,6 +349,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
           builder: (_) => RoomChatScreen(
             roomId: r.id,
             roomTitle: r.title,
+            topicTitle: r.roomTopicTitle,
           ),
         ),
       );

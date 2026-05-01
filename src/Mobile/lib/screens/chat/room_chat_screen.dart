@@ -19,10 +19,23 @@ class RoomChatScreen extends StatefulWidget {
     super.key,
     required this.roomId,
     required this.roomTitle,
+    this.topicTitle,
   });
 
   final int roomId;
   final String roomTitle;
+
+  /// Bağlı konu başlığı; doluysa üst başlıkta `odaAdı (konu)` gösterilir.
+  final String? topicTitle;
+
+  static String formatAppBarTitle({
+    required String roomTitle,
+    String? topicTitle,
+  }) {
+    final t = topicTitle?.trim();
+    if (t != null && t.isNotEmpty) return '$roomTitle ($t)';
+    return roomTitle;
+  }
 
   @override
   State<RoomChatScreen> createState() => _RoomChatScreenState();
@@ -343,7 +356,10 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              widget.roomTitle,
+              RoomChatScreen.formatAppBarTitle(
+                roomTitle: widget.roomTitle,
+                topicTitle: widget.topicTitle,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

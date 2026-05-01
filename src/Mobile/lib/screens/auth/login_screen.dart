@@ -18,6 +18,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+enum _AuthMode { login, register, corporateRegister }
+
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
@@ -26,7 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _regPassword = TextEditingController();
   final _regPassword2 = TextEditingController();
 
-  bool _registerMode = false;
+  _AuthMode _mode = _AuthMode.login;
   bool _loading = false;
   bool _obscure = true;
   bool _obscureReg = true;
@@ -41,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _regFieldsChanged() {
-    if (mounted && _registerMode) setState(() {});
+    if (mounted && _mode != _AuthMode.login) setState(() {});
   }
 
   @override
@@ -57,10 +59,10 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _setMode(bool register) {
+  void _setMode(_AuthMode mode) {
     if (_loading) return;
     setState(() {
-      _registerMode = register;
+      _mode = mode;
       _formKey.currentState?.reset();
     });
   }
@@ -97,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return _passwordRulesOk(p);
   }
 
-  Future<void> _submitRegister() async {
+  Future<void> _submitRegister({required bool corporate}) async {
     if (!_formKey.currentState!.validate()) return;
     final e = _regEmail.text.trim();
     final p = _regPassword.text;
@@ -124,7 +126,12 @@ class _LoginScreenState extends State<LoginScreen> {
     auth.setPendingPostRegistrationOnboarding(true);
     try {
       try {
-        await authSvc.registerAccount(email: e, password: p);
+        await authSvc.registerAccount(
+          email: e,
+          password: p,
+          partyType: corporate ? 2 : 1,
+          subscriptionType: corporate ? 2 : null,
+        );
       } on AuthException catch (err) {
         auth.setPendingPostRegistrationOnboarding(false);
         if (mounted) showAppSnackBar(context, err.message, error: true);
@@ -141,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
             'Hesabınız oluşturuldu. Lütfen giriş yapın.',
           );
           _email.text = e;
-          _setMode(false);
+          _setMode(_AuthMode.login);
         }
       }
     } finally {
@@ -152,7 +159,11 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final wide = AuthBreakpoint.isWide(context);
-    final form = _registerMode ? _buildRegisterForm(context) : _buildLoginForm(context);
+    final form = switch (_mode) {
+      _AuthMode.login => _buildLoginForm(context),
+      _AuthMode.register => _buildRegisterForm(context, corporate: false),
+      _AuthMode.corporateRegister => _buildRegisterForm(context, corporate: true),
+    };
 
     if (wide) {
       return Scaffold(
@@ -169,7 +180,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(32),
                       child: _AuthChrome(
-                        registerMode: _registerMode,
+                        mode: _mode,
                         onModeChanged: _setMode,
                         loading: _loading,
                         child: form,
@@ -217,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxWidth: 400),
                             child: _AuthChrome(
-                              registerMode: _registerMode,
+                              mode: _mode,
                               onModeChanged: _setMode,
                               loading: _loading,
                               child: form,
@@ -327,7 +338,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildRegisterForm(BuildContext context) {
+  Widget _buildRegisterForm(BuildContext context, {required bool corporate}) {
     final theme = Theme.of(context);
     final p = _regPassword.text;
     final rules = <_PwdRule>[
@@ -346,7 +357,7 @@ class _LoginScreenState extends State<LoginScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Aramıza katıl',
+            corporate ? 'Kurumsal hesabını oluştur' : 'Aramıza katıl',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
               letterSpacing: -0.6,
@@ -461,7 +472,9 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: (_loading || !canSubmit) ? null : _submitRegister,
+            onPressed: (_loading || !canSubmit)
+                ? null
+                : () => _submitRegister(corporate: corporate),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
               textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
@@ -484,7 +497,7 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(height: 16),
           Center(
             child: TextButton(
-              onPressed: _loading ? null : () => _setMode(false),
+              onPressed: _loading ? null : () => _setMode(_AuthMode.login),
               child: const Text('Zaten hesabım var, giriş yap'),
             ),
           ),
@@ -535,14 +548,14 @@ class _PasswordRuleTile extends StatelessWidget {
 
 class _AuthChrome extends StatelessWidget {
   const _AuthChrome({
-    required this.registerMode,
+    required this.mode,
     required this.onModeChanged,
     required this.loading,
     required this.child,
   });
 
-  final bool registerMode;
-  final void Function(bool register) onModeChanged;
+  final _AuthMode mode;
+  final void Function(_AuthMode mode) onModeChanged;
   final bool loading;
   final Widget child;
 
@@ -561,7 +574,7 @@ class _AuthChrome extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _AuthModeToggle(
-              registerMode: registerMode,
+              mode: mode,
               onChanged: onModeChanged,
               enabled: !loading,
             ),
@@ -583,7 +596,7 @@ class _AuthChrome extends StatelessWidget {
                 );
               },
               child: KeyedSubtree(
-                key: ValueKey<bool>(registerMode),
+                key: ValueKey<_AuthMode>(mode),
                 child: child,
               ),
             ),
@@ -597,19 +610,19 @@ class _AuthChrome extends StatelessWidget {
 
 class _AuthModeToggle extends StatelessWidget {
   const _AuthModeToggle({
-    required this.registerMode,
+    required this.mode,
     required this.onChanged,
     required this.enabled,
   });
 
-  final bool registerMode;
-  final void Function(bool register) onChanged;
+  final _AuthMode mode;
+  final void Function(_AuthMode mode) onChanged;
   final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Giriş veya kayıt modu',
+      label: 'Giriş veya kayıt modu seçimi',
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
@@ -623,8 +636,8 @@ class _AuthModeToggle extends StatelessWidget {
               child: _TogglePill(
                 label: 'Giriş',
                 icon: Icons.login_rounded,
-                selected: !registerMode,
-                onTap: enabled ? () => onChanged(false) : null,
+                selected: mode == _AuthMode.login,
+                onTap: enabled ? () => onChanged(_AuthMode.login) : null,
               ),
             ),
             const SizedBox(width: 4),
@@ -632,8 +645,19 @@ class _AuthModeToggle extends StatelessWidget {
               child: _TogglePill(
                 label: 'Kayıt',
                 icon: Icons.person_add_alt_1_rounded,
-                selected: registerMode,
-                onTap: enabled ? () => onChanged(true) : null,
+                selected: mode == _AuthMode.register,
+                onTap: enabled ? () => onChanged(_AuthMode.register) : null,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: _TogglePill(
+                label: 'Kurumsal',
+                icon: Icons.business_rounded,
+                selected: mode == _AuthMode.corporateRegister,
+                onTap: enabled
+                    ? () => onChanged(_AuthMode.corporateRegister)
+                    : null,
               ),
             ),
           ],

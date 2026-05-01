@@ -85,13 +85,16 @@ class AuthService {
   Future<void> registerAccount({
     required String email,
     required String password,
+    int partyType = 1,
+    int? subscriptionType,
   }) async {
     final dio = Dio();
     final body = {
       'Email': email.trim(),
       'Password': password,
       'PartyName': email.trim(),
-      'PartyType': 1,
+      'PartyType': partyType,
+      if (subscriptionType != null) 'SubscriptionType': subscriptionType,
       'DeviceId': null,
       'IsBanned': false,
     };

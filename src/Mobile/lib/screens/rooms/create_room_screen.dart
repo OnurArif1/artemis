@@ -29,6 +29,24 @@ class _SubPick {
   final int? value;
 }
 
+enum _LifeCyclePreset {
+  hourly,
+  daily,
+  weekly;
+
+  String get labelTr => switch (this) {
+        hourly => 'Saatlik',
+        daily => 'Günlük',
+        weekly => 'Haftalık',
+      };
+
+  Duration get duration => switch (this) {
+        hourly => const Duration(hours: 1),
+        daily => const Duration(days: 1),
+        weekly => const Duration(days: 7),
+      };
+}
+
 class CreateRoomScreen extends StatefulWidget {
   const CreateRoomScreen({super.key});
 
@@ -38,7 +56,6 @@ class CreateRoomScreen extends StatefulWidget {
 
 class _CreateRoomScreenState extends State<CreateRoomScreen> {
   final _title = TextEditingController();
-  final _roomRange = TextEditingController();
   final _partySearch = TextEditingController();
 
   List<Map<String, dynamic>> _topics = [];
@@ -47,13 +64,15 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   int? _subscriptionType;
   double? _locationX;
   double? _locationY;
-  DateTime? _lifeCycleEnd;
+  _LifeCyclePreset? _lifeCyclePreset;
+  double _roomRangeKm = 10;
 
   bool _loading = false;
   bool _loadingTopics = true;
   bool _showInvite = false;
   int? _createdRoomId;
   String? _createdRoomTitle;
+  String? _createdTopicTitle;
   final List<Map<String, dynamic>> _selectedParties = [];
   List<Map<String, dynamic>> _partyResults = [];
   bool _loadingParties = false;
@@ -82,7 +101,6 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
   void dispose() {
     _partyDebounce?.cancel();
     _title.dispose();
-    _roomRange.dispose();
     _partySearch.dispose();
     super.dispose();
   }
@@ -136,13 +154,15 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
       showAppSnackBar(context, 'Konu seçin.', error: true);
       return;
     }
-    final lifeCycle = _lifeCycleMinutes();
-    if (lifeCycle == null) {
-      showAppSnackBar(context, 'Yaşam döngüsü için tarih ve saat seçin.', error: true);
+    final resolved = _resolveLifeCycleFromPreset();
+    if (resolved == null) {
+      showAppSnackBar(context, 'Yaşam döngüsü süresini seçin.', error: true);
       return;
     }
+    final lifeCycle = resolved.minutes;
 
     final createdTitle = _title.text.trim();
+    final topicSnap = _snapshotTopicTitleForChat(_topicId);
     final app = context.read<AppServices>();
     final email = emailFromAccessToken(context.read<AuthService>().token);
     setState(() => _loading = true);
@@ -155,9 +175,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         'roomType': _roomType,
         'lifeCycle': lifeCycle,
         'subscriptionType': _subscriptionType,
-        'roomRange': _roomRange.text.trim().isEmpty
-            ? null
-            : double.tryParse(_roomRange.text.trim()),
+        'roomRange': _roomRangeKm,
         if (email != null && email.isNotEmpty) 'userEmail': email,
       });
 
@@ -179,13 +197,14 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         _loading = false;
         _createdRoomId = newId;
         _createdRoomTitle = createdTitle;
+        _createdTopicTitle = topicSnap;
         _showInvite = true;
         _title.clear();
         _topicId = null;
-        _roomRange.clear();
+        _roomRangeKm = 10;
         _roomType = 1;
         _subscriptionType = null;
-        _lifeCycleEnd = null;
+        _lifeCyclePreset = null;
       });
       showAppSnackBar(context, 'Oda oluşturuldu.');
     } on DioException catch (e) {
@@ -204,50 +223,31 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
     }
   }
 
-  Future<void> _pickLifeCycleEnd() async {
-    final now = DateTime.now();
-    final initial = _lifeCycleEnd != null && _lifeCycleEnd!.isAfter(now)
-        ? _lifeCycleEnd!
-        : now.add(const Duration(hours: 1));
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
-    );
-    if (date == null || !mounted) return;
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(initial),
-    );
-    if (time == null || !mounted) return;
-    final picked = DateTime(
-      date.year,
-      date.month,
-      date.day,
-      time.hour,
-      time.minute,
-    );
-    setState(() => _lifeCycleEnd = picked);
+  /// Seçilen preset için bitiş anı ve `lifeCycle` (dakika, backend ile uyumlu).
+  ({double minutes, DateTime endsAtUtc})? _resolveLifeCycleFromPreset() {
+    final preset = _lifeCyclePreset;
+    if (preset == null) return null;
+    final nowUtc = DateTime.now().toUtc();
+    final dur = preset.duration;
+    final endsAtUtc = nowUtc.add(dur);
+    final minutes = dur.inSeconds / 60.0;
+    if (minutes <= 0) return null;
+    return (minutes: minutes, endsAtUtc: endsAtUtc);
   }
 
-  double? _lifeCycleMinutes() {
-    final end = _lifeCycleEnd;
-    if (end == null) return null;
-    final diff = end.toUtc().difference(DateTime.now().toUtc());
-    if (diff.inMinutes <= 0) return null;
-    return diff.inMinutes.toDouble();
-  }
-
-  String _lifeCycleLabel(BuildContext context) {
-    final end = _lifeCycleEnd;
-    if (end == null) return 'Tarih ve saat seçin';
-    final d = MaterialLocalizations.of(context).formatCompactDate(end);
-    final t = MaterialLocalizations.of(context).formatTimeOfDay(
-      TimeOfDay.fromDateTime(end),
+  String _lifeCycleSummary(BuildContext context) {
+    final preset = _lifeCyclePreset;
+    if (preset == null) return 'Süre seçin';
+    final loc = MaterialLocalizations.of(context);
+    final r = _resolveLifeCycleFromPreset();
+    if (r == null) return preset.labelTr;
+    final endLocal = r.endsAtUtc.toLocal();
+    final d = loc.formatCompactDate(endLocal);
+    final t = loc.formatTimeOfDay(
+      TimeOfDay.fromDateTime(endLocal),
       alwaysUse24HourFormat: true,
     );
-    return '$d $t';
+    return '${preset.labelTr} · bitiş yaklaşık $d $t';
   }
 
   void _onPartySearchChanged(String q) {
@@ -296,6 +296,18 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
         });
       }
     }
+  }
+
+  /// Sohbet başlığında gösterilecek konu adı; listeden çözümlenemezse null.
+  String? _snapshotTopicTitleForChat(int? topicId) {
+    if (topicId == null) return null;
+    for (final t in _topics) {
+      if (_entityId(t) == topicId) {
+        final title = _entityTitle(t).trim();
+        return title.isEmpty ? null : title;
+      }
+    }
+    return null;
   }
 
   String _topicLabelForId(int? id) {
@@ -586,34 +598,75 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _pickLifeCycleEnd,
-                borderRadius: BorderRadius.circular(12),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Yaşam döngüsü bitişi *',
-                    suffixIcon: Icon(Icons.calendar_month_rounded),
-                  ).applyDefaults(Theme.of(context).inputDecorationTheme),
-                  child: Text(
-                    _lifeCycleLabel(context),
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: _lifeCycleEnd == null
-                          ? Theme.of(context).hintColor
-                          : Theme.of(context).colorScheme.onSurface,
-                    ),
+            Text(
+              'Yaşam döngüsü *',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<_LifeCyclePreset>(
+              segments: [
+                ButtonSegment(
+                  value: _LifeCyclePreset.hourly,
+                  label: Text(_LifeCyclePreset.hourly.labelTr),
+                  icon: const Icon(Icons.schedule_rounded, size: 18),
                 ),
-              ),
+                ButtonSegment(
+                  value: _LifeCyclePreset.daily,
+                  label: Text(_LifeCyclePreset.daily.labelTr),
+                  icon: const Icon(Icons.today_rounded, size: 18),
+                ),
+                ButtonSegment(
+                  value: _LifeCyclePreset.weekly,
+                  label: Text(_LifeCyclePreset.weekly.labelTr),
+                  icon: const Icon(Icons.date_range_rounded, size: 18),
+                ),
+              ],
+              emptySelectionAllowed: true,
+              selected: _lifeCyclePreset == null
+                  ? const <_LifeCyclePreset>{}
+                  : {_lifeCyclePreset!},
+              onSelectionChanged: (s) => setState(() {
+                _lifeCyclePreset = s.isEmpty ? null : s.first;
+              }),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _lifeCycleSummary(context),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: _lifeCyclePreset == null
+                        ? Theme.of(context).hintColor
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _roomRange,
-              keyboardType: TextInputType.number,
+            InputDecorator(
               decoration: const InputDecoration(
                 labelText: 'Oda menzili (km)',
               ).applyDefaults(Theme.of(context).inputDecorationTheme),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Slider(
+                    min: 1,
+                    max: 100,
+                    divisions: 99,
+                    value: _roomRangeKm,
+                    label: '${_roomRangeKm.round()} km',
+                    onChanged: (v) => setState(() => _roomRangeKm = v),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      '${_roomRangeKm.round()} km',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 24),
             FilledButton(
@@ -716,6 +769,7 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
                     builder: (_) => RoomChatScreen(
                       roomId: id,
                       roomTitle: roomTitle,
+                      topicTitle: _createdTopicTitle,
                     ),
                   ),
                 );

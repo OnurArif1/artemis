@@ -129,12 +129,15 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
   void _openRoom(Map<String, dynamic> m) {
     final id = entityId(m);
     if (id == null) return;
-    final title = mapTitle(m);
+    final roomTitle =
+        entityString(m, ['title', 'Title']) ?? mapTitle(m);
+    final topicTitle = entityString(m, ['topicTitle', 'TopicTitle']);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
         builder: (_) => RoomChatScreen(
           roomId: id,
-          roomTitle: title,
+          roomTitle: roomTitle,
+          topicTitle: topicTitle,
         ),
       ),
     );

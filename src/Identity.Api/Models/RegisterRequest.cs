@@ -19,6 +19,8 @@ public class RegisterRequest
 
     public PartyType PartyType { get; set; }
 
+    public SubscriptionType? SubscriptionType { get; set; }
+
     public int? DeviceId { get; set; }
 
     public bool? IsBanned { get; set; }

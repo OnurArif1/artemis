@@ -59,16 +59,45 @@ public class AccountController : ControllerBase
         await _userManager.AddToRoleAsync(user, "User");
 
         var partyName = string.IsNullOrWhiteSpace(request.PartyName) ? email : request.PartyName.Trim();
-        var party = new Party
+        var effectiveSubscription = request.SubscriptionType;
+        if (request.PartyType == PartyType.Organization)
         {
-            PartyName = partyName,
-            Email = email,
-            PartyType = request.PartyType,
-            IsBanned = request.IsBanned ?? false,
-            DeviceId = request.DeviceId ?? 0,
-            CreateDate = DateTime.UtcNow
-        };
-        await _artemisDb.Parties.AddAsync(party, ct);
+            effectiveSubscription ??= SubscriptionType.Gold;
+        }
+
+        // TPT: yalnızca Party eklemek Person/Organization tablolarına yazmaz; doğru türetilmiş satır gerekir.
+        if (request.PartyType == PartyType.Organization)
+        {
+            await _artemisDb.Organizations.AddAsync(
+                new Organization
+                {
+                    PartyName = partyName,
+                    Email = email,
+                    PartyType = PartyType.Organization,
+                    SubscriptionType = effectiveSubscription,
+                    IsBanned = request.IsBanned ?? false,
+                    DeviceId = request.DeviceId ?? 0,
+                    CreateDate = DateTime.UtcNow,
+                },
+                ct);
+        }
+        else
+        {
+            var partyType = request.PartyType == PartyType.None ? PartyType.Person : request.PartyType;
+            await _artemisDb.People.AddAsync(
+                new Person
+                {
+                    PartyName = partyName,
+                    Email = email,
+                    PartyType = partyType,
+                    SubscriptionType = effectiveSubscription,
+                    IsBanned = request.IsBanned ?? false,
+                    DeviceId = request.DeviceId ?? 0,
+                    CreateDate = DateTime.UtcNow,
+                },
+                ct);
+        }
+
         await _artemisDb.SaveChangesAsync(ct);
 
         return Ok(new { message = "Your account has been created. You can log in." });

@@ -214,7 +214,8 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
                           MaterialPageRoute<void>(
                             builder: (_) => RoomChatScreen(
                               roomId: id,
-                              roomTitle: headerTitle,
+                              roomTitle: title,
+                              topicTitle: topicTitle,
                             ),
                           ),
                         );
