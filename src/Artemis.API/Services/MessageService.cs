@@ -86,6 +86,14 @@ public class MessageService : IMessageService
 
     public async ValueTask<MessageListViewModel> GetList(MessageFilterViewModel filterViewModel)
     {
+        if (filterViewModel.LatestInRoomsWhereParticipated &&
+            filterViewModel.ParticipatingPartyId.HasValue &&
+            filterViewModel.ParticipatingPartyId.Value > 0)
+        {
+            return await GetLatestMessagePerRoomWherePartyParticipated(
+                filterViewModel.ParticipatingPartyId.Value);
+        }
+
         var query = _artemisDbContext.Messages.AsQueryable();
 
         if (filterViewModel.RoomId.HasValue)
@@ -121,6 +129,52 @@ public class MessageService : IMessageService
         return new MessageListViewModel
         {
             Count = count,
+            ResultViewmodels = messages
+        };
+    }
+
+    /// <summary>
+    /// Kullanıcının mesaj yazdığı odalar için odadaki (herhangi birinden) en son mesajı döndürür.
+    /// </summary>
+    private async ValueTask<MessageListViewModel> GetLatestMessagePerRoomWherePartyParticipated(int participantPartyId)
+    {
+        var roomIds = await _artemisDbContext.Messages.AsNoTracking()
+            .Where(m => m.PartyId == participantPartyId)
+            .Select(m => m.RoomId)
+            .Distinct()
+            .ToListAsync();
+
+        if (roomIds.Count == 0)
+        {
+            return new MessageListViewModel { Count = 0, ResultViewmodels = [] };
+        }
+
+        var latestIds = await _artemisDbContext.Messages
+            .Where(m => roomIds.Contains(m.RoomId))
+            .GroupBy(m => m.RoomId)
+            .Select(g => g.OrderByDescending(x => x.CreateDate).ThenByDescending(x => x.Id).First().Id)
+            .ToListAsync();
+
+        var messages = await _artemisDbContext.Messages
+            .Where(m => latestIds.Contains(m.Id))
+            .OrderByDescending(m => m.CreateDate)
+            .Select(m => new MessageResultViewModel
+            {
+                Id = m.Id,
+                RoomId = m.RoomId,
+                PartyId = m.PartyId,
+                PartyName = m.Party != null ? m.Party.PartyName : null,
+                Content = m.Content,
+                Upvote = m.Upvote,
+                Downvote = m.Downvote,
+                LastUpdateDate = m.LastUpdateDate,
+                CreateDate = m.CreateDate
+            })
+            .ToListAsync();
+
+        return new MessageListViewModel
+        {
+            Count = messages.Count,
             ResultViewmodels = messages
         };
     }

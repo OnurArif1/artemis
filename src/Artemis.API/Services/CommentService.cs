@@ -18,6 +18,14 @@ public class CommentService : ICommentService
 
     public async ValueTask<CommentListViewModel> GetList(CommentFilterViewModel filterViewModel)
     {
+        if (filterViewModel.LatestInTopicsWhereParticipated &&
+            filterViewModel.ParticipatingPartyId.HasValue &&
+            filterViewModel.ParticipatingPartyId.Value > 0)
+        {
+            return await GetLatestCommentPerTopicWherePartyParticipated(
+                filterViewModel.ParticipatingPartyId.Value);
+        }
+
         IQueryable<Comment> baseQuery = query;
 
         if (filterViewModel.TopicId.HasValue && filterViewModel.TopicId.Value > 0)
@@ -54,6 +62,52 @@ public class CommentService : ICommentService
         return new CommentListViewModel
         {
             Count = count,
+            ResultViewModels = comments
+        };
+    }
+
+    /// <summary>
+    /// Kullanıcının yorum yazdığı konular için konudaki (herhangi birinden) en son yorumu döndürür.
+    /// </summary>
+    private async ValueTask<CommentListViewModel> GetLatestCommentPerTopicWherePartyParticipated(int participantPartyId)
+    {
+        var topicIds = await _artemisDbContext.Comments.AsNoTracking()
+            .Where(c => c.PartyId == participantPartyId)
+            .Select(c => c.TopicId)
+            .Distinct()
+            .ToListAsync();
+
+        if (topicIds.Count == 0)
+        {
+            return new CommentListViewModel { Count = 0, ResultViewModels = [] };
+        }
+
+        var latestIds = await _artemisDbContext.Comments
+            .Where(c => topicIds.Contains(c.TopicId))
+            .GroupBy(c => c.TopicId)
+            .Select(g => g.OrderByDescending(x => x.CreateDate).ThenByDescending(x => x.Id).First().Id)
+            .ToListAsync();
+
+        var comments = await _artemisDbContext.Comments
+            .Where(c => latestIds.Contains(c.Id))
+            .OrderByDescending(c => c.CreateDate)
+            .Select(r => new CommentResultViewModel
+            {
+                Id = r.Id,
+                TopicId = r.TopicId,
+                PartyId = r.PartyId,
+                PartyName = r.Party != null ? r.Party.PartyName : null,
+                Content = r.Content,
+                Upvote = r.Upvote,
+                Downvote = r.Downvote,
+                LastUpdateDate = r.LastUpdateDate,
+                CreateDate = r.CreateDate
+            })
+            .ToListAsync();
+
+        return new CommentListViewModel
+        {
+            Count = comments.Count,
             ResultViewModels = comments
         };
     }

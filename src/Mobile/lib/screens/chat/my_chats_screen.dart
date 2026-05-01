@@ -341,12 +341,14 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         app.messages.getList({
           'pageIndex': 1,
           'pageSize': 300,
-          'partyId': partyId,
+          'latestInRoomsWhereParticipated': true,
+          'participatingPartyId': partyId,
         }),
         app.comments.getList({
           'pageIndex': 1,
           'pageSize': 300,
-          'partyId': partyId,
+          'latestInTopicsWhereParticipated': true,
+          'participatingPartyId': partyId,
         }),
       ]);
 
