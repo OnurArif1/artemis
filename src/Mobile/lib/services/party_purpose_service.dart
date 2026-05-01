@@ -15,4 +15,17 @@ class PartyPurposeService {
     );
     return r.data;
   }
+
+  Future<dynamic> getMyPurposes({String? email}) async {
+    final r = await _dio.get<dynamic>(
+      '/partyPurpose/my-purposes',
+      queryParameters: {
+        if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+      },
+      options: Options(
+        validateStatus: (s) => s != null && s >= 200 && s < 300,
+      ),
+    );
+    return r.data;
+  }
 }

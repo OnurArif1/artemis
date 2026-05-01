@@ -9,46 +9,7 @@ import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
 import 'onboarding_scaffold.dart';
-
-class _Purpose {
-  const _Purpose({
-    required this.id,
-    required this.label,
-    required this.icon,
-  });
-
-  final int id;
-  final String label;
-  final IconData icon;
-}
-
-const _purposes = [
-  _Purpose(
-    id: 1,
-    label: 'Sosyalleşme',
-    icon: Icons.celebration_rounded,
-  ),
-  _Purpose(
-    id: 2,
-    label: 'Flört',
-    icon: Icons.favorite_rounded,
-  ),
-  _Purpose(
-    id: 3,
-    label: 'Ağ kurma',
-    icon: Icons.hub_rounded,
-  ),
-  _Purpose(
-    id: 4,
-    label: 'Arkadaş edinme',
-    icon: Icons.group_add_rounded,
-  ),
-  _Purpose(
-    id: 5,
-    label: 'Keşfetme',
-    icon: Icons.explore_rounded,
-  ),
-];
+import 'party_purpose_options.dart';
 
 class SelectPurposesScreen extends StatefulWidget {
   const SelectPurposesScreen({super.key});
@@ -61,12 +22,12 @@ class _SelectPurposesScreenState extends State<SelectPurposesScreen> {
   final Set<int> _selected = {};
   bool _saving = false;
 
-  void _toggle(int id) {
+  void _toggle(int purposeType) {
     setState(() {
-      if (_selected.contains(id)) {
-        _selected.remove(id);
+      if (_selected.contains(purposeType)) {
+        _selected.remove(purposeType);
       } else {
-        _selected.add(id);
+        _selected.add(purposeType);
       }
     });
   }
@@ -120,14 +81,14 @@ class _SelectPurposesScreenState extends State<SelectPurposesScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          ..._purposes.map((p) {
-            final sel = _selected.contains(p.id);
+          ...kPartyPurposeOptions.map((p) {
+            final sel = _selected.contains(p.purposeType);
             return Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => _toggle(p.id),
+                  onTap: () => _toggle(p.purposeType),
                   borderRadius: BorderRadius.circular(12),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),

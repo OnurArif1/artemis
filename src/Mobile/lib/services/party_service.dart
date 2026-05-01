@@ -15,6 +15,20 @@ class PartyService {
     return r.data;
   }
 
+  /// [email] isteğe bağlı; Bearer token varsa sunucu JWT claim'lerinden çözer.
+  Future<dynamic> getProfile({String? email}) async {
+    final r = await _dio.get<dynamic>(
+      '/party/profile',
+      queryParameters: {
+        if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+      },
+      options: Options(
+        validateStatus: (s) => s != null && s >= 200 && s < 300,
+      ),
+    );
+    return r.data;
+  }
+
   Future<void> create(Map<String, dynamic> payload) async {
     await _dio.post<void>('/party/create', data: payload);
   }

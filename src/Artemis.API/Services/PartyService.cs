@@ -89,7 +89,7 @@ public class PartyService : IPartyService
             throw new InvalidOperationException("User not found.");
         }
 
-        EnsurePartyEmail(party, email);
+        PartyLoginLookup.EnsurePartyEmail(party, email);
 
         if (!string.IsNullOrWhiteSpace(partyName))
         {
@@ -114,7 +114,7 @@ public class PartyService : IPartyService
             throw new InvalidOperationException("User not found.");
         }
 
-        EnsurePartyEmail(party, email);
+        PartyLoginLookup.EnsurePartyEmail(party, email);
 
         party.SubscriptionType = subscriptionType;
         await _artemisDbContext.SaveChangesAsync();
@@ -167,6 +167,27 @@ public class PartyService : IPartyService
         };
     }
 
+    public async ValueTask<PartyProfileByEmailViewModel?> GetProfileByEmailAsync(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new ArgumentException("Email is required.", nameof(email));
+        }
+
+        var party = await FindPartyForLoginEmailAsync(email);
+
+        if (party == null)
+        {
+            return null;
+        }
+
+        return new PartyProfileByEmailViewModel
+        {
+            PartyName = party.PartyName ?? string.Empty,
+            Description = party.Description
+        };
+    }
+
     public async ValueTask Delete(int id)
     {
         var party = await _artemisDbContext.Parties
@@ -178,31 +199,7 @@ public class PartyService : IPartyService
         }
     }
 
-    private async Task<Party?> FindPartyForLoginEmailAsync(string email)
-    {
-        var trimmed = email.Trim();
-        var lowered = trimmed.ToLowerInvariant();
-
-        var party = await _artemisDbContext.Parties
-            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == lowered);
-
-        if (party != null)
-        {
-            return party;
-        }
-
-        return await _artemisDbContext.Parties
-            .FirstOrDefaultAsync(p => p.PartyName.ToLower() == lowered);
-    }
-
-    private static void EnsurePartyEmail(Party party, string email)
-    {
-        if (!string.IsNullOrWhiteSpace(party.Email))
-        {
-            return;
-        }
-
-        party.Email = email.Trim();
-    }
+    private Task<Party?> FindPartyForLoginEmailAsync(string email) =>
+        _artemisDbContext.Parties.FindPartyForLoginEmailAsync(email);
 
 }

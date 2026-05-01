@@ -1,4 +1,5 @@
 using Artemis.API.Entities.Enums;
+using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
@@ -101,6 +102,31 @@ public class PartyController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "An error occurred: " + ex.Message });
+        }
+    }
+
+    [HttpGet("profile")]
+    public async Task<IActionResult> GetProfileAsync([FromQuery] string? email)
+    {
+        var resolved = CallerIdentity.TryResolveLoginEmail(User, email);
+        if (string.IsNullOrWhiteSpace(resolved))
+        {
+            return BadRequest(new { message = "Email is required (login token or query)." });
+        }
+
+        try
+        {
+            var profile = await _partyService.GetProfileByEmailAsync(resolved);
+            if (profile == null)
+            {
+                return NotFound(new { message = "User not found." });
+            }
+
+            return Ok(profile);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

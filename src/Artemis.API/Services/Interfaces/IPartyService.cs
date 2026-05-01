@@ -10,5 +10,6 @@ public interface IPartyService
     ValueTask UpdateByEmail(string email, string? partyName, string? description);
     ValueTask UpdateSubscriptionByEmail(string email, SubscriptionType subscriptionType);
     ValueTask<ResultPartyLookupViewModel> GetPartyLookup(GetLookupPartyViewModel viewModel);
+    ValueTask<PartyProfileByEmailViewModel?> GetProfileByEmailAsync(string email);
     ValueTask Delete(int id);
 }

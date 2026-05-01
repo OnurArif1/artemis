@@ -1,4 +1,5 @@
 using Artemis.API.Entities.Enums;
+using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
@@ -14,6 +15,12 @@ public class SavePartyPurposesRequest
     public List<int> PurposeTypes { get; set; } = new();
 }
 
+public sealed class MyPurposesResponse
+{
+    [JsonPropertyName("purposeTypes")]
+    public List<int> PurposeTypes { get; init; } = [];
+}
+
 [Route("api/[controller]")]
 [ApiController]
 public class PartyPurposeController : ControllerBase
@@ -23,6 +30,34 @@ public class PartyPurposeController : ControllerBase
     public PartyPurposeController(IPartyPurposeService partyPurposeService)
     {
         _partyPurposeService = partyPurposeService;
+    }
+
+    [HttpGet("my-purposes")]
+    public async Task<IActionResult> GetMyPurposesAsync([FromQuery] string? email)
+    {
+        var resolved = CallerIdentity.TryResolveLoginEmail(User, email);
+        if (string.IsNullOrWhiteSpace(resolved))
+        {
+            return BadRequest(new { message = "Email is required (login token or query)." });
+        }
+
+        try
+        {
+            var purposeTypes = await _partyPurposeService.GetMyPurposeTypesAsync(resolved);
+            return Ok(new MyPurposesResponse { PurposeTypes = purposeTypes });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred: " + ex.Message });
+        }
     }
 
     [HttpPost("save")]

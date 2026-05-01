@@ -20,10 +20,11 @@ export default class InterestService {
         return response?.data ?? response;
     }
 
-    async getMyInterests() {
+    async getMyInterests(email) {
         const response = await this.request({
             method: 'get',
-            url: '/partyInterest/my-interests'
+            url: '/partyInterest/my-interests',
+            ...(email ? { params: { email } } : {})
         });
         return response?.data ?? response;
     }

@@ -79,7 +79,7 @@ const loadProfile = async () => {
 
         // İlgi alanlarını çek
         try {
-            const interestsData = await interestService.getMyInterests();
+            const interestsData = await interestService.getMyInterests(email);
             if (interestsData && Array.isArray(interestsData)) {
                 interests.value = interestsData.map(i => i.name || i);
             } else if (interestsData?.viewModels) {

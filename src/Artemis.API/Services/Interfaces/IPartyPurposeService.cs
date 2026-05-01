@@ -5,4 +5,5 @@ namespace Artemis.API.Services.Interfaces;
 public interface IPartyPurposeService
 {
     ValueTask SavePartyPurposesAsync(string email, List<PartyPurposeType> purposeTypes);
+    ValueTask<List<int>> GetMyPurposeTypesAsync(string email);
 }

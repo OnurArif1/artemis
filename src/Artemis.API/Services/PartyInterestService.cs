@@ -26,13 +26,14 @@ public class PartyInterestService : IPartyInterestService
             throw new ArgumentException("At least one interest must be selected.", nameof(interestIds));
         }
 
-        var party = await _artemisDbContext.Parties
-            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
+        var party = await _artemisDbContext.Parties.FindPartyForLoginEmailAsync(email);
 
         if (party == null)
         {
             throw new InvalidOperationException("User not found.");
         }
+
+        PartyLoginLookup.EnsurePartyEmail(party, email);
 
         var existingPartyInterests = await _artemisDbContext.PartyInterests
             .Where(pi => pi.PartyId == party.Id)
@@ -58,8 +59,7 @@ public class PartyInterestService : IPartyInterestService
             throw new ArgumentException("Email is required.", nameof(email));
         }
 
-        var party = await _artemisDbContext.Parties
-            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
+        var party = await _artemisDbContext.Parties.FindPartyForLoginEmailAsync(email);
 
         if (party == null)
         {

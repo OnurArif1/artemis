@@ -1,5 +1,5 @@
+using Artemis.API.Infrastructure;
 using Artemis.API.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 
@@ -23,6 +23,34 @@ public class PartyInterestController : ControllerBase
     public PartyInterestController(IPartyInterestService partyInterestService)
     {
         _partyInterestService = partyInterestService;
+    }
+
+    [HttpGet("my-interests")]
+    public async Task<IActionResult> GetMyInterestsAsync([FromQuery] string? email)
+    {
+        var resolved = CallerIdentity.TryResolveLoginEmail(User, email);
+        if (string.IsNullOrWhiteSpace(resolved))
+        {
+            return BadRequest(new { message = "Email is required (login token or query)." });
+        }
+
+        try
+        {
+            var interests = await _partyInterestService.GetMyInterestsAsync(resolved);
+            return Ok(interests);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "An error occurred: " + ex.Message });
+        }
     }
 
     [HttpPost("save")]

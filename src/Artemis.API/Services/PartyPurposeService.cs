@@ -34,13 +34,14 @@ public class PartyPurposeService : IPartyPurposeService
             throw new ArgumentException("At least one valid purpose must be selected.", nameof(purposeTypes));
         }
 
-        var party = await _artemisDbContext.Parties
-            .FirstOrDefaultAsync(p => p.Email != null && p.Email.ToLower() == email.ToLower());
+        var party = await _artemisDbContext.Parties.FindPartyForLoginEmailAsync(email);
 
         if (party == null)
         {
             throw new InvalidOperationException("User not found.");
         }
+
+        PartyLoginLookup.EnsurePartyEmail(party, email);
 
         var existingPartyPurposes = await _artemisDbContext.PartyPurposes
             .Where(pp => pp.PartyId == party.Id)
@@ -57,5 +58,26 @@ public class PartyPurposeService : IPartyPurposeService
 
         await _artemisDbContext.PartyPurposes.AddRangeAsync(partyPurposes);
         await _artemisDbContext.SaveChangesAsync();
+    }
+
+    public async ValueTask<List<int>> GetMyPurposeTypesAsync(string email)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            throw new ArgumentException("Email is required.", nameof(email));
+        }
+
+        var party = await _artemisDbContext.Parties.FindPartyForLoginEmailAsync(email);
+
+        if (party == null)
+        {
+            throw new InvalidOperationException("User not found.");
+        }
+
+        return await _artemisDbContext.PartyPurposes
+            .AsNoTracking()
+            .Where(pp => pp.PartyId == party.Id)
+            .Select(pp => (int)pp.PurposeType)
+            .ToListAsync();
     }
 }
