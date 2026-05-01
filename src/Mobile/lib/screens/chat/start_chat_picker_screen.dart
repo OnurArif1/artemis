@@ -7,6 +7,7 @@ import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
+import '../../core/util/ensure_room_access.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
 import '../../core/util/room_create_policy.dart';
@@ -87,11 +88,13 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
       if (!mounted) return;
       final roomMaps = asMapList(results[0]);
       final topicMaps = asMapList(results[1]);
+      final activeRooms =
+          roomMaps.where((m) => !lifecycleExpiredFromRoomMap(m)).toList();
 
       setState(() {
         _myTier = tier;
         _tierLoading = false;
-        _allRooms = roomMaps;
+        _allRooms = activeRooms;
         _allTopics = topicMaps;
         _loading = false;
       });
@@ -164,7 +167,7 @@ class _StartChatPickerScreenState extends State<StartChatPickerScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF0F2F5),
       appBar: AppBar(
-        title: const Text('Sohbet başlat'),
+        title: const Text('Sohbete Katıl'),
         bottom: _loading || _error != null
             ? null
             : TabBar(
