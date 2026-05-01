@@ -65,11 +65,19 @@ class _HomeShellState extends State<HomeShell> {
               onDestinationSelected: (i) =>
                   context.read<HomeTabController>().setIndex(i),
               backgroundColor: AppColors.surfaceCard,
-              indicatorColor: AppColors.purple100,
-              selectedIconTheme: const IconThemeData(color: AppColors.purple600),
+              indicatorColor: idx == HomeTabController.topicsTabIndex
+                  ? AppColors.topicMint
+                  : AppColors.purple100,
+              selectedIconTheme: IconThemeData(
+                color: idx == HomeTabController.topicsTabIndex
+                    ? AppColors.topicTeal
+                    : AppColors.purple600,
+              ),
               unselectedIconTheme: const IconThemeData(color: Color(0xFF6B6B76)),
-              selectedLabelTextStyle: const TextStyle(
-                color: AppColors.purple700,
+              selectedLabelTextStyle: TextStyle(
+                color: idx == HomeTabController.topicsTabIndex
+                    ? AppColors.topicTeal
+                    : AppColors.purple700,
                 fontWeight: FontWeight.w600,
               ),
               unselectedLabelTextStyle: const TextStyle(color: Color(0xFF6B6B76)),
@@ -125,11 +133,37 @@ class _HomeShellState extends State<HomeShell> {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: idx,
-        onDestinationSelected: (i) =>
-            context.read<HomeTabController>().setIndex(i),
-        destinations: _destinations,
+      bottomNavigationBar: NavigationBarTheme(
+        data: idx == HomeTabController.topicsTabIndex
+            ? NavigationBarThemeData(
+                indicatorColor: AppColors.topicMint,
+                labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                  final selected = states.contains(WidgetState.selected);
+                  return TextStyle(
+                    fontSize: 12,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                    color: selected
+                        ? AppColors.topicTeal
+                        : const Color(0xFF6B6B76),
+                  );
+                }),
+                iconTheme: WidgetStateProperty.resolveWith((states) {
+                  final selected = states.contains(WidgetState.selected);
+                  return IconThemeData(
+                    color: selected
+                        ? AppColors.topicTeal
+                        : const Color(0xFF6B6B76),
+                    size: 24,
+                  );
+                }),
+              )
+            : Theme.of(context).navigationBarTheme,
+        child: NavigationBar(
+          selectedIndex: idx,
+          onDestinationSelected: (i) =>
+              context.read<HomeTabController>().setIndex(i),
+          destinations: _destinations,
+        ),
       ),
     );
   }

@@ -20,4 +20,9 @@ abstract final class AppColors {
   static const Color surfaceLight = Color(0xFFF4F4F6);
   static const Color surfaceCard = Color(0xFFFFFFFF);
   static const Color outlineMuted = Color(0xFFE2E2E8);
+
+  /// Konu / hashtag akışı (odaların morundan ayrışır).
+  static const Color topicTeal = Color(0xFF0F766E);
+  static const Color topicTealAccent = Color(0xFF5EEAD4);
+  static const Color topicMint = Color(0xFFCCFBF1);
 }

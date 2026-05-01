@@ -696,9 +696,6 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
     );
   }
 
-  static const _topicStripeHi = Color(0xFF0F766E);
-  static const _topicStripeLo = Color(0xFF5EEAD4);
-
   Widget _buildChatRow(BuildContext context, _ConversationRow r) {
     final theme = Theme.of(context);
     final pv = r.preview;
@@ -746,7 +743,10 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                     end: Alignment.bottomCenter,
                     colors: r.isRoom
                         ? const [AppColors.purple700, AppColors.purple400]
-                        : const [_topicStripeHi, _topicStripeLo],
+                        : [
+                            AppColors.topicTeal,
+                            AppColors.topicTealAccent,
+                          ],
                   ),
                 ),
               ),
@@ -758,7 +758,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                     children: [
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: r.isRoom ? AppColors.purple50 : const Color(0xFFCCFBF1),
+                          color: r.isRoom ? AppColors.purple50 : AppColors.topicMint,
                           borderRadius: const BorderRadius.all(Radius.circular(14)),
                         ),
                         child: SizedBox(
@@ -766,7 +766,8 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                           height: 46,
                           child: Icon(
                             r.isRoom ? AppContentIcons.room : AppContentIcons.topic,
-                            color: r.isRoom ? AppColors.purple600 : _topicStripeHi,
+                            color:
+                                r.isRoom ? AppColors.purple600 : AppColors.topicTeal,
                             size: 22,
                           ),
                         ),
@@ -783,10 +784,10 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      // Text(
-                                      //   r.isRoom ? 'ODA' : 'KONU',
-                                      //   style: capsStyle,
-                                      // ),
+                                      Text(
+                                        r.isRoom ? 'ODA' : 'KONU',
+                                        style: capsStyle,
+                                      ),
                                       const SizedBox(height: 4),
                                       Text(
                                         r.title,
@@ -800,7 +801,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                                       ),
                                       if (showRoomTopic) ...[
                                         const SizedBox(height: 8),
-                                        // Text('KONU', style: capsStyle),
+                                        Text('KONU', style: capsStyle),
                                         const SizedBox(height: 3),
                                         Text(
                                           roomTopicTrimmed,

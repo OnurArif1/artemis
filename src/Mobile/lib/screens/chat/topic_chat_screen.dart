@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/util/ensure_room_access.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/privacy_label.dart';
@@ -50,6 +53,14 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
   ChatHubSession? _hub;
   List<_CommentLine> _comments = [];
   final Map<int, String> _partyNames = {};
+  final Set<int> _participantPartyIds = {};
+
+  Map<String, dynamic>? _topicDetail;
+  DateTime? _lifecycleEndsAtUtc;
+  bool _lifecycleExpired = false;
+  Timer? _countdownTimer;
+  DateTime _countdownTick = DateTime.now();
+
   bool _loading = true;
   bool _sending = false;
   String? _error;
@@ -60,10 +71,79 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _detachHub();
     _scroll.dispose();
     _text.dispose();
     super.dispose();
+  }
+
+  void _ensureCountdownTimer() {
+    _countdownTimer?.cancel();
+    if (_lifecycleEndsAtUtc == null ||
+        _lifecycleExpired ||
+        DateTime.now().toUtc().isAfter(_lifecycleEndsAtUtc!)) {
+      return;
+    }
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      final end = _lifecycleEndsAtUtc;
+      if (end != null && DateTime.now().toUtc().isAfter(end)) {
+        _countdownTimer?.cancel();
+        _countdownTimer = null;
+        setState(() => _lifecycleExpired = true);
+        return;
+      }
+      setState(() => _countdownTick = DateTime.now());
+    });
+  }
+
+  /// Konu API haritasında `lifeCycle` + `createDate` varsa geçerlidir (oda ile aynı mantık).
+  String? _lifecycleSubtitleOptional(BuildContext context) {
+    final m = _topicDetail;
+    if (m == null) return null;
+    final end = lifecycleEndUtcFromRoomMap(m);
+    if (end == null) return null;
+    if (_lifecycleExpired || lifecycleExpiredFromRoomMap(m)) {
+      return 'Yaşam döngüsü sona erdi';
+    }
+    final nowUtc = _countdownTick.toUtc();
+    if (!nowUtc.isBefore(end)) {
+      return 'Yaşam döngüsü sona erdi';
+    }
+    final remaining = end.difference(nowUtc);
+    final endLocal = end.toLocal();
+    final loc = MaterialLocalizations.of(context);
+    final dateStr = loc.formatCompactDate(endLocal);
+    final timeStr = loc.formatTimeOfDay(
+      TimeOfDay.fromDateTime(endLocal),
+      alwaysUse24HourFormat: true,
+    );
+    final d = remaining.inDays;
+    final h = remaining.inHours.remainder(24);
+    final min = remaining.inMinutes.remainder(60);
+    final sec = remaining.inSeconds.remainder(60);
+    final parts = <String>[];
+    if (d > 0) parts.add('${d}g');
+    if (h > 0 || d > 0) parts.add('${h}s');
+    parts.add('${min}dk');
+    parts.add('${sec}sn');
+    final countdown = parts.join(' ');
+    return 'Bitiş $dateStr $timeStr · Kalan $countdown';
+  }
+
+  String _commentTimeLabel(BuildContext context, DateTime at) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(at.year, at.month, at.day);
+    final loc = MaterialLocalizations.of(context);
+    if (day == today) {
+      return loc.formatTimeOfDay(
+        TimeOfDay.fromDateTime(at),
+        alwaysUse24HourFormat: true,
+      );
+    }
+    return '${at.day.toString().padLeft(2, '0')}.${at.month.toString().padLeft(2, '0')}.${at.year} · ${loc.formatTimeOfDay(TimeOfDay.fromDateTime(at), alwaysUse24HourFormat: true)}';
   }
 
   Future<void> _detachHub() async {
@@ -97,6 +177,22 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _boot());
   }
 
+  Future<void> _loadTopicDetail(AppServices app) async {
+    try {
+      final raw = await app.topics.getById(widget.topicId);
+      if (!mounted || raw is! Map) return;
+      final m = Map<String, dynamic>.from(raw);
+      final endUtc = lifecycleEndUtcFromRoomMap(m);
+      final expired = lifecycleExpiredFromRoomMap(m);
+      setState(() {
+        _topicDetail = m;
+        _lifecycleEndsAtUtc = endUtc;
+        _lifecycleExpired = expired;
+      });
+      _ensureCountdownTimer();
+    } catch (_) {}
+  }
+
   Future<void> _boot() async {
     final app = context.read<AppServices>();
     final email = emailFromAccessToken(context.read<AuthService>().token);
@@ -112,7 +208,10 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
     }
     _partyId = pid;
 
-    await _loadHistory(app);
+    await Future.wait<void>([
+      _loadHistory(app),
+      _loadTopicDetail(app),
+    ]);
     if (!mounted) return;
 
     final session = ChatHubSession(
@@ -188,6 +287,7 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
       }
 
       final lines = <_CommentLine>[];
+      final participants = <int>{};
       for (final e in items) {
         if (e is! Map) continue;
         final m = Map<String, dynamic>.from(e);
@@ -198,6 +298,7 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
         final cd = m['createDate'] ?? m['CreateDate'];
         final at = DateTime.tryParse('$cd') ?? DateTime.now();
         final name = _partyNames[pi] ?? 'Kullanıcı $pi';
+        if (pi > 0) participants.add(pi);
         lines.add(
           _CommentLine(
             id: id,
@@ -210,7 +311,12 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
       }
       lines.sort((a, b) => a.at.compareTo(b.at));
       if (!mounted) return;
-      setState(() => _comments = lines);
+      setState(() {
+        _comments = lines;
+        _participantPartyIds
+          ..clear()
+          ..addAll(participants);
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = 'Yorumlar yüklenemedi');
@@ -229,6 +335,7 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
     if (dup) return;
     setState(() {
       _partyNames[partyId] = partyName;
+      if (partyId > 0) _participantPartyIds.add(partyId);
       _comments = [
         ..._comments,
         _CommentLine(
@@ -281,33 +388,23 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
   @override
   Widget build(BuildContext context) {
     final myParty = _partyId;
+    final lifecycleOptional = _lifecycleSubtitleOptional(context);
+    final expiredLook = _lifecycleExpired ||
+        (_topicDetail != null && lifecycleExpiredFromRoomMap(_topicDetail!));
+    final canSend = !_sending && _hubReady;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.topicTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              _hubReady
-                  ? 'Canlı yorumlar'
-                  : _loading
-                      ? 'Yükleniyor…'
-                      : 'Bağlantı yok',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: AppColors.surfaceLight,
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _TopicChatHeader(
+            topicTitle: widget.topicTitle,
+            lifecycleLine: lifecycleOptional,
+            participantCount: _participantPartyIds.length,
+            expiredVisual: expiredLook,
+            onBack: () => Navigator.of(context).maybePop(),
+          ),
           if (_error != null)
             MaterialBanner(
               content: Text(_error!),
@@ -319,114 +416,338 @@ class _TopicChatScreenState extends State<TopicChatScreen> {
               ],
             ),
           Expanded(
-            child: _loading && _comments.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    itemCount: _comments.length,
-                    itemBuilder: (context, i) {
-                      final m = _comments[i];
-                      final mine = myParty != null && m.partyId == myParty;
-                      return Align(
-                        alignment:
-                            mine ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.sizeOf(context).width * 0.82,
-                          ),
-                          decoration: BoxDecoration(
-                            color: mine
-                                ? AppColors.purple500
-                                : AppColors.purple50,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: mine
-                                ? CrossAxisAlignment.end
-                                : CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                maskEmailLikeLabel(m.partyName,
-                                    showFull: mine),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
+            child: ColoredBox(
+              color: AppColors.surfaceLight,
+              child: _loading && _comments.isEmpty
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.topicTeal,
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scroll,
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                      itemCount: _comments.length,
+                      itemBuilder: (context, i) {
+                        final m = _comments[i];
+                        final mine = myParty != null && m.partyId == myParty;
+                        final bubbleRadius = BorderRadius.only(
+                          topLeft: Radius.circular(mine ? 18 : 6),
+                          topRight: Radius.circular(mine ? 6 : 18),
+                          bottomLeft: const Radius.circular(18),
+                          bottomRight: const Radius.circular(18),
+                        );
+                        return Align(
+                          alignment: mine
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 11,
+                            ),
+                            constraints: BoxConstraints(
+                              maxWidth:
+                                  MediaQuery.sizeOf(context).width * 0.82,
+                            ),
+                            decoration: BoxDecoration(
+                              color: mine
+                                  ? AppColors.topicTeal
+                                  : AppColors.surfaceCard,
+                              borderRadius: bubbleRadius,
+                              border: mine
+                                  ? null
+                                  : Border.all(
+                                      color: AppColors.outlineMuted
+                                          .withValues(alpha: 0.85),
+                                    ),
+                              boxShadow: [
+                                BoxShadow(
                                   color: mine
-                                      ? Colors.white.withValues(alpha: 0.95)
-                                      : AppColors.purple700,
+                                      ? AppColors.topicTeal
+                                          .withValues(alpha: 0.32)
+                                      : Colors.black
+                                          .withValues(alpha: 0.06),
+                                  blurRadius: mine ? 12 : 8,
+                                  offset: const Offset(0, 3),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                m.content,
-                                style: TextStyle(
-                                  color: mine ? Colors.white : AppColors.darkCharcoal,
-                                  height: 1.35,
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: mine
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  maskEmailLikeLabel(
+                                    m.partyName,
+                                    showFull: mine,
+                                  ),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
+                                    letterSpacing: 0.2,
+                                    color: mine
+                                        ? Colors.white.withValues(alpha: 0.88)
+                                        : AppColors.topicTeal,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 5),
+                                Text(
+                                  m.content,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: mine
+                                        ? Colors.white
+                                        : AppColors.darkCharcoal,
+                                    height: 1.4,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  _commentTimeLabel(context, m.at),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                    color: mine
+                                        ? Colors.white.withValues(alpha: 0.62)
+                                        : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
+            ),
           ),
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _text,
-                      minLines: 1,
-                      maxLines: 5,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        hintText: 'Yorum yazın…',
-                        border: OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      onSubmitted: (_) => _send(),
-                    ),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+              child: Material(
+                color: AppColors.surfaceCard,
+                elevation: 0,
+                shadowColor: Colors.black.withValues(alpha: 0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                  side: BorderSide(
+                    color: AppColors.outlineMuted.withValues(alpha: 0.9),
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: (_sending || !_hubReady) ? null : _send,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.purple600,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                    ),
-                    child: _sending
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(left: 4, right: 4, top: 4, bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _text,
+                          minLines: 1,
+                          maxLines: 5,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            height: 1.35,
+                            color: AppColors.darkCharcoal,
+                          ),
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: InputDecoration(
+                            hintText: 'Yorum yazın…',
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 15,
                             ),
-                          )
-                        : const Icon(Icons.send_rounded),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                          ),
+                          onSubmitted: (_) => _send(),
+                        ),
+                      ),
+                      IconButton(
+                        style: IconButton.styleFrom(
+                          backgroundColor: canSend
+                              ? AppColors.topicTeal
+                              : AppColors.topicMint,
+                          foregroundColor: canSend
+                              ? Colors.white
+                              : AppColors.topicTealAccent
+                                  .withValues(alpha: 0.75),
+                          disabledBackgroundColor: const Color(0xFFE6FFFA),
+                          disabledForegroundColor: AppColors.topicTealAccent
+                              .withValues(alpha: 0.55),
+                        ),
+                        onPressed: (_sending || !_hubReady) ? null : _send,
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded, size: 22),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TopicChatHeader extends StatelessWidget {
+  const _TopicChatHeader({
+    required this.topicTitle,
+    this.lifecycleLine,
+    required this.participantCount,
+    required this.expiredVisual,
+    required this.onBack,
+  });
+
+  final String topicTitle;
+  final String? lifecycleLine;
+  final int participantCount;
+  final bool expiredVisual;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final gradient = expiredVisual
+        ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF5C3D3D),
+              Color(0xFF4A2C2C),
+            ],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.topicTeal,
+              AppColors.topicTealAccent,
+            ],
+          );
+
+    final capsStyle = TextStyle(
+      fontSize: 10,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.65,
+      color: Colors.white.withValues(alpha: 0.58),
+    );
+
+    final lifecycleTrimmed = lifecycleLine?.trim();
+    final showLifecycle =
+        lifecycleTrimmed != null && lifecycleTrimmed.isNotEmpty;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(gradient: gradient),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 2, 16, 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 44,
+                  minHeight: 44,
+                ),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: onBack,
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('KONU', style: capsStyle),
+                    const SizedBox(height: 4),
+                    Text(
+                      topicTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        height: 1.22,
+                      ),
+                    ),
+                    if (showLifecycle) ...[
+                      const SizedBox(height: 10),
+                      Text('YAŞAM DÖNGÜSÜ', style: capsStyle),
+                      const SizedBox(height: 3),
+                      Text(
+                        lifecycleTrimmed,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.people_outline_rounded,
+                            size: 17,
+                            color: Colors.white.withValues(alpha: 0.92),
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            '$participantCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                              height: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ class HomeTabController extends ChangeNotifier {
 
   static const int chatsTabIndex = 0;
   static const int roomsTabIndex = 1;
+  static const int topicsTabIndex = 2;
 
   int _index;
   int? _roomIdToFocus;

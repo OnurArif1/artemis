@@ -144,19 +144,27 @@ class _TopicListScreenState extends State<TopicListScreen> {
       appBar: AppBar(
         title: Text(
           'Konular${_items.isNotEmpty ? ' (${_items.length})' : ''}',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: AppColors.darkCharcoal,
+              ),
         ),
         automaticallyImplyLeading: !rail,
         actions: [
           IconButton(
+            tooltip: 'Yenile',
             onPressed: _loading ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: _loading ? Colors.grey.shade400 : AppColors.topicTeal,
+            ),
           ),
         ],
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
             child: TextField(
               controller: _search,
               textInputAction: TextInputAction.search,
@@ -166,7 +174,9 @@ class _TopicListScreenState extends State<TopicListScreen> {
               },
               decoration: InputDecoration(
                 hintText: 'Konu ara…',
-                prefixIcon: const Icon(Icons.search_rounded),
+                hintStyle: TextStyle(color: Colors.grey.shade500),
+                prefixIcon:
+                    Icon(Icons.search_rounded, color: Colors.grey.shade600),
                 suffixIcon: _search.text.isNotEmpty
                     ? IconButton(
                         onPressed: () {
@@ -174,9 +184,31 @@ class _TopicListScreenState extends State<TopicListScreen> {
                           _search.clear();
                           _load();
                         },
-                        icon: const Icon(Icons.clear_rounded),
+                        icon: Icon(Icons.clear_rounded, color: Colors.grey.shade600),
                       )
                     : null,
+                filled: true,
+                fillColor: AppColors.surfaceCard,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade300.withValues(alpha: 0.6),
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(
+                    color: Colors.grey.shade300.withValues(alpha: 0.5),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(
+                    color: AppColors.topicTeal,
+                    width: 1.5,
+                  ),
+                ),
               ),
             ),
           ),
@@ -199,7 +231,7 @@ class _TopicListScreenState extends State<TopicListScreen> {
           : FloatingActionButton(
               onPressed: _onCreateTopicPressed,
               backgroundColor: canCreateTopic(_mySubscriptionType)
-                  ? AppColors.purple600
+                  ? AppColors.topicTeal
                   : Colors.grey.shade500,
               child: const Icon(Icons.add_rounded),
             ),
@@ -208,7 +240,9 @@ class _TopicListScreenState extends State<TopicListScreen> {
 
   Widget _buildBody(BuildContext context) {
     if (_loading && _items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.topicTeal),
+      );
     }
     if (_error != null && _items.isEmpty) {
       return Center(
@@ -237,7 +271,7 @@ class _TopicListScreenState extends State<TopicListScreen> {
     }
 
     return RefreshIndicator(
-      color: AppColors.purple500,
+      color: AppColors.topicTeal,
       onRefresh: _load,
       child: ListView.separated(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -253,7 +287,7 @@ class _TopicListScreenState extends State<TopicListScreen> {
             index: i,
             child: Card(
               elevation: 0,
-              surfaceTintColor: AppColors.purple50,
+              surfaceTintColor: AppColors.topicMint,
               child: InkWell(
               borderRadius: BorderRadius.circular(16),
               onTap: tid == null
@@ -275,10 +309,14 @@ class _TopicListScreenState extends State<TopicListScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppColors.purple50,
+                            color: AppColors.topicMint,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.tag_rounded, color: AppColors.purple600, size: 20),
+                          child: const Icon(
+                            Icons.tag_rounded,
+                            color: AppColors.topicTeal,
+                            size: 20,
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(

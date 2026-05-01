@@ -96,14 +96,42 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
       if (end != null && DateTime.now().toUtc().isAfter(end)) {
         _countdownTimer?.cancel();
         _countdownTimer = null;
-        setState(() {
-          _countdownTick = DateTime.now();
-          _lifecycleExpired = true;
-        });
+        setState(() => _lifecycleExpired = true);
         return;
       }
       setState(() => _countdownTick = DateTime.now());
     });
+  }
+
+  String _lifecycleSubtitle(BuildContext context) {
+    if (_lifecycleExpired || _readOnlyExpired) {
+      return 'Yaşam döngüsü sona erdi';
+    }
+    final end = _lifecycleEndsAtUtc;
+    if (end == null) return 'Yaşam döngüsü bilinmiyor';
+    final nowUtc = _countdownTick.toUtc();
+    if (!nowUtc.isBefore(end)) {
+      return 'Yaşam döngüsü sona erdi';
+    }
+    final remaining = end.difference(nowUtc);
+    final endLocal = end.toLocal();
+    final loc = MaterialLocalizations.of(context);
+    final dateStr = loc.formatCompactDate(endLocal);
+    final timeStr = loc.formatTimeOfDay(
+      TimeOfDay.fromDateTime(endLocal),
+      alwaysUse24HourFormat: true,
+    );
+    final d = remaining.inDays;
+    final h = remaining.inHours.remainder(24);
+    final min = remaining.inMinutes.remainder(60);
+    final sec = remaining.inSeconds.remainder(60);
+    final parts = <String>[];
+    if (d > 0) parts.add('${d}g');
+    if (h > 0 || d > 0) parts.add('${h}s');
+    parts.add('${min}dk');
+    parts.add('${sec}sn');
+    final countdown = parts.join(' ');
+    return 'Bitiş $dateStr $timeStr · Kalan $countdown';
   }
 
   Future<Map<String, dynamic>?> _fetchRoomMap(
@@ -162,37 +190,6 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
     } catch (_) {}
     if (!mounted) return;
     setState(() => _speakerPartyIds.addAll(ids));
-  }
-
-  String _lifecycleSubtitle(BuildContext context) {
-    if (_lifecycleExpired || _readOnlyExpired) {
-      return 'Yaşam döngüsü sona erdi';
-    }
-    final end = _lifecycleEndsAtUtc;
-    if (end == null) return 'Yaşam döngüsü bilinmiyor';
-    final nowUtc = _countdownTick.toUtc();
-    if (!nowUtc.isBefore(end)) {
-      return 'Yaşam döngüsü sona erdi';
-    }
-    final remaining = end.difference(nowUtc);
-    final endLocal = end.toLocal();
-    final loc = MaterialLocalizations.of(context);
-    final dateStr = loc.formatCompactDate(endLocal);
-    final timeStr = loc.formatTimeOfDay(
-      TimeOfDay.fromDateTime(endLocal),
-      alwaysUse24HourFormat: true,
-    );
-    final d = remaining.inDays;
-    final h = remaining.inHours.remainder(24);
-    final min = remaining.inMinutes.remainder(60);
-    final sec = remaining.inSeconds.remainder(60);
-    final parts = <String>[];
-    if (d > 0) parts.add('${d}g');
-    if (h > 0 || d > 0) parts.add('${h}s');
-    parts.add('${min}dk');
-    parts.add('${sec}sn');
-    final countdown = parts.join(' ');
-    return 'Bitiş ~ $dateStr $timeStr · Kalan $countdown';
   }
 
   Future<void> _detachHub() async {
@@ -482,97 +479,22 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
   @override
   Widget build(BuildContext context) {
     final myParty = _partyId;
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final appBarFg = theme.appBarTheme.foregroundColor ?? cs.onSurface;
-    final subColor = cs.onSurfaceVariant;
-    final mutedSub = subColor.withValues(alpha: 0.78);
-
-    final titleStyle = theme.textTheme.titleMedium?.copyWith(
-          color: appBarFg,
-          fontWeight: FontWeight.w600,
-          height: 1.2,
-        ) ??
-        TextStyle(color: appBarFg, fontSize: 17, fontWeight: FontWeight.w600);
-    final subStyle = theme.textTheme.labelSmall?.copyWith(
-          color: subColor,
-          height: 1.25,
-        ) ??
-        TextStyle(color: subColor, fontSize: 11.5, height: 1.25);
-    final topicTrimmed = widget.topicTitle?.trim();
-    final topicLineStyle = theme.textTheme.bodySmall?.copyWith(
-          color: appBarFg.withValues(alpha: 0.82),
-          fontWeight: FontWeight.w500,
-          height: 1.25,
-          fontSize: 13,
-        ) ??
-        TextStyle(
-          color: appBarFg.withValues(alpha: 0.82),
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-          height: 1.25,
-        );
+    final expiredLook = _lifecycleExpired || _readOnlyExpired;
+    final canSend = !_readOnlyExpired && !_sending && _hubReady;
 
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: kToolbarHeight + 72,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.roomTitle,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: titleStyle,
-            ),
-            if (topicTrimmed != null && topicTrimmed.isNotEmpty) ...[
-              const SizedBox(height: 3),
-              Text(
-                topicTrimmed,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: topicLineStyle,
-              ),
-            ],
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(
-                  Icons.people_outline_rounded,
-                  size: 16,
-                  color: subColor,
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  '${_speakerPartyIds.length}',
-                  style: subStyle.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              _lifecycleSubtitle(context),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: subStyle,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              _readOnlyExpired
-                  ? 'Salt okunur — süre doldu'
-                  : _hubReady
-                      ? 'Bağlı'
-                      : _loading
-                          ? 'Yükleniyor…'
-                          : 'Bağlantı yok',
-              style: subStyle.copyWith(color: mutedSub),
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: AppColors.surfaceLight,
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _RoomChatHeader(
+            roomTitle: widget.roomTitle,
+            topicTitle: widget.topicTitle,
+            lifecycleLine: _lifecycleSubtitle(context),
+            participantCount: _speakerPartyIds.length,
+            expiredVisual: expiredLook,
+            onBack: () => Navigator.of(context).maybePop(),
+          ),
           if (_error != null)
             MaterialBanner(
               content: Text(_error!),
@@ -584,119 +506,343 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
               ],
             ),
           Expanded(
-            child: _loading && _messages.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    controller: _scroll,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, i) {
-                      final m = _messages[i];
-                      final mine = myParty != null && m.partyId == myParty;
-                      return Align(
-                        alignment:
-                            mine ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.sizeOf(context).width * 0.82,
-                          ),
-                          decoration: BoxDecoration(
-                            color: mine
-                                ? AppColors.purple500
-                                : AppColors.purple50,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: mine
-                                ? CrossAxisAlignment.end
-                                : CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                maskEmailLikeLabel(m.partyName,
-                                    showFull: mine),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
+            child: ColoredBox(
+              color: AppColors.surfaceLight,
+              child: _loading && _messages.isEmpty
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.purple500,
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: _scroll,
+                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, i) {
+                        final m = _messages[i];
+                        final mine = myParty != null && m.partyId == myParty;
+                        final bubbleRadius = BorderRadius.only(
+                          topLeft: Radius.circular(mine ? 18 : 6),
+                          topRight: Radius.circular(mine ? 6 : 18),
+                          bottomLeft: const Radius.circular(18),
+                          bottomRight: const Radius.circular(18),
+                        );
+                        return Align(
+                          alignment: mine
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 11,
+                            ),
+                            constraints: BoxConstraints(
+                              maxWidth:
+                                  MediaQuery.sizeOf(context).width * 0.82,
+                            ),
+                            decoration: BoxDecoration(
+                              color: mine
+                                  ? AppColors.purple500
+                                  : AppColors.surfaceCard,
+                              borderRadius: bubbleRadius,
+                              border: mine
+                                  ? null
+                                  : Border.all(
+                                      color: AppColors.outlineMuted
+                                          .withValues(alpha: 0.85),
+                                    ),
+                              boxShadow: [
+                                BoxShadow(
                                   color: mine
-                                      ? Colors.white.withValues(alpha: 0.95)
-                                      : AppColors.purple700,
+                                      ? AppColors.purple500
+                                          .withValues(alpha: 0.26)
+                                      : Colors.black
+                                          .withValues(alpha: 0.06),
+                                  blurRadius: mine ? 12 : 8,
+                                  offset: const Offset(0, 3),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                m.content,
-                                style: TextStyle(
-                                  color: mine ? Colors.white : AppColors.darkCharcoal,
-                                  height: 1.35,
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: mine
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  maskEmailLikeLabel(
+                                    m.partyName,
+                                    showFull: mine,
+                                  ),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                    letterSpacing: 0.15,
+                                    color: mine
+                                        ? Colors.white.withValues(alpha: 0.92)
+                                        : AppColors.purple700,
+                                  ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 5),
+                                Text(
+                                  m.content,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: mine
+                                        ? Colors.white
+                                        : AppColors.darkCharcoal,
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    ),
+            ),
           ),
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _text,
-                      enabled: !_readOnlyExpired,
-                      minLines: 1,
-                      maxLines: 5,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        hintText: _readOnlyExpired
-                            ? 'Bu odada mesaj gönderilemez'
-                            : 'Mesaj yazın…',
-                        border: const OutlineInputBorder(),
-                        isDense: true,
-                      ),
-                      onSubmitted: (_) => _send(),
-                    ),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+              child: Material(
+                color: AppColors.surfaceCard,
+                elevation: 0,
+                shadowColor: Colors.black.withValues(alpha: 0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(22),
+                  side: BorderSide(
+                    color: AppColors.outlineMuted.withValues(alpha: 0.9),
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    onPressed: (_readOnlyExpired || _sending || !_hubReady)
-                        ? null
-                        : _send,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.purple600,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                    ),
-                    child: _sending
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                ),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(left: 4, right: 4, top: 4, bottom: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _text,
+                          enabled: !_readOnlyExpired,
+                          minLines: 1,
+                          maxLines: 5,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            height: 1.35,
+                            color: AppColors.darkCharcoal,
+                          ),
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: InputDecoration(
+                            hintText: _readOnlyExpired
+                                ? 'Bu odada mesaj gönderilemez'
+                                : 'Mesaj yazın…',
+                            hintStyle: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 15,
                             ),
-                          )
-                        : const Icon(Icons.send_rounded),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                          ),
+                          onSubmitted: (_) => _send(),
+                        ),
+                      ),
+                      IconButton(
+                        style: IconButton.styleFrom(
+                          backgroundColor: canSend
+                              ? AppColors.purple500
+                              : AppColors.purple100,
+                          foregroundColor:
+                              canSend ? Colors.white : AppColors.purple300,
+                          disabledBackgroundColor: AppColors.purple50,
+                          disabledForegroundColor: AppColors.purple200,
+                        ),
+                        onPressed:
+                            (_readOnlyExpired || _sending || !_hubReady)
+                                ? null
+                                : _send,
+                        icon: _sending
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.send_rounded, size: 22),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _RoomChatHeader extends StatelessWidget {
+  const _RoomChatHeader({
+    required this.roomTitle,
+    this.topicTitle,
+    required this.lifecycleLine,
+    required this.participantCount,
+    required this.expiredVisual,
+    required this.onBack,
+  });
+
+  final String roomTitle;
+  final String? topicTitle;
+  final String lifecycleLine;
+  final int participantCount;
+  final bool expiredVisual;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final topicTrimmed = topicTitle?.trim();
+    final gradient = expiredVisual
+        ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF5C3D3D),
+              Color(0xFF4A2C2C),
+            ],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.purple800,
+              AppColors.purple600,
+            ],
+          );
+
+    final capsStyle = TextStyle(
+      fontSize: 10,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.65,
+      color: Colors.white.withValues(alpha: 0.58),
+    );
+
+    return DecoratedBox(
+      decoration: BoxDecoration(gradient: gradient),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 2, 16, 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(
+                  minWidth: 44,
+                  minHeight: 44,
+                ),
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: onBack,
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('ODA', style: capsStyle),
+                    const SizedBox(height: 4),
+                    Text(
+                      roomTitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        height: 1.22,
+                      ),
+                    ),
+                    if (topicTrimmed != null &&
+                        topicTrimmed.isNotEmpty &&
+                        topicTrimmed != roomTitle.trim()) ...[
+                      const SizedBox(height: 10),
+                      Text('KONU', style: capsStyle),
+                      const SizedBox(height: 3),
+                      Text(
+                        topicTrimmed,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Text('YAŞAM DÖNGÜSÜ', style: capsStyle),
+                    const SizedBox(height: 3),
+                    Text(
+                      lifecycleLine,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 11,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.people_outline_rounded,
+                            size: 17,
+                            color: Colors.white.withValues(alpha: 0.92),
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            '$participantCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                              height: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
