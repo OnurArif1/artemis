@@ -1,5 +1,3 @@
-using Artemis.API.Entities.Enums;
-
 namespace Artemis.API.Services;
 
 public class TopicListViewModel
@@ -14,7 +12,6 @@ public class TopicResultViewModel
     public int? PartyId { get; set; }
     public string? PartyName { get; set; }
     public string Title { get; set; } = string.Empty;
-    public RoomType Type { get; set; }
     public double LocationX { get; set; }
     public double LocationY { get; set; }
     public int CategoryId { get; set; }

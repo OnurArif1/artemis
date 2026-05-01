@@ -48,7 +48,6 @@ public class TopicService : ITopicService
                 PartyId = r.PartyId,
                 PartyName = r.Party != null ? r.Party.PartyName : null,
                 Title = r.Title,
-                Type = r.Type,
                 LocationX = r.LocationX ?? 0,
                 LocationY = r.LocationY ?? 0,
                 CategoryId = r.CategoryId,
@@ -79,7 +78,6 @@ public class TopicService : ITopicService
                 Id = topic.Id,
                 PartyId = topic.PartyId ?? 0,
                 Title = topic.Title,
-                Type = topic.Type,
                 LocationX = topic.LocationX ?? 0,
                 LocationY = topic.LocationY ?? 0,
                 CategoryId = topic.CategoryId,
@@ -111,7 +109,6 @@ public class TopicService : ITopicService
         {
             PartyId = viewModel.PartyId,
             Title = viewModel.Title,
-            Type = viewModel.Type,
             LocationX = viewModel.LocationX,
             LocationY = viewModel.LocationY,
             CategoryId = viewModel.CategoryId,
@@ -120,7 +117,7 @@ public class TopicService : ITopicService
             Downvote = viewModel.Downvote,
             LastUpdateDate = DateTime.UtcNow
         });
-        _artemisDbContext.SaveChanges();
+        await _artemisDbContext.SaveChangesAsync();
 
         resultViewModel.IsSuccess = true;
         return resultViewModel;
@@ -147,9 +144,6 @@ public class TopicService : ITopicService
 
             if (topic.Title != viewModel.Title)
                 topic.Title = viewModel.Title;
-            
-            if (topic.Type != viewModel.Type)
-                topic.Type = viewModel.Type;
 
             if ((topic.LocationX ?? 0) != viewModel.LocationX)
                 topic.LocationX = viewModel.LocationX;

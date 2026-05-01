@@ -32,7 +32,6 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
 
   List<Map<String, dynamic>> _categories = [];
   int? _categoryId;
-  int _topicType = 1;
   double? _locationX;
   double? _locationY;
 
@@ -125,7 +124,6 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
     try {
       final result = await app.topics.create({
         'title': _title.text.trim(),
-        'type': _topicType,
         'locationX': _locationX ?? 0,
         'locationY': _locationY ?? 0,
         'categoryId': _categoryId ?? 0,
@@ -158,7 +156,6 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
         _createdTopicId = tid;
         _showRoomSection = true;
         _title.clear();
-        _topicType = 1;
         _categoryId = null;
         _locationX = null;
         _locationY = null;
@@ -292,15 +289,6 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 1, label: Text('Herkese açık')),
-                ButtonSegment(value: 2, label: Text('Özel')),
-              ],
-              selected: {_topicType},
-              onSelectionChanged: (s) =>
-                  setState(() => _topicType = s.first),
-            ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: _loading ? null : _createTopic,

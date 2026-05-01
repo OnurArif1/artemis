@@ -1,5 +1,3 @@
-using Artemis.API.Entities.Enums;
-
 namespace Artemis.API.Entities;
 
 public class Topic : BaseEntity, IChangingDate
@@ -7,7 +5,6 @@ public class Topic : BaseEntity, IChangingDate
     public int? PartyId { get; set; }
     public Party? Party { get; set; }
     public string Title { get; set; } = string.Empty;
-    public RoomType Type { get; set; }
     public double? LocationX { get; set; }
     public double? LocationY { get; set; }
     public int CategoryId { get; set; }
