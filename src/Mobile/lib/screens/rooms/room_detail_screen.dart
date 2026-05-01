@@ -86,35 +86,35 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
     });
   }
 
-  String _lifecycleCountdownText(BuildContext context) {
+  String _lifecycleRemainingCompact() {
     if (_lifecycleEndsAtUtc == null) return '';
-    if (_expired) {
-      return 'Bu oda için yaşam döngüsü sona erdi.';
-    }
+    if (_expired) return 'Sona erdi';
     final end = _lifecycleEndsAtUtc!;
     final nowUtc = _lifecycleTick.toUtc();
-    if (!nowUtc.isBefore(end)) {
-      return 'Bu oda için yaşam döngüsü sona erdi.';
-    }
+    if (!nowUtc.isBefore(end)) return 'Sona erdi';
     final remaining = end.difference(nowUtc);
-    final endLocal = end.toLocal();
+    final d = remaining.inDays;
+    final h = remaining.inHours.remainder(24);
+    final min = remaining.inMinutes.remainder(60);
+    final sec = remaining.inSeconds.remainder(60);
+    final parts = <String>[];
+    if (d > 0) parts.add('${d}g');
+    if (h > 0 || d > 0) parts.add('${h}s');
+    parts.add('${min}dk');
+    parts.add('${sec}sn');
+    return parts.join(' ');
+  }
+
+  String _lifecycleEndFormatted(BuildContext context) {
+    if (_lifecycleEndsAtUtc == null) return '';
+    final endLocal = _lifecycleEndsAtUtc!.toLocal();
     final loc = MaterialLocalizations.of(context);
     final dateStr = loc.formatCompactDate(endLocal);
     final timeStr = loc.formatTimeOfDay(
       TimeOfDay.fromDateTime(endLocal),
       alwaysUse24HourFormat: true,
     );
-    final d = remaining.inDays;
-    final h = remaining.inHours.remainder(24);
-    final min = remaining.inMinutes.remainder(60);
-    final sec = remaining.inSeconds.remainder(60);
-    final parts = <String>[];
-    if (d > 0) parts.add('$d gün');
-    if (h > 0 || d > 0) parts.add('$h sa');
-    parts.add('$min dk');
-    parts.add('$sec sn');
-    final countdown = parts.join(' ');
-    return 'Bitiş: $dateStr $timeStr\nKalan süre: $countdown';
+    return '$dateStr · $timeStr';
   }
 
   Future<void> _resolveChatState() async {
@@ -180,6 +180,39 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
     });
   }
 
+  static const _splitFlexLeft = 11;
+  static const _splitFlexRight = 13;
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.6,
+              color: Color(0xFF8B8798),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              height: 1.25,
+              color: AppColors.darkCharcoal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final room = widget.room;
@@ -188,173 +221,292 @@ class _RoomDetailScreenState extends State<RoomDetailScreen> {
         entityString(room, ['title', 'Title']) ?? 'Oda #${id ?? '—'}';
     final topicTitle =
         entityString(room, ['topicTitle', 'TopicTitle', 'topicName']);
+    final topicTrimmed = topicTitle?.trim();
     final desc = entityString(room, ['description', 'Description']);
     final roomType = room['roomType'] ?? room['RoomType'];
     final range = room['roomRange'] ?? room['RoomRange'];
     final distance = room['distance'] ?? room['Distance'];
     final ll = itemLatLng(room);
     final subType = parseSubscriptionType(Map<String, dynamic>.from(room));
-    final headerTitle = (topicTitle != null && topicTitle.isNotEmpty)
-        ? '$title ($topicTitle)'
-        : title;
-
-    String row(String label, String? value) {
-      if (value == null || value.isEmpty) return '';
-      return '$label: $value';
-    }
-
-    final rows = <String>[
-      if (roomType != null) row('Oda tipi', roomTypeLabelTr(roomType)),
-      if (range != null) row('Menzil (km)', '$range'),
-      if (distance != null) row('Mesafe', distance is num ? '${distance.toStringAsFixed(2)} km' : '$distance'),
-      if (ll != null)
-        row('Koordinat',
-            '${ll.latitude.toStringAsFixed(5)}, ${ll.longitude.toStringAsFixed(5)}'),
-      if (_loadingMessageParticipantCount)
-        row('Mesajlaşan kişi', 'Yükleniyor...'),
-      if (!_loadingMessageParticipantCount && _messageParticipantCount != null)
-        row('Mesajlaşan kişi', '$_messageParticipantCount'),
-    ].where((s) => s.isNotEmpty).toList();
+    final leftGradient = _expired
+        ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF5C3D3D),
+              Color(0xFF4A2C2C),
+            ],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.purple800,
+              AppColors.purple600,
+            ],
+          );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
+      backgroundColor: AppColors.surfaceLight,
+      body: SafeArea(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(AppContentIcons.room, size: 20),
-            const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                headerTitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              flex: _splitFlexLeft,
+              child: DecoratedBox(
+                decoration: BoxDecoration(gradient: leftGradient),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 14, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                        icon: const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        onPressed: () => Navigator.of(context).maybePop(),
+                      ),
+                      const SizedBox(height: 12),
+                      Icon(
+                        AppContentIcons.room,
+                        size: 36,
+                        color: Colors.white.withValues(alpha: 0.35),
+                      ),
+                      const SizedBox(height: 14),
+                      Text(
+                        title,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          height: 1.25,
+                        ),
+                      ),
+                      if (topicTrimmed != null &&
+                          topicTrimmed.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          'KONU',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.7,
+                            color: Colors.white.withValues(alpha: 0.55),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          topicTrimmed,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.88),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                      if (desc != null && desc.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          desc,
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.82),
+                            fontSize: 13,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                      const Spacer(),
+                      if (_lifecycleEndsAtUtc != null) ...[
+                        Text(
+                          'YAŞAM DÖNGÜSÜ',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.7,
+                            color: Colors.white.withValues(alpha: 0.55),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _lifecycleRemainingCompact(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            height: 1.1,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _expired
+                              ? 'Bu oda kapandı'
+                              : 'Bitiş ${_lifecycleEndFormatted(context)}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 12,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              flex: _splitFlexRight,
+              child: ColoredBox(
+                color: AppColors.surfaceLight,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(18, 20, 18, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Detaylar',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.darkCharcoal,
+                                  ),
+                            ),
+                            const SizedBox(height: 18),
+                            if (roomType != null)
+                              _detailRow('Oda tipi', roomTypeLabelTr(roomType)),
+                            if (range != null)
+                              _detailRow('Menzil', '$range km'),
+                            if (distance != null)
+                              _detailRow(
+                                'Mesafe',
+                                distance is num
+                                    ? '${distance.toStringAsFixed(2)} km'
+                                    : '$distance',
+                              ),
+                            if (ll != null)
+                              _detailRow(
+                                'Konum',
+                                '${ll.latitude.toStringAsFixed(5)}, ${ll.longitude.toStringAsFixed(5)}',
+                              ),
+                            if (_loadingMessageParticipantCount)
+                              _detailRow('Mesajlaşan', '…'),
+                            if (!_loadingMessageParticipantCount &&
+                                _messageParticipantCount != null)
+                              _detailRow(
+                                'Mesajlaşan',
+                                '$_messageParticipantCount kişi',
+                              ),
+                            if (subType != null) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'PAKET',
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.6,
+                                      color: const Color(0xFF8B8798),
+                                      fontSize: 10,
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              SubscriptionTierBadge(
+                                subscriptionType: subType,
+                                compact: false,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_expired)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: Text(
+                                'Bu oda için süre dolmuş.',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.error,
+                                    ),
+                              ),
+                            ),
+                          if (id != null)
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: _chatAllowed
+                                  ? null
+                                  : () {
+                                      showAppSnackBar(
+                                        context,
+                                        'Bu odaya giremezsin çünkü artık aktif değil.',
+                                        error: true,
+                                      );
+                                    },
+                              child: FilledButton.icon(
+                                onPressed: _chatAllowed
+                                    ? () {
+                                        Navigator.of(context).push<void>(
+                                          MaterialPageRoute<void>(
+                                            builder: (_) => RoomChatScreen(
+                                              roomId: id,
+                                              roomTitle: title,
+                                              topicTitle: topicTrimmed != null &&
+                                                      topicTrimmed.isNotEmpty
+                                                  ? topicTrimmed
+                                                  : null,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    : null,
+                                icon: const Icon(Icons.forum_rounded),
+                                label: Text(
+                                  _expired ? 'Süre doldu' : 'Canlı sohbete gir',
+                                ),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: _expired
+                                      ? Colors.grey.shade500
+                                      : AppColors.purple600,
+                                  disabledBackgroundColor: Colors.grey.shade400,
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          if (desc != null && desc.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(desc, style: Theme.of(context).textTheme.bodyLarge),
-          ],
-          const SizedBox(height: 20),
-          Text(
-            'Bilgiler',
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          if (_lifecycleEndsAtUtc != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: _expired ? Colors.red.shade50 : AppColors.purple50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _expired ? Colors.red.shade200 : AppColors.purple200,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Yaşam döngüsü',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: _expired ? Colors.red.shade900 : AppColors.purple700,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _lifecycleCountdownText(context),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.35,
-                          color: _expired
-                              ? Colors.red.shade900
-                              : AppColors.darkCharcoal,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 8),
-          ...rows.map(
-            (line) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(line),
-            ),
-          ),
-          if (subType != null) ...[
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                Text(
-                  'Paket:',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(width: 8),
-                SubscriptionTierBadge(
-                  subscriptionType: subType,
-                  compact: true,
-                ),
-              ],
-            ),
-          ],
-          const SizedBox(height: 16),
-          if (id != null)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _chatAllowed
-                  ? null
-                  : () {
-                      showAppSnackBar(
-                        context,
-                        _expired
-                            ? 'Bu odaya giremezsin çünkü artık aktif değil.'
-                            : 'Bu odaya giremezsin çünkü artık aktif değil.',
-                        error: true,
-                      );
-                    },
-              child: FilledButton.icon(
-                onPressed: _chatAllowed
-                    ? () {
-                        Navigator.of(context).push<void>(
-                          MaterialPageRoute<void>(
-                            builder: (_) => RoomChatScreen(
-                              roomId: id,
-                              roomTitle: title,
-                              topicTitle: topicTitle,
-                            ),
-                          ),
-                        );
-                      }
-                    : null,
-                icon: const Icon(Icons.forum_rounded),
-                label: Text(
-                  _expired ? 'Süre doldu' : 'Canlı sohbete gir',
-                ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _expired
-                      ? Colors.grey.shade500
-                      : AppColors.purple600,
-                  disabledBackgroundColor: Colors.grey.shade400,
-                  minimumSize: const Size.fromHeight(48),
-                ),
-              ),
-            ),
-          if (_expired) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Bu oda için süre dolmuş.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-            ),
-          ],
-        ],
       ),
     );
   }

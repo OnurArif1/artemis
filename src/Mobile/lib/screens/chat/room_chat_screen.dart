@@ -28,17 +28,8 @@ class RoomChatScreen extends StatefulWidget {
   final int roomId;
   final String roomTitle;
 
-  /// Bağlı konu başlığı; doluysa üst başlıkta `odaAdı (konu)` gösterilir.
+  /// Bağlı konu başlığı; doluysa üst başlıkta oda adının altında ikinci satır olarak gösterilir.
   final String? topicTitle;
-
-  static String formatAppBarTitle({
-    required String roomTitle,
-    String? topicTitle,
-  }) {
-    final t = topicTitle?.trim();
-    if (t != null && t.isNotEmpty) return '$roomTitle ($t)';
-    return roomTitle;
-  }
 
   @override
   State<RoomChatScreen> createState() => _RoomChatScreenState();
@@ -508,6 +499,19 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
           height: 1.25,
         ) ??
         TextStyle(color: subColor, fontSize: 11.5, height: 1.25);
+    final topicTrimmed = widget.topicTitle?.trim();
+    final topicLineStyle = theme.textTheme.bodySmall?.copyWith(
+          color: appBarFg.withValues(alpha: 0.82),
+          fontWeight: FontWeight.w500,
+          height: 1.25,
+          fontSize: 13,
+        ) ??
+        TextStyle(
+          color: appBarFg.withValues(alpha: 0.82),
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          height: 1.25,
+        );
 
     return Scaffold(
       appBar: AppBar(
@@ -517,14 +521,20 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              RoomChatScreen.formatAppBarTitle(
-                roomTitle: widget.roomTitle,
-                topicTitle: widget.topicTitle,
-              ),
-              maxLines: 1,
+              widget.roomTitle,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: titleStyle,
             ),
+            if (topicTrimmed != null && topicTrimmed.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              Text(
+                topicTrimmed,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: topicLineStyle,
+              ),
+            ],
             const SizedBox(height: 4),
             Row(
               children: [
