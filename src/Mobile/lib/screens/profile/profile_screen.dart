@@ -112,8 +112,133 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   int? _interestIdFromEntry(dynamic e) {
+    if (e == null) return null;
+    final asScalar = _parseId(e);
+    if (asScalar != null) return asScalar;
+    if (e is! Map) return null;
     final raw = _mapPick(e, const ['id', 'Id', 'interestId', 'InterestId']);
     return _parseId(raw);
+  }
+
+  /// GET my-interests bazen düz dizi, bazen `{ data/interests/viewModels: [...] }` olarak gelir.
+  Set<int> _extractSelectedInterestIds(dynamic raw) {
+    final out = <int>{};
+
+    void ingestList(dynamic list) {
+      if (list is! List) return;
+      for (final e in list) {
+        final id = _interestIdFromEntry(e);
+        if (id != null) out.add(id);
+      }
+    }
+
+    void walk(dynamic node, [int depth = 0]) {
+      if (node == null || depth > 6) return;
+
+      if (node is String) {
+        final t = node.trim();
+        if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
+          try {
+            walk(jsonDecode(t), depth + 1);
+          } catch (_) {}
+        }
+        return;
+      }
+
+      if (node is List) {
+        ingestList(node);
+        return;
+      }
+
+      if (node is Map) {
+        final idOnly = node['interestIds'] ?? node['InterestIds'] ?? node['interest_ids'];
+        if (idOnly is List) {
+          for (final e in idOnly) {
+            final id = _parseId(e);
+            if (id != null) out.add(id);
+          }
+        }
+
+        const keys = [
+          'interests',
+          'Interests',
+          'items',
+          'values',
+          'data',
+          'result',
+          'value',
+          'viewModels',
+          'ViewModels',
+        ];
+        for (final k in keys) {
+          if (!node.containsKey(k)) continue;
+          final v = node[k];
+          if (v is List) ingestList(v);
+          if (v is Map || v is String) walk(v, depth + 1);
+        }
+      }
+    }
+
+    walk(raw);
+    return out;
+  }
+
+  /// GET interest/list için katalog (sarmalayıcı varyasyonları).
+  List<_InterestCatalogItem> _extractInterestCatalog(dynamic raw) {
+    final list = <_InterestCatalogItem>[];
+
+    void ingest(dynamic rawList) {
+      if (rawList is! List) return;
+      for (final e in rawList) {
+        if (e is! Map) continue;
+        final id = _interestIdFromEntry(e);
+        final nameRaw = _mapPick(e, const ['name', 'Name']);
+        final name = nameRaw?.toString().trim() ?? '';
+        if (id != null && name.isNotEmpty) {
+          list.add(_InterestCatalogItem(id: id, name: name));
+        }
+      }
+    }
+
+    void walk(dynamic node, [int depth = 0]) {
+      if (node == null || depth > 6) return;
+      if (node is String) {
+        final t = node.trim();
+        if ((t.startsWith('{') && t.endsWith('}')) || (t.startsWith('[') && t.endsWith(']'))) {
+          try {
+            walk(jsonDecode(t), depth + 1);
+          } catch (_) {}
+        }
+        return;
+      }
+      if (node is List) {
+        ingest(node);
+        return;
+      }
+      if (node is Map) {
+        const keys = [
+          'interests',
+          'Interests',
+          'items',
+          'data',
+          'result',
+          'value',
+          'viewModels',
+          'ViewModels',
+          'resultViewmodels',
+          'ResultViewmodels',
+        ];
+        for (final k in keys) {
+          if (!node.containsKey(k)) continue;
+          final v = node[k];
+          if (v is List) ingest(v);
+          if (v is Map || v is String) walk(v, depth + 1);
+        }
+      }
+    }
+
+    walk(raw);
+    return list;
   }
 
   int? _parsePurposeScalar(dynamic e) {
@@ -208,27 +333,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted || seq != _registrationLoadSeq) return;
 
-      final catalog = <_InterestCatalogItem>[];
-      if (rawList is List) {
-        for (final e in rawList) {
-          if (e is Map) {
-            final id = _interestIdFromEntry(e);
-            final nameRaw = _mapPick(e, const ['name', 'Name']);
-            final name = nameRaw?.toString().trim() ?? '';
-            if (id != null && name.isNotEmpty) {
-              catalog.add(_InterestCatalogItem(id: id, name: name));
-            }
-          }
-        }
-      }
+      final catalog = _extractInterestCatalog(rawList);
 
-      final selectedInterest = <int>{};
-      if (rawMine is List) {
-        for (final e in rawMine) {
-          final id = _interestIdFromEntry(e);
-          if (id != null) selectedInterest.add(id);
-        }
-      }
+      final selectedInterest = _extractSelectedInterestIds(rawMine);
 
       final purposes = _extractPurposeTypeIds(rawPurposes);
 
@@ -549,171 +656,183 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   controller: _pageController,
                   onPageChanged: (i) => setState(() => _regPageIndex = i),
                   children: [
-                    SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'En az bir ilgi alanı seçin.',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 10),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: cross,
-                              mainAxisSpacing: 10,
-                              crossAxisSpacing: 10,
-                              childAspectRatio: 0.78,
-                            ),
-                            itemCount: _interestCatalog.length,
-                            itemBuilder: (context, i) {
-                              final it = _interestCatalog[i];
-                              final sel = _selectedInterestIds.contains(it.id);
-                              final label = interestLabelTr(it.name);
-                              return Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => _toggleInterest(it.id),
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 6,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        width: 2,
-                                        color: sel ? AppColors.purple500 : AppColors.outlineMuted,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'En az bir ilgi alanı seçin.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 10),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: cross,
+                                mainAxisSpacing: 10,
+                                crossAxisSpacing: 10,
+                                childAspectRatio: 0.78,
+                              ),
+                              itemCount: _interestCatalog.length,
+                              itemBuilder: (context, i) {
+                                final it = _interestCatalog[i];
+                                final sel = _selectedInterestIds.contains(it.id);
+                                final label = interestLabelTr(it.name);
+                                return Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: () => _toggleInterest(it.id),
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 10,
                                       ),
-                                      color: sel
-                                          ? AppColors.purple500.withValues(alpha: 0.08)
-                                          : Colors.white,
-                                      boxShadow: sel
-                                          ? [
-                                              BoxShadow(
-                                                color: AppColors.purple500.withValues(alpha: 0.18),
-                                                blurRadius: 12,
-                                                offset: const Offset(0, 4),
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        InterestCoverPhoto(
-                                          nameKey: it.name,
-                                          height: cross >= 4 ? 52 : 58,
-                                          selected: sel,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          width: 2,
+                                          color: sel ? AppColors.purple500 : AppColors.outlineMuted,
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          label,
-                                          textAlign: TextAlign.center,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.labelMedium?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: sel ? AppColors.purple600 : AppColors.darkCharcoal,
-                                            height: 1.15,
+                                        color: sel
+                                            ? AppColors.purple500.withValues(alpha: 0.08)
+                                            : Colors.white,
+                                        boxShadow: sel
+                                            ? [
+                                                BoxShadow(
+                                                  color: AppColors.purple500.withValues(alpha: 0.18),
+                                                  blurRadius: 12,
+                                                  offset: const Offset(0, 4),
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          InterestCoverPhoto(
+                                            nameKey: it.name,
+                                            height: cross >= 4 ? 52 : 58,
+                                            selected: sel,
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            label,
+                                            textAlign: TextAlign.center,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.textTheme.labelMedium?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: sel ? AppColors.purple600 : AppColors.darkCharcoal,
+                                              height: 1.15,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: (_selectedInterestIds.isEmpty || _savingInterests)
+                              ? null
+                              : () => _saveInterests(email),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            backgroundColor: AppColors.purple500,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: _savingInterests
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Devam et'),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Bio',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.darkCharcoal,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: TextField(
+                              controller: _bioController,
+                              keyboardType: TextInputType.multiline,
+                              textCapitalization: TextCapitalization.sentences,
+                              maxLines: null,
+                              minLines: 3,
+                              decoration: InputDecoration(
+                                hintText: 'Kendinizden kısaca bahsedin…',
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: AppColors.outlineMuted),
                                 ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: (_selectedInterestIds.isEmpty || _savingInterests)
-                                ? null
-                                : () => _saveInterests(email),
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              backgroundColor: AppColors.purple500,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: _savingInterests
-                                ? const SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text('Kaydet'),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Bio',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.darkCharcoal,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _bioController,
-                            maxLines: 5,
-                            minLines: 3,
-                            decoration: InputDecoration(
-                              hintText: 'Kendinizden kısaca bahsedin…',
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.outlineMuted),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(color: AppColors.purple400, width: 2),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: AppColors.purple400, width: 2),
+                                ),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          FilledButton(
-                            onPressed: _savingBio ? null : () => _saveBio(email),
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              backgroundColor: AppColors.purple500,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: _savingBio
-                                ? const SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text('Kaydet'),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: _savingBio ? null : () => _saveBio(email),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            backgroundColor: AppColors.purple500,
+                            foregroundColor: Colors.white,
                           ),
-                        ],
-                      ),
+                          child: _savingBio
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Kaydet'),
+                        ),
+                      ],
                     ),
-                    SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Birden fazla seçebilirsiniz.',
-                            style: theme.textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 10),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Birden fazla seçebilirsiniz.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 10),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                           ...kPartyPurposeOptions.map((p) {
                             final sel = _selectedPurposeIds.contains(p.purposeType);
                             return Padding(
@@ -799,29 +918,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             );
                           }),
-                          const SizedBox(height: 8),
-                          FilledButton(
-                            onPressed: (_selectedPurposeIds.isEmpty || _savingPurposes)
-                                ? null
-                                : () => _savePurposes(email),
-                            style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(48),
-                              backgroundColor: AppColors.purple500,
-                              foregroundColor: Colors.white,
+                              ],
                             ),
-                            child: _savingPurposes
-                                ? const SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text('Kaydet'),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          onPressed: (_selectedPurposeIds.isEmpty || _savingPurposes)
+                              ? null
+                              : () => _savePurposes(email),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            backgroundColor: AppColors.purple500,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: _savingPurposes
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Kaydet'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
