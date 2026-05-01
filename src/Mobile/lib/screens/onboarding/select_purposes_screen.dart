@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/util/jwt_email.dart';
+import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/artemis_snackbar.dart';
@@ -91,6 +92,7 @@ class _SelectPurposesScreenState extends State<SelectPurposesScreen> {
           );
       if (mounted) {
         showAppSnackBar(context, 'Amaçlarınız kaydedildi.');
+        context.read<HomeTabController>().setIndex(HomeTabController.roomsTabIndex);
         context.go('/app');
       }
     } catch (_) {
