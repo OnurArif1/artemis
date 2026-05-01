@@ -8,6 +8,7 @@ import '../../core/location/location_service.dart';
 import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/ensure_room_access.dart';
+import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
@@ -18,6 +19,23 @@ import '../../services/auth_service.dart';
 import '../../widgets/subscription_tier_badge.dart';
 import 'create_room_screen.dart';
 import 'room_detail_screen.dart';
+
+String _roomListPrimaryTitle(Map<String, dynamic> m) {
+  final room = entityString(m, ['title', 'Title']);
+  if (room != null && room.isNotEmpty) return room;
+  final topicOnly = entityString(m, ['topicTitle', 'TopicTitle', 'topicName']);
+  if (topicOnly != null && topicOnly.isNotEmpty) return topicOnly;
+  return mapTitle(m);
+}
+
+/// Oda adı doluysa ve konudan farklıysa gösterilir.
+String? _roomListTopicLine(Map<String, dynamic> m) {
+  final room = entityString(m, ['title', 'Title']);
+  final topic = entityString(m, ['topicTitle', 'TopicTitle', 'topicName']);
+  if (topic == null || topic.isEmpty) return null;
+  if (room != null && room.isNotEmpty && topic != room) return topic;
+  return null;
+}
 
 class RoomListScreen extends StatefulWidget {
   const RoomListScreen({super.key});
@@ -136,21 +154,38 @@ class _RoomListScreenState extends State<RoomListScreen> {
   @override
   Widget build(BuildContext context) {
     final rail = MediaQuery.sizeOf(context).width >= 720;
+    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: AppColors.surfaceLight,
       appBar: AppBar(
-        title: Text('Odalar${_total > 0 ? ' ($_total)' : ''}'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: AppColors.surfaceLight,
+        foregroundColor: AppColors.darkCharcoal,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          'Odalar${_total > 0 ? ' ($_total)' : ''}',
+          style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: AppColors.darkCharcoal,
+              ),
+        ),
         automaticallyImplyLeading: !rail,
         actions: [
           IconButton(
+            tooltip: 'Yenile',
             onPressed: _loading ? null : _load,
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: _loading ? Colors.grey.shade400 : AppColors.purple600,
+            ),
           ),
         ],
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
             child: TextField(
               controller: _search,
               textInputAction: TextInputAction.search,
@@ -159,8 +194,11 @@ class _RoomListScreenState extends State<RoomListScreen> {
                 _load();
               },
               decoration: InputDecoration(
+                filled: true,
+                fillColor: AppColors.surfaceCard,
                 hintText: 'Oda ara…',
-                prefixIcon: const Icon(Icons.search_rounded),
+                hintStyle: TextStyle(color: Colors.grey.shade500),
+                prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade600),
                 suffixIcon: _search.text.isNotEmpty
                     ? IconButton(
                         onPressed: () {
@@ -168,9 +206,22 @@ class _RoomListScreenState extends State<RoomListScreen> {
                           _search.clear();
                           _load();
                         },
-                        icon: const Icon(Icons.clear_rounded),
+                        icon: Icon(Icons.clear_rounded, color: Colors.grey.shade600),
                       )
                     : null,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey.shade300.withValues(alpha: 0.6)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide(color: Colors.grey.shade300.withValues(alpha: 0.5)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: const BorderSide(color: AppColors.purple500, width: 1.5),
+                ),
               ),
             ),
           ),
@@ -242,73 +293,161 @@ class _RoomListScreenState extends State<RoomListScreen> {
       color: AppColors.purple500,
       onRefresh: _load,
       child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 88),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
         itemCount: _items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        separatorBuilder: (_, __) => const SizedBox(height: 12),
         itemBuilder: (context, i) {
           final m = _items[i];
-          final title = mapTitle(m);
+          final primary = _roomListPrimaryTitle(m);
+          final topicLine = _roomListTopicLine(m);
           final sub = mapSubtitle(m);
           final subType = parseSubscriptionType(Map<String, dynamic>.from(m));
-          return Card(
+          final theme = Theme.of(context);
+
+          return Material(
+            color: AppColors.surfaceCard,
+            elevation: 0,
+            shadowColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: BorderSide(color: AppColors.outlineMuted.withValues(alpha: 0.85)),
+            ),
+            clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () {
                 Navigator.of(context).push<void>(
                   MaterialPageRoute<void>(
-                    builder: (_) => RoomDetailScreen(room: Map<String, dynamic>.from(m)),
+                    builder: (_) =>
+                        RoomDetailScreen(room: Map<String, dynamic>.from(m)),
                   ),
                 );
               },
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+              child: IntrinsicHeight(
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const CircleAvatar(
-                      backgroundColor: AppColors.purple100,
-                      foregroundColor: AppColors.purple700,
-                      child: Icon(AppContentIcons.room),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (subType != null) ...[
-                            SubscriptionTierBadge(subscriptionType: subType, compact: true),
-                            const SizedBox(height: 8),
+                    Container(
+                      width: 5,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.purple700,
+                            AppColors.purple400,
                           ],
-                          Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          if (sub != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              sub,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey.shade700,
-                                  ),
-                            ),
-                          ],
-                          if (subType != null) ...[
-                            const SizedBox(height: 6),
-                            Text(
-                              'Konuşmak için: ${subscriptionTierLabelTr(subType)}',
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: AppColors.purple700,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                          ],
-                        ],
+                        ),
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 14, 8, 14),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AppColors.purple50,
+                                borderRadius: BorderRadius.all(Radius.circular(14)),
+                              ),
+                              child: SizedBox(
+                                width: 46,
+                                height: 46,
+                                child: Icon(
+                                  AppContentIcons.room,
+                                  color: AppColors.purple600,
+                                  size: 22,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              primary,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                fontWeight: FontWeight.w800,
+                                                height: 1.25,
+                                                color: AppColors.darkCharcoal,
+                                              ),
+                                            ),
+                                            if (topicLine != null) ...[
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                'KONU',
+                                                style: theme.textTheme.labelSmall
+                                                    ?.copyWith(
+                                                  fontWeight: FontWeight.w700,
+                                                  letterSpacing: 0.65,
+                                                  fontSize: 10,
+                                                  color: const Color(0xFF8B8798),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 3),
+                                              Text(
+                                                topicLine,
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: theme.textTheme.bodySmall
+                                                    ?.copyWith(
+                                                  color: AppColors.purple700,
+                                                  fontWeight: FontWeight.w600,
+                                                  height: 1.35,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      if (subType != null) ...[
+                                        const SizedBox(width: 8),
+                                        SubscriptionTierBadge(
+                                          subscriptionType: subType,
+                                          compact: true,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  if (sub != null) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      sub,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                            color: Colors.grey.shade600,
+                                            height: 1.35,
+                                          ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Icon(
+                                Icons.chevron_right_rounded,
+                                color: Colors.grey.shade400,
+                                size: 26,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),

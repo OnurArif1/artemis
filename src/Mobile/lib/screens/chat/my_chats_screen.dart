@@ -106,6 +106,10 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
     if (q.isEmpty) return _items;
     return _items.where((r) {
       if (r.title.toLowerCase().contains(q)) return true;
+      if (r.isRoom) {
+        final tt = r.roomTopicTitle?.trim().toLowerCase();
+        if (tt != null && tt.isNotEmpty && tt.contains(q)) return true;
+      }
       final p = (r.preview ?? '').toLowerCase();
       if (p.contains(q)) return true;
       final inline = (r.lastSenderPartyName ?? '').toLowerCase();
@@ -468,15 +472,35 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   Widget build(BuildContext context) {
     final rail = MediaQuery.sizeOf(context).width >= 720;
 
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F2F5),
+      backgroundColor: AppColors.surfaceLight,
       appBar: AppBar(
-        title: const Text('Sohbetler'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: AppColors.surfaceLight,
+        foregroundColor: AppColors.darkCharcoal,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          'Sohbetler',
+          style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: AppColors.darkCharcoal,
+              ),
+        ),
         automaticallyImplyLeading: !rail,
         actions: [
           IconButton(
-            onPressed: (_loading || _refreshing) ? null : () => _load(fullScreenLoading: _items.isEmpty, force: true),
-            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Yenile',
+            onPressed: (_loading || _refreshing)
+                ? null
+                : () => _load(fullScreenLoading: _items.isEmpty, force: true),
+            icon: Icon(
+              Icons.refresh_rounded,
+              color: (_loading || _refreshing)
+                  ? Colors.grey.shade400
+                  : AppColors.purple600,
+            ),
           ),
         ],
       ),
@@ -500,13 +524,13 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   Widget _buildBody(BuildContext context) {
     if (_loading) {
       return const ColoredBox(
-        color: Color(0xFFF0F2F5),
+        color: AppColors.surfaceLight,
         child: Center(child: CircularProgressIndicator()),
       );
     }
     if (_error != null) {
       return ColoredBox(
-        color: const Color(0xFFF0F2F5),
+        color: AppColors.surfaceLight,
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -529,36 +553,46 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
 
     if (_items.isEmpty) {
       return ColoredBox(
-        color: const Color(0xFFF0F2F5),
+        color: AppColors.surfaceLight,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
               child: TextField(
                 controller: _search,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
                   hintText: 'Sohbet ara…',
-                  prefixIcon: const Icon(Icons.search_rounded),
+                  hintStyle: TextStyle(color: Colors.grey.shade500),
+                  prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade600),
                   suffixIcon: _search.text.isNotEmpty
                       ? IconButton(
                           onPressed: () {
                             _search.clear();
                             setState(() {});
                           },
-                          icon: const Icon(Icons.clear_rounded),
+                          icon: Icon(Icons.clear_rounded, color: Colors.grey.shade600),
                         )
                       : null,
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: AppColors.surfaceCard,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade300.withValues(alpha: 0.6),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(
+                      color: Colors.grey.shade300.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: AppColors.purple500, width: 1.5),
                   ),
                 ),
               ),
@@ -582,45 +616,53 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
       );
     }
 
-    const dividerIndent = 80.0;
-
     return Column(
       children: [
         if (_refreshing)
           const LinearProgressIndicator(minHeight: 2),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
           child: TextField(
             controller: _search,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               hintText: 'Sohbet ara…',
-              prefixIcon: const Icon(Icons.search_rounded),
+              hintStyle: TextStyle(color: Colors.grey.shade500),
+              prefixIcon: Icon(Icons.search_rounded, color: Colors.grey.shade600),
               suffixIcon: _search.text.isNotEmpty
                   ? IconButton(
                       onPressed: () {
                         _search.clear();
                         setState(() {});
                       },
-                      icon: const Icon(Icons.clear_rounded),
+                      icon: Icon(Icons.clear_rounded, color: Colors.grey.shade600),
                     )
                   : null,
               filled: true,
-              fillColor: Colors.white,
+              fillColor: AppColors.surfaceCard,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(
+                  color: Colors.grey.shade300.withValues(alpha: 0.6),
+                ),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(
+                  color: Colors.grey.shade300.withValues(alpha: 0.5),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: AppColors.purple500, width: 1.5),
               ),
             ),
           ),
         ),
         Expanded(
           child: ColoredBox(
-            color: Colors.white,
+            color: AppColors.surfaceLight,
             child: RefreshIndicator(
               color: AppColors.purple500,
               onRefresh: () => _load(fullScreenLoading: false, force: true),
@@ -642,14 +684,9 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                     )
                   : ListView.separated(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      padding: EdgeInsets.zero,
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
                       itemCount: visible.length,
-                      separatorBuilder: (_, __) => Divider(
-                        height: 1,
-                        thickness: 0.5,
-                        indent: dividerIndent,
-                        color: Colors.black.withValues(alpha: 0.08),
-                      ),
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
                       itemBuilder: (context, i) => _buildChatRow(context, visible[i]),
                     ),
             ),
@@ -659,7 +696,8 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
     );
   }
 
-  static const _avatarRadius = 28.0;
+  static const _topicStripeHi = Color(0xFF0F766E);
+  static const _topicStripeLo = Color(0xFF5EEAD4);
 
   Widget _buildChatRow(BuildContext context, _ConversationRow r) {
     final theme = Theme.of(context);
@@ -672,102 +710,139 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         ? preview
         : 'Sohbete dokunun';
 
-    final senderRaw = () {
-      final a = r.lastSenderPartyName?.trim();
-      if (a != null && a.isNotEmpty) return a;
-      final pid = r.lastSenderPartyId;
-      if (pid != null && pid > 0) {
-        final b = _partyDisplayNamesById[pid]?.trim();
-        if (b != null && b.isNotEmpty) return b;
-      }
-      return null;
-    }();
-    final senderLine = (senderRaw != null && senderRaw.isNotEmpty)
-        ? (senderRaw.length > 36 ? '${senderRaw.substring(0, 36)}…' : senderRaw)
-        : null;
+    final roomTopicTrimmed = r.roomTopicTitle?.trim();
+    final showRoomTopic = r.isRoom &&
+        roomTopicTrimmed != null &&
+        roomTopicTrimmed.isNotEmpty &&
+        roomTopicTrimmed != r.title.trim();
+
+    final capsStyle = theme.textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.65,
+          fontSize: 10,
+          color: const Color(0xFF8B8798),
+        );
 
     return Material(
-      color: Colors.white,
+      color: AppColors.surfaceCard,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: AppColors.outlineMuted.withValues(alpha: 0.85)),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => _open(r),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+        child: IntrinsicHeight(
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CircleAvatar(
-                radius: _avatarRadius,
-                backgroundColor:
-                    r.isRoom ? AppColors.purple100 : const Color(0xFFCCFBF1),
-                foregroundColor:
-                    r.isRoom ? AppColors.purple700 : const Color(0xFF0F766E),
-                child: Icon(
-                  r.isRoom ? AppContentIcons.room : AppContentIcons.topic,
-                  size: 26,
+              Container(
+                width: 5,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: r.isRoom
+                        ? const [AppColors.purple700, AppColors.purple400]
+                        : const [_topicStripeHi, _topicStripeLo],
+                  ),
                 ),
               ),
-              const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            r.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              height: 1.25,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 14, 14, 14),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: r.isRoom ? AppColors.purple50 : const Color(0xFFCCFBF1),
+                          borderRadius: const BorderRadius.all(Radius.circular(14)),
+                        ),
+                        child: SizedBox(
+                          width: 46,
+                          height: 46,
+                          child: Icon(
+                            r.isRoom ? AppContentIcons.room : AppContentIcons.topic,
+                            color: r.isRoom ? AppColors.purple600 : _topicStripeHi,
+                            size: 22,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          timeStr,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: muted,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    if (senderLine != null) ...[
-                      Text(
-                        senderLine,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                              color: muted.withValues(alpha: 0.95),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              height: 1.25,
-                            ) ??
-                            TextStyle(
-                              color: muted.withValues(alpha: 0.95),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              height: 1.25,
-                            ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Text(
+                                      //   r.isRoom ? 'ODA' : 'KONU',
+                                      //   style: capsStyle,
+                                      // ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        r.title,
+                                        style: theme.textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                              height: 1.25,
+                                              color: AppColors.darkCharcoal,
+                                            ),
+                                        maxLines: r.isRoom ? 2 : 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (showRoomTopic) ...[
+                                        const SizedBox(height: 8),
+                                        // Text('KONU', style: capsStyle),
+                                        const SizedBox(height: 3),
+                                        Text(
+                                          roomTopicTrimmed,
+                                          style: theme.textTheme.bodySmall?.copyWith(
+                                                color: AppColors.purple700,
+                                                fontWeight: FontWeight.w600,
+                                                height: 1.35,
+                                              ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  timeStr,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                        color: muted,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              secondLine,
+                              style: TextStyle(
+                                color: muted.withValues(alpha: 0.88),
+                                fontSize: 13.5,
+                                height: 1.35,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
-                    Text(
-                      secondLine,
-                      style: TextStyle(
-                        color: muted.withValues(alpha: 0.92),
-                        fontSize: 14,
-                        height: 1.3,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
