@@ -123,7 +123,8 @@ export default {
         roomRangePlaceholder: 'Room range (km)',
         accessDenied: 'Access Denied',
         outOfRange: 'You cannot enter this room because you are outside its boundaries.',
-        subscriptionAccessDenied: 'You cannot enter this room because your subscription package does not have permission to join this room.'
+        subscriptionAccessDenied: 'You cannot enter this room because your subscription package does not have permission to join this room.',
+        expiredNotOnMap: 'This room has expired and is not shown on the map.'
     },
     dashboard: {
         description: 'Artemis WebApi – Dashboard. Future features will be added here.'

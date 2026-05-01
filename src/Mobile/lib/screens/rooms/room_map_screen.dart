@@ -87,6 +87,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
 
   int _liveCount = 0;
   int? _pendingFocusRoomId;
+  int _prevHomeTabIndex = -2;
 
   int? _mySubscriptionType;
   bool _tierLoading = true;
@@ -169,9 +170,17 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
   }
 
   void _onHomeTabChanged() {
-    if (!mounted || _homeTab.currentIndex != HomeTabController.roomsTabIndex) {
-      return;
+    if (!mounted) return;
+    final idx = _homeTab.currentIndex;
+    final roomsIdx = HomeTabController.roomsTabIndex;
+    if (idx == roomsIdx && _prevHomeTabIndex != roomsIdx) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _homeTab.currentIndex == roomsIdx) _refresh();
+      });
     }
+    _prevHomeTabIndex = idx;
+
+    if (idx != roomsIdx) return;
     final id = _homeTab.consumeRoomFocusRequest();
     if (id == null) return;
     setState(() => _pendingFocusRoomId = id);
@@ -379,23 +388,19 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
 
   void _updateCountsForMode() {
     final mapRooms = _roomsForMapMarkers;
-    if (_mode == _MapViewMode.nearby &&
-        _userLat != null &&
-        _userLng != null) {
-      _liveCount =
-          filterWithinKm(mapRooms, _userLat!, _userLng!, _userRadiusKm).length;
-    } else {
-      _liveCount = mapRooms.length;
+    if (_mode == _MapViewMode.detail && _detailRegion != null) {
+      _liveCount = _detailRegion!.roomItems
+          .where((r) => !lifecycleExpiredFromRoomMap(r))
+          .length;
+      return;
     }
+    _liveCount = mapRooms.length;
   }
 
-  List<Map<String, dynamic>> get _displayRooms {
+  /// Liste ekranıyla uyumlu: yakınlık modunda da API'den gelen tüm (süresi dolmamış) odalar pinlenir.
+  /// 40 km çemberi yalnızca yakınlık ipucu; liste görünümü konuma göre filtrelemediği için harita da filtrelemez.
+  List<Map<String, dynamic>> get _markerRoomsForPins {
     final mapRooms = _roomsForMapMarkers;
-    if (_mode == _MapViewMode.nearby &&
-        _userLat != null &&
-        _userLng != null) {
-      return filterWithinKm(mapRooms, _userLat!, _userLng!, _userRadiusKm);
-    }
     if (_mode == _MapViewMode.detail && _detailRegion != null) {
       return _detailRegion!.roomItems
           .where((r) => !lifecycleExpiredFromRoomMap(r))
@@ -404,14 +409,29 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
     return mapRooms;
   }
 
+  /// Yakınlık görünümünde kamerayı kullanıcıya yakın tutmak için (dar zoom).
+  List<Map<String, dynamic>> _roomsNearUserForCameraFit(
+    List<Map<String, dynamic>> mapRooms,
+  ) {
+    if (_userLat == null || _userLng == null) return mapRooms;
+    final near = filterWithinKm(
+      mapRooms,
+      _userLat!,
+      _userLng!,
+      _userRadiusKm,
+    );
+    return near.isNotEmpty ? near : mapRooms;
+  }
+
   void _fitCameraForMode() {
     try {
       if (_mode == _MapViewMode.nearby &&
           _userLat != null &&
           _userLng != null) {
+        final forFit = _roomsNearUserForCameraFit(_roomsForMapMarkers);
         final pts = <LatLng>[
           LatLng(_userLat!, _userLng!),
-          ..._displayRooms.map(itemLatLng).whereType<LatLng>(),
+          ...forFit.map(itemLatLng).whereType<LatLng>(),
         ];
         if (pts.length > 1) {
           _mapController.fitCamera(
@@ -492,7 +512,11 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
     await _loadMap(showRationaleDialog: false);
   }
 
-  void _onPositionChanged(MapCamera camera, bool _) {
+  void _onPositionChanged(MapCamera camera, bool hasGesture) {
+    // hasGesture == false: fitCamera / ilk zoom / mapController.move.
+    // Bunları da işleyince zoom<10 iken yakınlık modu şehir kümesine düşüyordu;
+    // tekil oda pinleri hiç çizilmiyordu (getList'te oda varken haritada yokmuş gibi).
+    if (!hasGesture) return;
     if (camera.zoom >= _zoomClusterThreshold) return;
     if (_mode == _MapViewMode.city) return;
     setState(() {
@@ -726,7 +750,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
 
   List<Marker> _buildDetailedMarkers() {
     final out = <Marker>[];
-    for (final room in _displayRooms) {
+    for (final room in _markerRoomsForPins) {
       final ll = itemLatLng(room);
       if (ll == null) continue;
       final title =
@@ -778,13 +802,16 @@ class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
         actions: [
           IconButton(
             tooltip: 'Liste',
-            onPressed: () {
-              Navigator.of(context).push<void>(
-                MaterialPageRoute<void>(
-                  builder: (_) => const RoomListScreen(),
-                ),
-              );
-            },
+            onPressed: _loading
+                ? null
+                : () async {
+                    await Navigator.of(context).push<void>(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const RoomListScreen(),
+                      ),
+                    );
+                    if (mounted) await _refresh();
+                  },
             icon: const Icon(Icons.list_rounded),
           ),
           IconButton(

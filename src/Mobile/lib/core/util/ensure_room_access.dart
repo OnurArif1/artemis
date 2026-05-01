@@ -25,20 +25,44 @@ class RoomEntryResult {
 }
 
 bool lifecycleExpiredFromRoomMap(Map<String, dynamic> room) {
-  final s = room['lifecycleExpired'] ?? room['LifecycleExpired'];
-  if (s is bool) return s;
+  bool? apiExpired;
+  final rawFlag = room['lifecycleExpired'] ?? room['LifecycleExpired'];
+  if (rawFlag is bool) {
+    apiExpired = rawFlag;
+  } else if (rawFlag is num) {
+    apiExpired = rawFlag != 0;
+  } else if (rawFlag != null) {
+    final t = '$rawFlag'.toLowerCase().trim();
+    if (t == 'true' || t == '1') apiExpired = true;
+    if (t == 'false' || t == '0') apiExpired = false;
+  }
 
   final lc = room['lifeCycle'] ?? room['LifeCycle'];
   final cd = room['createDate'] ?? room['CreateDate'];
   final minutes = lc is num ? lc.toDouble() : double.tryParse('$lc');
-  if (minutes == null) return false;
   final created = DateTime.tryParse('$cd');
-  if (created == null) return false;
-  final startUtc = created.isUtc ? created : created.toUtc();
-  final expires = startUtc.add(
-    Duration(milliseconds: (minutes * 60000).round()),
-  );
-  return DateTime.now().toUtc().isAfter(expires);
+
+  var computedExpired = false;
+  if (minutes != null && created != null) {
+    final startUtc = created.isUtc ? created : created.toUtc();
+    final expires = startUtc.add(
+      Duration(milliseconds: (minutes * 60000).round()),
+    );
+    computedExpired = DateTime.now().toUtc().isAfter(expires);
+  }
+
+  // Süre henüz dolmamışken backend'in lifecycleExpired göndermesi (timezone vb.)
+  // haritada yeni odayı tamamen gizliyordu.
+  if (apiExpired == true &&
+      !computedExpired &&
+      minutes != null &&
+      minutes > 0 &&
+      created != null) {
+    return false;
+  }
+  if (apiExpired != null) return apiExpired;
+  if (minutes == null || created == null) return false;
+  return computedExpired;
 }
 
 Future<bool> userHasMessageInRoom(

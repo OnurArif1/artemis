@@ -8,6 +8,7 @@ import { getEmailFromToken } from '@/utils/jwt';
 import request from '@/service/request';
 import RoomService from '@/service/RoomService';
 import TopicService from '@/service/TopicService';
+import { lifecycleExpiredFromRoom, roomsForMapMarkers } from '@/utils/roomLifecycle';
 import Chat from '@/views/chat/Chat.vue';
 import TopicCommentChat from '@/views/chat/TopicCommentChat.vue';
 import Dropdown from 'primevue/dropdown';
@@ -300,11 +301,12 @@ onMounted(async () => {
                 
                 const rooms = roomRes?.resultViewModels ?? roomRes?.ResultViewModels ?? [];
                 const topics = topicRes?.resultViewModels ?? topicRes?.ResultViewModels ?? [];
-                
+                const mapRooms = roomsForMapMarkers(rooms);
+
                 // Cache'le
                 cachedRooms = rooms;
                 cachedTopics = topics;
-                
+
                 if (!Array.isArray(rooms) || !Array.isArray(topics)) {
                     loading.value = false;
                     return;
@@ -324,10 +326,17 @@ onMounted(async () => {
                 // Query'de roomId varsa önce onu kontrol et
                 const roomIdFromQuery = route.query.roomId;
                 if (roomIdFromQuery) {
-                    const roomIdNum = parseInt(roomIdFromQuery);
-                    if (!isNaN(roomIdNum)) {
+                    const roomIdNum = parseInt(roomIdFromQuery, 10);
+                    if (!Number.isNaN(roomIdNum)) {
                         const targetRoom = rooms.find((r) => (r.id ?? r.Id) === roomIdNum);
-                        if (targetRoom) {
+                        if (targetRoom && lifecycleExpiredFromRoom(targetRoom)) {
+                            toast.add({
+                                severity: 'info',
+                                summary: t('common.info') || 'Bilgi',
+                                detail: t('room.expiredNotOnMap'),
+                                life: 5000
+                            });
+                        } else if (targetRoom) {
                             // Erişim kontrolü
                             const canAccess = targetRoom.canAccess !== false;
                             const roomRange = targetRoom.roomRange ?? targetRoom.RoomRange;
@@ -376,7 +385,7 @@ onMounted(async () => {
                 }
 
                 // Kullanıcı konumunun 40km etrafındaki odalar ve konuları göster
-                zoomToUserLocationWithRadius(L, rooms, topics, userLocation);
+                zoomToUserLocationWithRadius(L, mapRooms, topics, userLocation);
             } catch (e) {
                 error.value = t('common.error') + ': ' + (e?.message || String(e));
             } finally {
@@ -423,14 +432,15 @@ async function loadMapData(L) {
         
         const rooms = roomRes?.resultViewModels ?? roomRes?.ResultViewModels ?? [];
         const topics = topicRes?.resultViewModels ?? topicRes?.ResultViewModels ?? [];
-        
+        const mapRooms = roomsForMapMarkers(rooms);
+
         // Cache'le
         cachedRooms = rooms;
         cachedTopics = topics;
-        
-        // Update counts
-        liveCount.value = rooms.length;
-        totalCount.value = rooms.length + topics.length;
+
+        // Update counts (harita: yalnızca süresi dolmamış odalar)
+        liveCount.value = mapRooms.length;
+        totalCount.value = mapRooms.length + topics.length;
         
         if (!Array.isArray(rooms) || !Array.isArray(topics)) {
             loading.value = false;
@@ -443,7 +453,7 @@ async function loadMapData(L) {
         markersLayer = L.layerGroup().addTo(map);
 
         // Şehir/bölge bazlı gruplama - odalar ve topic'leri ayrı grupla
-        const roomRegions = groupByRegion(rooms, 'room');
+        const roomRegions = groupByRegion(mapRooms, 'room');
         const topicRegions = groupByRegion(topics, 'topic');
 
         // Tüm şehirleri birleştir ve her şehir için hem oda hem topic sayısını göster
@@ -451,7 +461,7 @@ async function loadMapData(L) {
 
         // İlk yüklemede sadece şehir marker'larını göster
         for (const region of allRegions) {
-            createCityMarker(region, L, rooms, topics);
+            createCityMarker(region, L, mapRooms, topics);
         }
 
         // Zoom değişikliğini dinle
@@ -480,22 +490,29 @@ async function loadMapData(L) {
 
         const roomIdFromQuery = route.query.roomId;
         if (roomIdFromQuery) {
-            const roomIdNum = parseInt(roomIdFromQuery);
-            if (!isNaN(roomIdNum)) {
-                // Tüm region'larda ara
-                let targetRoom = null;
-                let targetRegion = null;
-                const allRegions = combineRegions(roomRegions, topicRegions);
-                
-                for (const region of allRegions) {
-                    targetRoom = region.roomItems.find((r) => (r.id ?? r.Id) === roomIdNum);
-                    if (targetRoom) {
-                        targetRegion = region;
-                        break;
+            const roomIdNum = parseInt(roomIdFromQuery, 10);
+            if (!Number.isNaN(roomIdNum)) {
+                const fullRoom = rooms.find((r) => (r.id ?? r.Id) === roomIdNum);
+                if (fullRoom && lifecycleExpiredFromRoom(fullRoom)) {
+                    toast.add({
+                        severity: 'info',
+                        summary: t('common.info'),
+                        detail: t('room.expiredNotOnMap'),
+                        life: 5000
+                    });
+                } else {
+                    let targetRoom = null;
+                    let targetRegion = null;
+
+                    for (const region of allRegions) {
+                        targetRoom = region.roomItems.find((r) => (r.id ?? r.Id) === roomIdNum);
+                        if (targetRoom) {
+                            targetRegion = region;
+                            break;
+                        }
                     }
-                }
-                
-                if (targetRoom && targetRegion) {
+
+                    if (targetRoom && targetRegion) {
                     // Erişim kontrolü
                     const canAccess = targetRoom.canAccess !== false;
                     const roomRange = targetRoom.roomRange ?? targetRoom.RoomRange;
@@ -537,8 +554,9 @@ async function loadMapData(L) {
                         map.setView([roomLat, roomLng], 15);
                         // Detaylı marker'ları göster
                         showingDetailedMarkers = true;
-                        showDetailedMarkersForRegion(targetRegion, 'room', L, rooms, topics);
+                        showDetailedMarkersForRegion(targetRegion, 'room', L, mapRooms, topics);
                     }
+                }
                 }
             }
         }
@@ -947,6 +965,15 @@ function createDetailedRoomMarker(room, lat, lng, L) {
         } else if (target.closest('.room-marker-group')) {
             // Room erişim kontrolü
             const roomData = marker.roomData || room;
+            if (lifecycleExpiredFromRoom(roomData)) {
+                toast.add({
+                    severity: 'info',
+                    summary: t('common.info'),
+                    detail: t('room.expiredNotOnMap'),
+                    life: 5000
+                });
+                return;
+            }
             const canAccess = roomData.canAccess !== false; // Backend'den gelen değer, default true
             const roomRange = roomData.roomRange ?? roomData.RoomRange;
             const distance = roomData.distance ?? roomData.Distance;
@@ -1054,13 +1081,14 @@ function updateMarkersBasedOnZoom(L) {
     if (currentZoomLevel < 10 && showingDetailedMarkers) {
         showingDetailedMarkers = false;
         markersLayer.clearLayers();
-        
-        const roomRegions = groupByRegion(cachedRooms, 'room');
+
+        const mapRooms = roomsForMapMarkers(cachedRooms);
+        const roomRegions = groupByRegion(mapRooms, 'room');
         const topicRegions = groupByRegion(cachedTopics, 'topic');
         const allRegions = combineRegions(roomRegions, topicRegions);
         
         for (const region of allRegions) {
-            createCityMarker(region, L, cachedRooms, cachedTopics);
+            createCityMarker(region, L, mapRooms, cachedTopics);
         }
     }
 }
@@ -1088,7 +1116,7 @@ function centerOnLocation() {
             const userLoc = [position.coords.latitude, position.coords.longitude];
             userLocation = userLoc;
             const L = window.L;
-            zoomToUserLocationWithRadius(L, cachedRooms, cachedTopics, userLoc);
+            zoomToUserLocationWithRadius(L, roomsForMapMarkers(cachedRooms), cachedTopics, userLoc);
         });
     }
 }
@@ -1099,7 +1127,7 @@ function setCurrentLocation() {
             const userLoc = [position.coords.latitude, position.coords.longitude];
             userLocation = userLoc;
             const L = window.L;
-            zoomToUserLocationWithRadius(L, cachedRooms, cachedTopics, userLoc);
+            zoomToUserLocationWithRadius(L, roomsForMapMarkers(cachedRooms), cachedTopics, userLoc);
         });
     }
 }

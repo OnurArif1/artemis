@@ -126,6 +126,7 @@ export default {
         accessDenied: 'Erişim Reddedildi',
         outOfRange: 'Bu odaya giremezsiniz çünkü bu odanın sınırları dışındasınız.',
         subscriptionAccessDenied: 'Bu odaya giremezsiniz çünkü almış olduğunuz paketin bu odaya katılma yetkisi yok.',
+        expiredNotOnMap: 'Bu odanın süresi dolmuştur; haritada gösterilmez.',
         noPartySelected: 'Lütfen bir kişi seçin'
     },
     dashboard: {
