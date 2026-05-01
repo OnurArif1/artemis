@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:signalr_netcore/signalr_client.dart';
 
+import '../../core/location/location_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/util/ensure_room_access.dart';
 import '../../core/util/entity_map.dart';
@@ -64,6 +67,12 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
   ChatHubSession? _hub;
   List<_ChatLine> _messages = [];
   final Map<int, String> _partyNames = {};
+  final Set<int> _speakerPartyIds = {};
+  DateTime? _lifecycleEndsAtUtc;
+  bool _lifecycleExpired = false;
+  Timer? _countdownTimer;
+  DateTime _countdownTick = DateTime.now();
+
   bool _loading = true;
   bool _sending = false;
   String? _error;
@@ -75,10 +84,133 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _detachHub();
     _scroll.dispose();
     _text.dispose();
     super.dispose();
+  }
+
+  void _ensureCountdownTimer() {
+    _countdownTimer?.cancel();
+    if (_lifecycleEndsAtUtc == null ||
+        _lifecycleExpired ||
+        _readOnlyExpired ||
+        DateTime.now().toUtc().isAfter(_lifecycleEndsAtUtc!)) {
+      return;
+    }
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      final end = _lifecycleEndsAtUtc;
+      if (end != null && DateTime.now().toUtc().isAfter(end)) {
+        _countdownTimer?.cancel();
+        _countdownTimer = null;
+        setState(() {
+          _countdownTick = DateTime.now();
+          _lifecycleExpired = true;
+        });
+        return;
+      }
+      setState(() => _countdownTick = DateTime.now());
+    });
+  }
+
+  Future<Map<String, dynamic>?> _fetchRoomMap(
+    AppServices app,
+    String? userEmail,
+  ) async {
+    final filter = <String, dynamic>{
+      'pageIndex': 1,
+      'pageSize': 1000,
+    };
+    final lat = LocationService.latitude;
+    final lng = LocationService.longitude;
+    if (lat != null && lng != null) {
+      filter['userLatitude'] = lat;
+      filter['userLongitude'] = lng;
+    }
+    if (userEmail != null && userEmail.isNotEmpty) {
+      filter['userEmail'] = userEmail;
+    }
+    try {
+      final raw = await app.rooms.getList(filter);
+      final rooms = raw is Map ? asMapList(raw) : <Map<String, dynamic>>[];
+      for (final e in rooms) {
+        if (entityId(e) == widget.roomId) return e;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  DateTime? _lifecycleEndUtcFromRoom(Map<String, dynamic> room) {
+    final lc = room['lifeCycle'] ?? room['LifeCycle'];
+    final cd = room['createDate'] ?? room['CreateDate'];
+    final minutes = lc is num ? lc.toDouble() : double.tryParse('$lc');
+    final created = DateTime.tryParse('$cd');
+    if (minutes == null || created == null) return null;
+    final startUtc = created.isUtc ? created : created.toUtc();
+    return startUtc.add(
+      Duration(milliseconds: (minutes * 60000).round()),
+    );
+  }
+
+  Future<void> _loadUniqueSpeakerCount(AppServices app) async {
+    const pageSize = 500;
+    var pageIndex = 1;
+    final ids = <int>{};
+    try {
+      while (true) {
+        final raw = await app.messages.getList({
+          'roomId': widget.roomId,
+          'pageIndex': pageIndex,
+          'pageSize': pageSize,
+        });
+        final items = extractItems(raw);
+        if (items.isEmpty) break;
+        for (final e in items) {
+          if (e is! Map) continue;
+          final m = Map<String, dynamic>.from(e);
+          final pid = m['partyId'] ?? m['PartyId'];
+          final id = pid is int ? pid : int.tryParse('$pid');
+          if (id != null && id > 0) ids.add(id);
+        }
+        if (items.length < pageSize) break;
+        pageIndex++;
+      }
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() => _speakerPartyIds.addAll(ids));
+  }
+
+  String _lifecycleSubtitle(BuildContext context) {
+    if (_lifecycleExpired || _readOnlyExpired) {
+      return 'Yaşam döngüsü sona erdi';
+    }
+    final end = _lifecycleEndsAtUtc;
+    if (end == null) return 'Yaşam döngüsü bilinmiyor';
+    final nowUtc = _countdownTick.toUtc();
+    if (!nowUtc.isBefore(end)) {
+      return 'Yaşam döngüsü sona erdi';
+    }
+    final remaining = end.difference(nowUtc);
+    final endLocal = end.toLocal();
+    final loc = MaterialLocalizations.of(context);
+    final dateStr = loc.formatCompactDate(endLocal);
+    final timeStr = loc.formatTimeOfDay(
+      TimeOfDay.fromDateTime(endLocal),
+      alwaysUse24HourFormat: true,
+    );
+    final d = remaining.inDays;
+    final h = remaining.inHours.remainder(24);
+    final min = remaining.inMinutes.remainder(60);
+    final sec = remaining.inSeconds.remainder(60);
+    final parts = <String>[];
+    if (d > 0) parts.add('${d}g');
+    if (h > 0 || d > 0) parts.add('${h}s');
+    parts.add('${min}dk');
+    parts.add('${sec}sn');
+    final countdown = parts.join(' ');
+    return 'Bitiş ~ $dateStr $timeStr · Kalan $countdown';
   }
 
   Future<void> _detachHub() async {
@@ -145,7 +277,21 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
 
     _readOnlyExpired = entry.readOnlyExpired;
 
-    await _loadHistory(app);
+    final roomMap = await _fetchRoomMap(app, email);
+    if (mounted && roomMap != null) {
+      final expired = lifecycleExpiredFromRoomMap(roomMap);
+      final endUtc = _lifecycleEndUtcFromRoom(roomMap);
+      setState(() {
+        _lifecycleExpired = expired;
+        _lifecycleEndsAtUtc = endUtc;
+      });
+      _ensureCountdownTimer();
+    }
+
+    await Future.wait<void>([
+      _loadUniqueSpeakerCount(app),
+      _loadHistory(app),
+    ]);
     if (!mounted) return;
 
     if (_readOnlyExpired) {
@@ -275,7 +421,12 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
       }
       lines.sort((a, b) => a.at.compareTo(b.at));
       if (!mounted) return;
-      setState(() => _messages = lines);
+      setState(() {
+        _messages = lines;
+        for (final line in lines) {
+          if (line.partyId > 0) _speakerPartyIds.add(line.partyId);
+        }
+      });
     } catch (_) {
       if (!mounted) return;
       setState(() => _error = 'Mesajlar yüklenemedi');
@@ -293,6 +444,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
     );
     if (dup) return;
     setState(() {
+      _speakerPartyIds.add(partyId);
       _partyNames[partyId] = partyName;
       _messages = [
         ..._messages,
@@ -348,9 +500,27 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
   @override
   Widget build(BuildContext context) {
     final myParty = _partyId;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final appBarFg = theme.appBarTheme.foregroundColor ?? cs.onSurface;
+    final subColor = cs.onSurfaceVariant;
+    final mutedSub = subColor.withValues(alpha: 0.78);
+
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+          color: appBarFg,
+          fontWeight: FontWeight.w600,
+          height: 1.2,
+        ) ??
+        TextStyle(color: appBarFg, fontSize: 17, fontWeight: FontWeight.w600);
+    final subStyle = theme.textTheme.labelSmall?.copyWith(
+          color: subColor,
+          height: 1.25,
+        ) ??
+        TextStyle(color: subColor, fontSize: 11.5, height: 1.25);
 
     return Scaffold(
       appBar: AppBar(
+        toolbarHeight: kToolbarHeight + 72,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -362,7 +532,31 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: titleStyle,
             ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Icon(
+                  Icons.people_outline_rounded,
+                  size: 16,
+                  color: subColor,
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  '${_speakerPartyIds.length}',
+                  style: subStyle.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              _lifecycleSubtitle(context),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: subStyle,
+            ),
+            const SizedBox(height: 2),
             Text(
               _readOnlyExpired
                   ? 'Salt okunur — süre doldu'
@@ -371,9 +565,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                       : _loading
                           ? 'Yükleniyor…'
                           : 'Bağlantı yok',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.85),
-                  ),
+              style: subStyle.copyWith(color: mutedSub),
             ),
           ],
         ),
