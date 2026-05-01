@@ -5,11 +5,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/navigation/app_route_observer.dart';
 import '../../core/geo/artemis_map_tiles.dart';
 import '../../core/icons/app_content_icons.dart';
 import '../../core/geo/room_map_clustering.dart';
 import '../../core/location/location_service.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/util/ensure_room_access.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/paged_result.dart';
@@ -66,7 +68,7 @@ class RoomMapScreen extends StatefulWidget {
   State<RoomMapScreen> createState() => _RoomMapScreenState();
 }
 
-class _RoomMapScreenState extends State<RoomMapScreen> {
+class _RoomMapScreenState extends State<RoomMapScreen> with RouteAware {
   final MapController _mapController = MapController();
   late final HomeTabController _homeTab;
   late final AuthProvider _authProvider;
@@ -101,6 +103,22 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
       _loadMap(showRationaleDialog: true);
       _loadMySubscriptionTier();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<dynamic>) {
+      appRouteObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPopNext() {
+    if (!mounted) return;
+    if (_homeTab.currentIndex != HomeTabController.roomsTabIndex) return;
+    _refresh();
   }
 
   void _onSubscriptionChanged() {
@@ -143,6 +161,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
 
   @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
     _homeTab.removeListener(_onHomeTabChanged);
     _authProvider.removeListener(_onSubscriptionChanged);
     _mapController.dispose();
@@ -354,27 +373,35 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
     }
   }
 
+  /// Haritada gösterilir; süresi dolmuş odalar Sohbetler’de kalabilir ama pin olarak çıkmaz.
+  List<Map<String, dynamic>> get _roomsForMapMarkers =>
+      _rooms.where((r) => !lifecycleExpiredFromRoomMap(r)).toList();
+
   void _updateCountsForMode() {
+    final mapRooms = _roomsForMapMarkers;
     if (_mode == _MapViewMode.nearby &&
         _userLat != null &&
         _userLng != null) {
       _liveCount =
-          filterWithinKm(_rooms, _userLat!, _userLng!, _userRadiusKm).length;
+          filterWithinKm(mapRooms, _userLat!, _userLng!, _userRadiusKm).length;
     } else {
-      _liveCount = _rooms.length;
+      _liveCount = mapRooms.length;
     }
   }
 
   List<Map<String, dynamic>> get _displayRooms {
+    final mapRooms = _roomsForMapMarkers;
     if (_mode == _MapViewMode.nearby &&
         _userLat != null &&
         _userLng != null) {
-      return filterWithinKm(_rooms, _userLat!, _userLng!, _userRadiusKm);
+      return filterWithinKm(mapRooms, _userLat!, _userLng!, _userRadiusKm);
     }
     if (_mode == _MapViewMode.detail && _detailRegion != null) {
-      return _detailRegion!.roomItems;
+      return _detailRegion!.roomItems
+          .where((r) => !lifecycleExpiredFromRoomMap(r))
+          .toList();
     }
-    return _rooms;
+    return mapRooms;
   }
 
   void _fitCameraForMode() {
@@ -405,7 +432,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
         return;
       }
 
-      final regions = buildCombinedRegions(_rooms, const []);
+      final regions = buildCombinedRegions(_roomsForMapMarkers, const []);
       if (regions.isEmpty) {
         _mapController.fitCamera(
           CameraFit.bounds(
@@ -537,7 +564,7 @@ class _RoomMapScreenState extends State<RoomMapScreen> {
   }
 
   List<Marker> _buildCityMarkers() {
-    final regions = buildCombinedRegions(_rooms, const []);
+    final regions = buildCombinedRegions(_roomsForMapMarkers, const []);
     final out = <Marker>[];
     for (final r in regions) {
       if (r.roomCount <= 0) continue;

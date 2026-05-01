@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../../core/location/location_service.dart';
 import '../../core/icons/app_content_icons.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/util/ensure_room_access.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/map_helpers.dart';
 import '../../core/util/paged_result.dart';
@@ -109,9 +110,12 @@ class _RoomListScreenState extends State<RoomListScreen> {
         if (email != null) 'userEmail': email,
       });
       if (!mounted) return;
+      final rows = asMapList(data)
+          .where((r) => !lifecycleExpiredFromRoomMap(r))
+          .toList();
       setState(() {
-        _items = asMapList(data);
-        _total = extractCount(data);
+        _items = rows;
+        _total = rows.length;
         _loading = false;
       });
     } on DioException catch (e) {
