@@ -214,14 +214,42 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
         ? (entityString(_topic!, ['title', 'Title']) ?? 'Konu #${widget.topicId}')
         : 'Konu #${widget.topicId}';
 
+    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: AppColors.surfaceLight,
       appBar: AppBar(
-        title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: AppColors.surfaceLight,
+        foregroundColor: AppColors.darkCharcoal,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
+          children: [
+            const Icon(Icons.tag_rounded, color: AppColors.topicTeal, size: 22),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.darkCharcoal,
+                    ),
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Odaya git',
             onPressed: _roomsForTopic.isEmpty ? null : _goToRoom,
-            icon: const Icon(AppContentIcons.roomOutlined),
+            icon: Icon(
+              AppContentIcons.roomOutlined,
+              color: _roomsForTopic.isEmpty
+                  ? Colors.grey.shade400
+                  : AppColors.purple600,
+            ),
           ),
           IconButton(
             tooltip: 'Canlı yorum sohbeti',
@@ -235,7 +263,7 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
                 ),
               );
             },
-            icon: const Icon(Icons.chat_bubble_rounded),
+            icon: const Icon(Icons.chat_bubble_rounded, color: AppColors.topicTeal),
           ),
           IconButton(
             tooltip: _topic != null && _hasTopicLocation(_topic!)
@@ -244,7 +272,12 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
             onPressed: _topic != null && _hasTopicLocation(_topic!)
                 ? _openTopicLocationOnMap
                 : null,
-            icon: const Icon(Icons.map_rounded),
+            icon: Icon(
+              Icons.map_rounded,
+              color: _topic != null && _hasTopicLocation(_topic!)
+                  ? AppColors.topicTeal
+                  : Colors.grey.shade400,
+            ),
           ),
         ],
       ),
@@ -254,7 +287,9 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
 
   Widget _buildBody(BuildContext context) {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.topicTeal),
+      );
     }
     if (_error != null && _topic == null) {
       return Center(
@@ -265,7 +300,14 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
             children: [
               Text(_error!, textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              FilledButton(onPressed: _load, child: const Text('Yeniden dene')),
+              FilledButton(
+                onPressed: _load,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.topicTeal,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Yeniden dene'),
+              ),
             ],
           ),
         ),
@@ -277,44 +319,93 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
         entityString(t, ['categoryName', 'CategoryName', 'categoryTitle']);
     final desc = entityString(t, ['description', 'Description']);
 
+    final theme = Theme.of(context);
+    final capsMuted = theme.textTheme.labelSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.65,
+          fontSize: 10,
+          color: const Color(0xFF8B8798),
+        );
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 120),
       children: [
         if (category != null) ...[
-          Row(
-            children: [
-              Icon(Icons.label_outline_rounded,
-                  size: 18, color: Colors.grey.shade700),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  category,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.topicMint.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.topicTeal.withValues(alpha: 0.18),
               ),
-            ],
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.label_outline_rounded,
+                  size: 20,
+                  color: AppColors.topicTeal,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    category,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.darkCharcoal,
+                        ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
         ],
         if (desc != null && desc.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text(desc, style: Theme.of(context).textTheme.bodyLarge),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceCard,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.outlineMuted.withValues(alpha: 0.9),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Text(
+              desc,
+              style: theme.textTheme.bodyLarge?.copyWith(height: 1.45),
+            ),
+          ),
+          const SizedBox(height: 20),
         ],
-        const SizedBox(height: 24),
+        Text('YORUMLAR', style: capsMuted),
+        const SizedBox(height: 6),
         Text(
-          'Yorumlar (${_comments.length})',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+          '${_comments.length} gönderi',
+          style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w600,
               ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         if (_comments.isEmpty)
-          Text(
-            'Henüz yorum yok.',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: Colors.grey.shade600),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              'Henüz yorum yok.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
+            ),
           )
         else
           ..._comments.map((c) {
@@ -329,69 +420,164 @@ class _TopicDetailScreenState extends State<TopicDetailScreen> {
             final date = formatTrDate(c['createDate'] ?? c['CreateDate']);
             final body =
                 entityString(c, ['content', 'Content']) ?? '—';
-            return Card(
-              margin: const EdgeInsets.only(bottom: 10),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.person_outline_rounded,
-                            size: 16, color: Colors.grey.shade700),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            author,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Material(
+                color: AppColors.surfaceCard,
+                elevation: 0,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(
+                    color: AppColors.outlineMuted.withValues(alpha: 0.85),
+                  ),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        width: 4,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              AppColors.topicTeal,
+                              AppColors.topicTealAccent,
+                            ],
                           ),
                         ),
-                        Text(
-                          date,
-                          style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.topicMint,
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(10)),
+                                    ),
+                                    child: Padding(
+                                      padding: EdgeInsets.all(6),
+                                      child: Icon(
+                                        Icons.person_outline_rounded,
+                                        size: 18,
+                                        color: AppColors.topicTeal,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          author,
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: AppColors.darkCharcoal,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          date,
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                            color: Colors.grey.shade600,
+                                            fontFeatures: const [
+                                              FontFeature.tabularFigures(),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                body,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                      height: 1.45,
+                                      color: AppColors.darkCharcoal,
+                                    ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(body),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
           }),
-        const SizedBox(height: 20),
-        Text(
-          'Yorum yaz',
-          style: Theme.of(context).textTheme.titleSmall,
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _commentCtrl,
-          minLines: 3,
-          maxLines: 6,
-          decoration: const InputDecoration(
-            hintText: 'Düşüncelerinizi yazın…',
-            border: OutlineInputBorder(),
+        const SizedBox(height: 24),
+        Text('YORUM YAZ', style: capsMuted),
+        const SizedBox(height: 10),
+        Material(
+          color: AppColors.surfaceCard,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(
+              color: AppColors.outlineMuted.withValues(alpha: 0.9),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: TextField(
+            controller: _commentCtrl,
+            minLines: 3,
+            maxLines: 6,
+            style: theme.textTheme.bodyLarge?.copyWith(height: 1.4),
+            decoration: InputDecoration(
+              hintText: 'Düşüncelerinizi yazın…',
+              hintStyle: TextStyle(color: Colors.grey.shade500),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.all(16),
+            ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         FilledButton.icon(
           onPressed: _sending ? null : _sendComment,
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.purple600,
-            minimumSize: const Size.fromHeight(48),
+            backgroundColor: AppColors.topicTeal,
+            foregroundColor: Colors.white,
+            disabledBackgroundColor: Colors.grey.shade300,
+            minimumSize: const Size.fromHeight(52),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            elevation: 0,
           ),
           icon: _sending
               ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: Colors.white,
+                  ),
                 )
               : const Icon(Icons.send_rounded),
-          label: Text(_sending ? 'Gönderiliyor…' : 'Gönder'),
+          label: Text(
+            _sending ? 'Gönderiliyor…' : 'Gönder',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
         ),
       ],
     );
   }
 }
+
