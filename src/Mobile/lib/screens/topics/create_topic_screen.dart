@@ -221,149 +221,406 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
     }
   }
 
+  Widget _stepChip({
+    required String step,
+    required String label,
+    required bool active,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: active ? AppColors.topicMint : AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: active
+              ? AppColors.topicTeal.withValues(alpha: 0.22)
+              : AppColors.outlineMuted.withValues(alpha: 0.9),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: active
+                  ? AppColors.topicTeal.withValues(alpha: 0.18)
+                  : AppColors.purple100,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              step,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: active ? AppColors.topicTeal : AppColors.purple700,
+                height: 1,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: active ? AppColors.topicTeal : AppColors.darkCharcoal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+    bool topicStyle = true,
+  }) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.outlineMuted.withValues(alpha: 0.9)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: topicStyle ? AppColors.topicTeal : AppColors.purple600,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.darkCharcoal,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ...children,
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    InputDecoration fieldDecoration({
+      required String label,
+      String? hint,
+      Widget? suffixIcon,
+      Widget? prefixIcon,
+      bool topicFocus = true,
+    }) {
+      return InputDecoration(
+        labelText: label,
+        hintText: hint,
+        suffixIcon: suffixIcon,
+        prefixIcon: prefixIcon,
+        filled: true,
+        fillColor: AppColors.surfaceCard,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.grey.shade300.withValues(alpha: 0.6)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.grey.shade300.withValues(alpha: 0.5)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(14)),
+          borderSide: BorderSide(
+            color: topicFocus ? AppColors.topicTeal : AppColors.purple500,
+            width: 1.6,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
+      backgroundColor: AppColors.surfaceLight,
       appBar: AppBar(
-        title: Text(_showRoomSection ? 'Konuya oda ekle' : 'Konu oluştur'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        backgroundColor: AppColors.surfaceLight,
+        foregroundColor: AppColors.darkCharcoal,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          _showRoomSection ? 'Konuya oda ekle' : 'Konu oluştur',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.darkCharcoal,
+          ),
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
           if (_loadingCategories)
             const Center(
               child: Padding(
                 padding: EdgeInsets.all(24),
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(color: AppColors.topicTeal),
               ),
             )
           else if (!_showRoomSection) ...[
-            TextField(
-              controller: _title,
-              decoration: const InputDecoration(
-                labelText: 'Başlık *',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int?>(
-              value: _categoryId,
-              decoration: const InputDecoration(
-                labelText: 'Kategori',
-                border: OutlineInputBorder(),
-              ),
-              items: [
-                const DropdownMenuItem<int?>(
-                  value: null,
-                  child: Text('Seçilmedi'),
-                ),
-                ..._categories.map((c) {
-                  final id = _entityId(c);
-                  if (id == null) return null;
-                  return DropdownMenuItem<int?>(
-                    value: id,
-                    child: Text(
-                      _categoryTitle(c).isEmpty ? '#$id' : _categoryTitle(c),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  );
-                }).whereType<DropdownMenuItem<int?>>(),
-              ],
-              onChanged: (v) => setState(() => _categoryId = v),
-            ),
-            const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    'Konum: ${_locationY?.toStringAsFixed(4) ?? "—"}, ${_locationX?.toStringAsFixed(4) ?? "—"}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                _stepChip(step: '1', label: 'Konu bilgisi', active: true),
+                const SizedBox(width: 8),
+                _stepChip(step: '2', label: 'İsteğe bağlı oda', active: false),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.topicMint, AppColors.surfaceCard],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.topicTeal.withValues(alpha: 0.18)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.tips_and_updates_rounded, color: AppColors.topicTeal, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Konu bilgilerini doldurun. İsterseniz ikinci adımda odaya geçebilirsiniz.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.topicTeal,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            _sectionCard(
+              title: 'Konu bilgileri',
+              icon: Icons.tag_rounded,
+              children: [
+                TextField(
+                  controller: _title,
+                  decoration: fieldDecoration(
+                    label: 'Başlık *',
+                    hint: 'Konu başlığını yazın',
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: _useGpsTopic,
-                  icon: const Icon(Icons.gps_fixed_rounded, size: 18),
-                  label: const Text('GPS'),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<int?>(
+                  initialValue: _categoryId,
+                  decoration: fieldDecoration(
+                    label: 'Kategori',
+                    topicFocus: true,
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('Seçilmedi'),
+                    ),
+                    ..._categories.map((c) {
+                      final id = _entityId(c);
+                      if (id == null) return null;
+                      return DropdownMenuItem<int?>(
+                        value: id,
+                        child: Text(
+                          _categoryTitle(c).isEmpty ? '#$id' : _categoryTitle(c),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).whereType<DropdownMenuItem<int?>>(),
+                  ],
+                  onChanged: (v) => setState(() => _categoryId = v),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.outlineMuted.withValues(alpha: 0.9),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Konum: ${_locationY?.toStringAsFixed(4) ?? "—"}, ${_locationX?.toStringAsFixed(4) ?? "—"}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _useGpsTopic,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.topicTeal,
+                          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        icon: const Icon(Icons.gps_fixed_rounded, size: 18),
+                        label: const Text('GPS'),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             FilledButton(
               onPressed: _loading ? null : _createTopic,
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.purple600,
-                minimumSize: const Size.fromHeight(48),
+                backgroundColor: AppColors.topicTeal,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(54),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: _loading
                   ? const SizedBox(
                       width: 22,
                       height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Text('Konuyu oluştur'),
             ),
           ] else ...[
-            Text(
-              'Konu #$_createdTopicId için oda ekleyebilirsiniz.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _roomTitle,
-              decoration: const InputDecoration(
-                labelText: 'Oda başlığı *',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _roomLifeCycle,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Yaşam döngüsü *',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    'Konum: ${_roomLocationY?.toStringAsFixed(4) ?? "—"}, ${_roomLocationX?.toStringAsFixed(4) ?? "—"}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: _useGpsRoom,
-                  icon: const Icon(Icons.gps_fixed_rounded, size: 18),
-                  label: const Text('GPS'),
-                ),
+                _stepChip(step: '1', label: 'Konu bilgisi', active: false),
+                const SizedBox(width: 8),
+                _stepChip(step: '2', label: 'İsteğe bağlı oda', active: true),
               ],
             ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.purple50,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.purple200.withValues(alpha: 0.55)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.meeting_room_outlined, color: AppColors.purple600, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Konu #$_createdTopicId için bir oda oluşturabilirsiniz (isteğe bağlı).',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.purple700,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 12),
-            SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 1, label: Text('Herkese açık')),
-                ButtonSegment(value: 2, label: Text('Özel')),
+            _sectionCard(
+              title: 'Oda ayarları',
+              icon: Icons.tune_rounded,
+              topicStyle: false,
+              children: [
+                TextField(
+                  controller: _roomTitle,
+                  decoration: fieldDecoration(
+                    label: 'Oda başlığı *',
+                    hint: 'Oda için başlık yazın',
+                    topicFocus: false,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _roomLifeCycle,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: fieldDecoration(
+                    label: 'Yaşam döngüsü *',
+                    hint: 'Dakika cinsinden (örn: 60)',
+                    topicFocus: false,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: AppColors.outlineMuted.withValues(alpha: 0.9),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Konum: ${_roomLocationY?.toStringAsFixed(4) ?? "—"}, ${_roomLocationX?.toStringAsFixed(4) ?? "—"}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: _useGpsRoom,
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.purple600,
+                          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        icon: const Icon(Icons.gps_fixed_rounded, size: 18),
+                        label: const Text('GPS'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment(value: 1, label: Text('Herkese açık')),
+                    ButtonSegment(value: 2, label: Text('Özel')),
+                  ],
+                  selected: {_roomType},
+                  onSelectionChanged: (s) =>
+                      setState(() => _roomType = s.first),
+                ),
               ],
-              selected: {_roomType},
-              onSelectionChanged: (s) =>
-                  setState(() => _roomType = s.first),
             ),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: _loading ? null : _createRoomForTopic,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.purple600,
-                minimumSize: const Size.fromHeight(48),
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(54),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: _loading
                   ? const SizedBox(
                       width: 22,
                       height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Text('Odayı oluştur'),
             ),

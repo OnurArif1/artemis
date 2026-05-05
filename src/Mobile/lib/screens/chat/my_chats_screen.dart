@@ -10,6 +10,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/util/entity_map.dart';
 import '../../core/util/jwt_email.dart';
 import '../../core/util/paged_result.dart';
+import '../../core/util/ensure_room_access.dart';
 import '../../core/util/party_resolver.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
@@ -40,6 +41,7 @@ class _ConversationRow {
     this.lastSenderPartyName,
     this.lastSenderPartyId,
     this.roomTopicTitle,
+    this.roomLifecycleExpired = false,
   });
 
   final bool isRoom;
@@ -56,6 +58,9 @@ class _ConversationRow {
 
   /// Oda sohbeti için konu başlığı (üst çubukta parantez içinde gösterilir).
   final String? roomTopicTitle;
+
+  /// [RoomChatScreen] süresi dolmuş görünümü ile uyum için; yalnızca oda satırlarında.
+  final bool roomLifecycleExpired;
 }
 
 String _chatListTimeLabel(DateTime at) {
@@ -91,6 +96,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   String? _error;
   final Map<int, String> _roomTitlesCache = {};
   final Map<int, String> _roomTopicTitlesCache = {};
+  final Map<int, bool> _roomLifecycleExpiredCache = {};
   final Map<int, String> _topicTitlesCache = {};
   /// Mesaj listesinde partyName gelmediğinde lookup ile doldurulur.
   final Map<int, String> _partyDisplayNamesById = {};
@@ -273,6 +279,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
           lastSenderPartyName: roomSenderName[e.key],
           lastSenderPartyId: roomSenderPartyId[e.key],
           roomTopicTitle: _resolvedRoomTopicTitle(e.key),
+          roomLifecycleExpired: _roomLifecycleExpiredCache[e.key] ?? false,
         ),
       );
     }
@@ -356,7 +363,8 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         (id) =>
             id <= 0 ||
             (_roomTitlesCache.containsKey(id) &&
-                _roomTopicTitlesCache.containsKey(id)),
+                _roomTopicTitlesCache.containsKey(id) &&
+                _roomLifecycleExpiredCache.containsKey(id)),
       );
     final neededTopicIds = <int>{
       for (final m in commentMaps)
@@ -384,6 +392,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         if (t != null && t.isNotEmpty) _roomTitlesCache[id] = t;
         final tt = entityString(r, ['topicTitle', 'TopicTitle']);
         _roomTopicTitlesCache[id] = tt ?? '';
+        _roomLifecycleExpiredCache[id] = lifecycleExpiredFromRoomMap(r);
       }
       for (final rid in neededRoomIds) {
         _roomTopicTitlesCache.putIfAbsent(rid, () => '');
@@ -834,6 +843,11 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         roomTopicTrimmed.isNotEmpty &&
         roomTopicTrimmed != r.title.trim();
 
+    /// [RoomChatScreen] / `_RoomChatHeader` süresi dolmuş gradient ile aynı palet
+    const expiredRoomAccent = Color(0xFF5C3D3D);
+    const expiredRoomAccentDeep = Color(0xFF4A2C2C);
+    final expiredRoom = r.isRoom && r.roomLifecycleExpired;
+
     final capsStyle = theme.textTheme.labelSmall?.copyWith(
           fontWeight: FontWeight.w700,
           letterSpacing: 0.65,
@@ -862,12 +876,14 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: r.isRoom
-                        ? const [AppColors.purple700, AppColors.purple400]
-                        : [
-                            AppColors.topicTeal,
-                            AppColors.topicTealAccent,
-                          ],
+                    colors: expiredRoom
+                        ? const [expiredRoomAccent, expiredRoomAccentDeep]
+                        : r.isRoom
+                            ? const [AppColors.purple700, AppColors.purple400]
+                            : [
+                                AppColors.topicTeal,
+                                AppColors.topicTealAccent,
+                              ],
                   ),
                 ),
               ),
@@ -879,7 +895,11 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                     children: [
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: r.isRoom ? AppColors.purple50 : AppColors.topicMint,
+                          color: expiredRoom
+                              ? expiredRoomAccent.withValues(alpha: 0.12)
+                              : r.isRoom
+                                  ? AppColors.purple50
+                                  : AppColors.topicMint,
                           borderRadius: const BorderRadius.all(Radius.circular(14)),
                         ),
                         child: SizedBox(
@@ -887,8 +907,11 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                           height: 46,
                           child: Icon(
                             r.isRoom ? AppContentIcons.room : AppContentIcons.topic,
-                            color:
-                                r.isRoom ? AppColors.purple600 : AppColors.topicTeal,
+                            color: expiredRoom
+                                ? expiredRoomAccent
+                                : r.isRoom
+                                    ? AppColors.purple600
+                                    : AppColors.topicTeal,
                             size: 22,
                           ),
                         ),
@@ -927,7 +950,9 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                                         Text(
                                           roomTopicTrimmed,
                                           style: theme.textTheme.bodySmall?.copyWith(
-                                                color: AppColors.purple700,
+                                                color: expiredRoom
+                                                    ? expiredRoomAccent
+                                                    : AppColors.purple700,
                                                 fontWeight: FontWeight.w600,
                                                 height: 1.35,
                                               ),
@@ -953,7 +978,9 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                             Text(
                               secondLine,
                               style: TextStyle(
-                                color: muted.withValues(alpha: 0.88),
+                                color: expiredRoom
+                                    ? expiredRoomAccent
+                                    : muted.withValues(alpha: 0.88),
                                 fontSize: 13.5,
                                 height: 1.35,
                               ),

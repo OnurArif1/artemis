@@ -481,6 +481,14 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
     final myParty = _partyId;
     final expiredLook = _lifecycleExpired || _readOnlyExpired;
     final canSend = !_readOnlyExpired && !_sending && _hubReady;
+    // Başlıktaki süresi dolmuş gradient ile uyumlu ( _RoomChatHeader )
+    const expiredBubble = Color(0xFF5C3D3D);
+    const expiredBubbleDeep = Color(0xFF4A2C2C);
+    final mineBubble =
+        expiredLook ? expiredBubble : AppColors.purple500;
+    final mineShadow = expiredLook
+        ? expiredBubbleDeep.withValues(alpha: 0.32)
+        : AppColors.purple500.withValues(alpha: 0.26);
 
     return Scaffold(
       backgroundColor: AppColors.surfaceLight,
@@ -542,9 +550,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                                   MediaQuery.sizeOf(context).width * 0.82,
                             ),
                             decoration: BoxDecoration(
-                              color: mine
-                                  ? AppColors.purple500
-                                  : AppColors.surfaceCard,
+                              color: mine ? mineBubble : AppColors.surfaceCard,
                               borderRadius: bubbleRadius,
                               border: mine
                                   ? null
@@ -555,8 +561,7 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                               boxShadow: [
                                 BoxShadow(
                                   color: mine
-                                      ? AppColors.purple500
-                                          .withValues(alpha: 0.26)
+                                      ? mineShadow
                                       : Colors.black
                                           .withValues(alpha: 0.06),
                                   blurRadius: mine ? 12 : 8,
@@ -580,7 +585,9 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                                     letterSpacing: 0.15,
                                     color: mine
                                         ? Colors.white.withValues(alpha: 0.92)
-                                        : AppColors.purple700,
+                                        : (expiredLook
+                                            ? expiredBubble
+                                            : AppColors.purple700),
                                   ),
                                 ),
                                 const SizedBox(height: 5),
@@ -655,12 +662,21 @@ class _RoomChatScreenState extends State<RoomChatScreen> {
                       IconButton(
                         style: IconButton.styleFrom(
                           backgroundColor: canSend
-                              ? AppColors.purple500
-                              : AppColors.purple100,
-                          foregroundColor:
-                              canSend ? Colors.white : AppColors.purple300,
-                          disabledBackgroundColor: AppColors.purple50,
-                          disabledForegroundColor: AppColors.purple200,
+                              ? mineBubble
+                              : (expiredLook
+                                  ? expiredBubble.withValues(alpha: 0.22)
+                                  : AppColors.purple100),
+                          foregroundColor: canSend
+                              ? Colors.white
+                              : (expiredLook
+                                  ? expiredBubbleDeep.withValues(alpha: 0.42)
+                                  : AppColors.purple300),
+                          disabledBackgroundColor: expiredLook
+                              ? expiredBubble.withValues(alpha: 0.18)
+                              : AppColors.purple50,
+                          disabledForegroundColor: expiredLook
+                              ? expiredBubbleDeep.withValues(alpha: 0.36)
+                              : AppColors.purple200,
                         ),
                         onPressed:
                             (_readOnlyExpired || _sending || !_hubReady)
