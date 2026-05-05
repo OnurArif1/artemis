@@ -14,6 +14,7 @@ import '../../core/util/party_resolver.dart';
 import '../../providers/home_tab_controller.dart';
 import '../../services/app_services.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/artemis_snackbar.dart';
 import 'room_chat_screen.dart';
 import 'start_chat_picker_screen.dart';
 import 'topic_chat_screen.dart';
@@ -80,9 +81,13 @@ class MyChatsScreen extends StatefulWidget {
 
 class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   final _search = TextEditingController();
+  final _listScroll = ScrollController();
   List<_ConversationRow> _items = [];
+  final List<Map<String, dynamic>> _allMsgMaps = [];
+  final List<Map<String, dynamic>> _allCommentMaps = [];
   bool _loading = true;
   bool _refreshing = false;
+  bool _loadingMore = false;
   String? _error;
   final Map<int, String> _roomTitlesCache = {};
   final Map<int, String> _roomTopicTitlesCache = {};
@@ -91,6 +96,12 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   final Map<int, String> _partyDisplayNamesById = {};
   DateTime? _lastLoadedAt;
   static const _minAutoReloadGap = Duration(seconds: 20);
+  static const _pageSize = 50;
+  int _msgPageIndex = 1;
+  int _commentPageIndex = 1;
+  bool _hasMoreMessages = true;
+  bool _hasMoreComments = true;
+  int? _partyId;
   Timer? _reloadAfterPopTimer;
 
   late final HomeTabController _homeTab;
@@ -127,6 +138,7 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
   void initState() {
     super.initState();
     _search.addListener(() => setState(() {}));
+    _listScroll.addListener(_onListScroll);
     _homeTab = context.read<HomeTabController>();
     _homeTab.addListener(_onHomeTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -151,8 +163,23 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
     _reloadAfterPopTimer?.cancel();
     appRouteObserver.unsubscribe(this);
     _search.dispose();
+    _listScroll.dispose();
     _homeTab.removeListener(_onHomeTabChanged);
     super.dispose();
+  }
+
+  bool get _canLoadMore =>
+      _hasMoreMessages || _hasMoreComments;
+
+  void _onListScroll() {
+    if (!_listScroll.hasClients) return;
+    if (_loading || _refreshing || _loadingMore) return;
+    if (_error != null) return;
+    if (!_canLoadMore) return;
+    final pos = _listScroll.position;
+    if (pos.pixels >= pos.maxScrollExtent - 220) {
+      _loadMore();
+    }
   }
 
   void _scheduleReloadChatsAfterOverlayPop() {
@@ -305,6 +332,146 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
     if (touched) setState(() {});
   }
 
+  void _resetPagingState() {
+    _allMsgMaps.clear();
+    _allCommentMaps.clear();
+    _msgPageIndex = 1;
+    _commentPageIndex = 1;
+    _hasMoreMessages = true;
+    _hasMoreComments = true;
+  }
+
+  Future<void> _hydrateTitlesIfNeeded(
+    AppServices app, {
+    required List<Map<String, dynamic>> msgMaps,
+    required List<Map<String, dynamic>> commentMaps,
+  }) async {
+    final neededRoomIds = <int>{
+      for (final m in msgMaps)
+        ((m['roomId'] ?? m['RoomId']) is int
+                ? (m['roomId'] ?? m['RoomId']) as int
+                : int.tryParse('${m['roomId'] ?? m['RoomId']}')) ??
+            -1,
+    }..removeWhere(
+        (id) =>
+            id <= 0 ||
+            (_roomTitlesCache.containsKey(id) &&
+                _roomTopicTitlesCache.containsKey(id)),
+      );
+    final neededTopicIds = <int>{
+      for (final m in commentMaps)
+        ((m['topicId'] ?? m['TopicId']) is int
+                ? (m['topicId'] ?? m['TopicId']) as int
+                : int.tryParse('${m['topicId'] ?? m['TopicId']}')) ??
+            -1,
+    }..removeWhere((id) => id <= 0 || _topicTitlesCache.containsKey(id));
+
+    if (neededRoomIds.isEmpty && neededTopicIds.isEmpty) return;
+
+    final titlePayloads = await Future.wait([
+      if (neededRoomIds.isNotEmpty) app.rooms.getList({'pageIndex': 1, 'pageSize': 1000}),
+      if (neededTopicIds.isNotEmpty) app.topics.getList({'pageIndex': 1, 'pageSize': 1000}),
+    ]);
+    if (!mounted) return;
+
+    var p = 0;
+    if (neededRoomIds.isNotEmpty) {
+      final roomMaps = asMapList(titlePayloads[p++]);
+      for (final r in roomMaps) {
+        final id = entityId(r);
+        if (id == null || !neededRoomIds.contains(id)) continue;
+        final t = entityString(r, ['title', 'Title']);
+        if (t != null && t.isNotEmpty) _roomTitlesCache[id] = t;
+        final tt = entityString(r, ['topicTitle', 'TopicTitle']);
+        _roomTopicTitlesCache[id] = tt ?? '';
+      }
+      for (final rid in neededRoomIds) {
+        _roomTopicTitlesCache.putIfAbsent(rid, () => '');
+      }
+    }
+    if (neededTopicIds.isNotEmpty) {
+      final topicMaps = asMapList(titlePayloads[p]);
+      for (final t in topicMaps) {
+        final id = entityId(t);
+        if (id == null || !neededTopicIds.contains(id)) continue;
+        final title = entityString(t, ['title', 'Title']);
+        if (title != null && title.isNotEmpty) _topicTitlesCache[id] = title;
+      }
+    }
+  }
+
+  Future<void> _fetchNextPage(AppServices app) async {
+    if (_partyId == null) return;
+    if (!_hasMoreMessages && !_hasMoreComments) return;
+
+    final requests = <Future<dynamic>>[];
+    final fetchMessages = _hasMoreMessages;
+    final fetchComments = _hasMoreComments;
+
+    if (fetchMessages) {
+      requests.add(
+        app.messages.getList({
+          'pageIndex': _msgPageIndex,
+          'pageSize': _pageSize,
+          'latestInRoomsWhereParticipated': true,
+          'participatingPartyId': _partyId,
+        }),
+      );
+    }
+    if (fetchComments) {
+      requests.add(
+        app.comments.getList({
+          'pageIndex': _commentPageIndex,
+          'pageSize': _pageSize,
+          'latestInTopicsWhereParticipated': true,
+          'participatingPartyId': _partyId,
+        }),
+      );
+    }
+
+    final responses = await Future.wait(requests);
+    if (!mounted) return;
+
+    var idx = 0;
+    var newMsgMaps = <Map<String, dynamic>>[];
+    var newCommentMaps = <Map<String, dynamic>>[];
+
+    if (fetchMessages) {
+      newMsgMaps = asMapList(responses[idx++]);
+      _allMsgMaps.addAll(newMsgMaps);
+      _msgPageIndex++;
+      _hasMoreMessages = newMsgMaps.length >= _pageSize;
+    }
+    if (fetchComments) {
+      newCommentMaps = asMapList(responses[idx]);
+      _allCommentMaps.addAll(newCommentMaps);
+      _commentPageIndex++;
+      _hasMoreComments = newCommentMaps.length >= _pageSize;
+    }
+
+    final rows = _composeRows(
+      msgMaps: _allMsgMaps,
+      commentMaps: _allCommentMaps,
+    );
+    setState(() {
+      _items = rows;
+      _lastLoadedAt = DateTime.now();
+    });
+
+    await _resolveSenderDisplayNames(app, rows);
+    await _hydrateTitlesIfNeeded(
+      app,
+      msgMaps: _allMsgMaps,
+      commentMaps: _allCommentMaps,
+    );
+    if (!mounted) return;
+    final rows2 = _composeRows(
+      msgMaps: _allMsgMaps,
+      commentMaps: _allCommentMaps,
+    );
+    setState(() => _items = rows2);
+  }
+
   Future<void> _load({bool fullScreenLoading = true, bool force = false}) async {
     if (!force &&
         _items.isNotEmpty &&
@@ -340,92 +507,16 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         });
         return;
       }
+      _partyId = partyId;
 
-      final results = await Future.wait([
-        app.messages.getList({
-          'pageIndex': 1,
-          'pageSize': 300,
-          'latestInRoomsWhereParticipated': true,
-          'participatingPartyId': partyId,
-        }),
-        app.comments.getList({
-          'pageIndex': 1,
-          'pageSize': 300,
-          'latestInTopicsWhereParticipated': true,
-          'participatingPartyId': partyId,
-        }),
-      ]);
-
-      final msgMaps = asMapList(results[0]);
-      final commentMaps = asMapList(results[1]);
-      final rows = _composeRows(msgMaps: msgMaps, commentMaps: commentMaps);
-
+      _resetPagingState();
+      await _fetchNextPage(app);
       if (!mounted) return;
+
       setState(() {
-        _items = rows;
         _loading = false;
         _refreshing = false;
-        _lastLoadedAt = DateTime.now();
       });
-      await _resolveSenderDisplayNames(app, rows);
-
-      final neededRoomIds = <int>{
-        for (final m in msgMaps)
-          ((m['roomId'] ?? m['RoomId']) is int
-                  ? (m['roomId'] ?? m['RoomId']) as int
-                  : int.tryParse('${m['roomId'] ?? m['RoomId']}')) ??
-              -1,
-      }..removeWhere(
-          (id) =>
-              id <= 0 ||
-              (_roomTitlesCache.containsKey(id) &&
-                  _roomTopicTitlesCache.containsKey(id)),
-        );
-      final neededTopicIds = <int>{
-        for (final m in commentMaps)
-          ((m['topicId'] ?? m['TopicId']) is int
-                  ? (m['topicId'] ?? m['TopicId']) as int
-                  : int.tryParse('${m['topicId'] ?? m['TopicId']}')) ??
-              -1,
-      }..removeWhere((id) => id <= 0 || _topicTitlesCache.containsKey(id));
-
-      if (neededRoomIds.isNotEmpty || neededTopicIds.isNotEmpty) {
-        final titlePayloads = await Future.wait([
-          if (neededRoomIds.isNotEmpty) app.rooms.getList({'pageIndex': 1, 'pageSize': 1000}),
-          if (neededTopicIds.isNotEmpty) app.topics.getList({'pageIndex': 1, 'pageSize': 1000}),
-        ]);
-        if (!mounted) return;
-
-        var p = 0;
-        if (neededRoomIds.isNotEmpty) {
-          final roomMaps = asMapList(titlePayloads[p++]);
-          for (final r in roomMaps) {
-            final id = entityId(r);
-            if (id == null || !neededRoomIds.contains(id)) continue;
-            final t = entityString(r, ['title', 'Title']);
-            if (t != null && t.isNotEmpty) _roomTitlesCache[id] = t;
-            final tt = entityString(r, ['topicTitle', 'TopicTitle']);
-            _roomTopicTitlesCache[id] = tt ?? '';
-          }
-          for (final rid in neededRoomIds) {
-            _roomTopicTitlesCache.putIfAbsent(rid, () => '');
-          }
-        }
-        if (neededTopicIds.isNotEmpty) {
-          final topicMaps = asMapList(titlePayloads[p]);
-          for (final t in topicMaps) {
-            final id = entityId(t);
-            if (id == null || !neededTopicIds.contains(id)) continue;
-            final title = entityString(t, ['title', 'Title']);
-            if (title != null && title.isNotEmpty) _topicTitlesCache[id] = title;
-          }
-        }
-
-        if (!mounted) return;
-        final rows2 = _composeRows(msgMaps: msgMaps, commentMaps: commentMaps);
-        setState(() => _items = rows2);
-        await _resolveSenderDisplayNames(app, rows2);
-      }
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -440,6 +531,21 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
         _refreshing = false;
         _error = 'Yüklenemedi';
       });
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_loading || _refreshing || _loadingMore || !_canLoadMore) return;
+    final app = context.read<AppServices>();
+    setState(() => _loadingMore = true);
+    try {
+      await _fetchNextPage(app);
+    } catch (_) {
+      if (mounted) {
+        showAppSnackBar(context, 'Daha fazla sohbet yüklenemedi.', error: true);
+      }
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
     }
   }
 
@@ -683,11 +789,26 @@ class _MyChatsScreenState extends State<MyChatsScreen> with RouteAware {
                       ],
                     )
                   : ListView.separated(
+                      controller: _listScroll,
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 96),
-                      itemCount: visible.length,
+                      itemCount: visible.length + (_loadingMore ? 1 : 0),
                       separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, i) => _buildChatRow(context, visible[i]),
+                      itemBuilder: (context, i) {
+                        if (i >= visible.length) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2.2),
+                              ),
+                            ),
+                          );
+                        }
+                        return _buildChatRow(context, visible[i]);
+                      },
                     ),
             ),
           ),
