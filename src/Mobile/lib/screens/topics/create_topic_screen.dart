@@ -225,17 +225,43 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
     required String step,
     required String label,
     required bool active,
+    /// Aktifken oda adımı (2) için mor palet; konu adımı (1) için teal.
+    bool roomAccent = false,
   }) {
+    late final Color chipBg;
+    late final Color borderColor;
+    late final Color circleBg;
+    late final Color numberColor;
+    late final Color labelColor;
+
+    if (active) {
+      if (roomAccent) {
+        chipBg = AppColors.purple50;
+        borderColor = AppColors.purple200.withValues(alpha: 0.55);
+        circleBg = AppColors.purple600.withValues(alpha: 0.14);
+        numberColor = AppColors.purple600;
+        labelColor = AppColors.purple700;
+      } else {
+        chipBg = AppColors.topicMint;
+        borderColor = AppColors.topicTeal.withValues(alpha: 0.22);
+        circleBg = AppColors.topicTeal.withValues(alpha: 0.18);
+        numberColor = AppColors.topicTeal;
+        labelColor = AppColors.topicTeal;
+      }
+    } else {
+      chipBg = AppColors.surfaceCard;
+      borderColor = AppColors.outlineMuted.withValues(alpha: 0.9);
+      circleBg = Colors.grey.shade200;
+      numberColor = Colors.grey.shade600;
+      labelColor = AppColors.darkCharcoal;
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: active ? AppColors.topicMint : AppColors.surfaceCard,
+        color: chipBg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: active
-              ? AppColors.topicTeal.withValues(alpha: 0.22)
-              : AppColors.outlineMuted.withValues(alpha: 0.9),
-        ),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -245,9 +271,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
             height: 18,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: active
-                  ? AppColors.topicTeal.withValues(alpha: 0.18)
-                  : AppColors.purple100,
+              color: circleBg,
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -255,7 +279,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
-                color: active ? AppColors.topicTeal : AppColors.purple700,
+                color: numberColor,
                 height: 1,
               ),
             ),
@@ -266,7 +290,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: active ? AppColors.topicTeal : AppColors.darkCharcoal,
+              color: labelColor,
             ),
           ),
         ],
@@ -325,6 +349,8 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
       Widget? prefixIcon,
       bool topicFocus = true,
     }) {
+      final accentColor =
+          topicFocus ? AppColors.topicTeal : AppColors.purple500;
       return InputDecoration(
         labelText: label,
         hintText: hint,
@@ -332,6 +358,10 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
         prefixIcon: prefixIcon,
         filled: true,
         fillColor: AppColors.surfaceCard,
+        floatingLabelStyle: TextStyle(
+          color: accentColor,
+          fontWeight: FontWeight.w600,
+        ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -344,7 +374,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
         focusedBorder: OutlineInputBorder(
           borderRadius: const BorderRadius.all(Radius.circular(14)),
           borderSide: BorderSide(
-            color: topicFocus ? AppColors.topicTeal : AppColors.purple500,
+            color: accentColor,
             width: 1.6,
           ),
         ),
@@ -420,6 +450,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
               children: [
                 TextField(
                   controller: _title,
+                  cursorColor: AppColors.topicTeal,
                   decoration: fieldDecoration(
                     label: 'Başlık *',
                     hint: 'Konu başlığını yazın',
@@ -510,7 +541,12 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
               children: [
                 _stepChip(step: '1', label: 'Konu bilgisi', active: false),
                 const SizedBox(width: 8),
-                _stepChip(step: '2', label: 'İsteğe bağlı oda', active: true),
+                _stepChip(
+                  step: '2',
+                  label: 'İsteğe bağlı oda',
+                  active: true,
+                  roomAccent: true,
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -545,6 +581,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
               children: [
                 TextField(
                   controller: _roomTitle,
+                  cursorColor: AppColors.purple500,
                   decoration: fieldDecoration(
                     label: 'Oda başlığı *',
                     hint: 'Oda için başlık yazın',
@@ -554,6 +591,7 @@ class _CreateTopicScreenState extends State<CreateTopicScreen> {
                 const SizedBox(height: 12),
                 TextField(
                   controller: _roomLifeCycle,
+                  cursorColor: AppColors.purple500,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   decoration: fieldDecoration(
                     label: 'Yaşam döngüsü *',
